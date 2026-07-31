@@ -46,11 +46,11 @@
     </details>
     <nav id="mainNav" class="nav" aria-label="主导航">
       <span class="nav-group">快速开始</span>
-      <button class="active" data-view="home">学习地图</button><button data-view="globalSearch">全站检索</button><button data-view="core">糖尿病诊疗主线</button><button data-view="quick">床旁速查</button><button data-view="clinic">患者诊疗台</button>
+      <button class="active" data-view="home">学习地图</button><button data-view="globalSearch">全站检索</button><button data-view="symptoms">主诉入口</button><button data-view="core">糖尿病诊疗主线</button><button data-view="quick">床旁速查</button><button data-view="clinic">患者诊疗台</button>
       <span class="nav-group">临床查阅</span>
       <button data-view="workups">异常指标追查</button><button data-view="diseases">疾病目录</button><button data-view="severity">分期与严重度</button><button data-view="complications">并发症分级处置</button><button data-view="medications">药物与剂量</button><button data-view="glossary">缩写词典</button>
       <span class="nav-group">深入学习</span>
-      <button data-view="modules">糖尿病专题</button><button data-view="cases">病例推演</button><button data-view="decision">决策练习</button><button data-view="library">核心指南</button><button data-view="compare">差异对照</button><button data-view="evidenceGuide">循证等级说明</button>
+      <button data-view="learningPath">30天学习路径</button><button data-view="modules">糖尿病专题</button><button data-view="cases">病例推演</button><button data-view="decision">决策练习</button><button data-view="library">核心指南</button><button data-view="compare">差异对照</button><button data-view="evidenceGuide">循证等级说明</button>
       <span class="nav-group">资料索引</span>
       <button data-view="updates">新增指南索引</button><button data-view="sources">原始来源</button>
     </nav>
@@ -87,6 +87,22 @@
         <div class="section-head"><div><div class="kicker">全站检索</div><h2>一次搜索疾病、指南、路径、药物和剂量</h2></div><p>首页输入框现在会真正检索全站；可查中文、英文缩写、剂量单位和证据等级。</p></div>
         <input id="globalSearchInput" class="deep-search" type="search" aria-label="全站检索" placeholder="例如：痛风 CKD、非布司他 40 mg、甲状旁腺、胰岛素静脉输注……">
         <div id="globalSearchSummary" class="search-summary">输入关键词后开始检索。</div><div id="globalSearchResults" class="search-results"></div>
+      </section>
+
+      <section id="symptoms" class="view">
+        <div class="section-head"><div><div class="kicker">主诉入口</div><h2>从主诉、复诊到住院的完整临床路径</h2></div><p>临床接诊三阶段全覆盖：「初诊主诉」→「随访复诊/共病管理」→「住院-出院-再入院」。每个场景含鉴别诊断/评估维度、关键措施、循证依据和指南回链。</p></div>
+        <div class="library-tools" style="margin-bottom:14px"><button id="symTabInitial" class="active" data-symtab="initial">🏥 初诊主诉（24）</button><button id="symTabFollowup" data-symtab="followup">📋 随访复诊 / 共病管理（32）</button><button id="symTabInpatient" data-symtab="inpatient">🚨 住院-出院-再入院（14）</button></div>
+        <div class="workup-toolbar"><input id="symptomSearch" class="deep-search" type="search" aria-label="搜索主诉" placeholder="搜索主诉、复诊或住院场景，如：心悸、低钾、糖尿病随访、甲亢危象、DKA住院、黏液性水肿昏迷……"><div id="symptomGroups" class="workup-groups"></div></div>
+        <div id="symptomSummary" class="search-summary">初诊主诉24 + 随访复诊32 + 住院-出院-再入院14 = 70个临床场景，每个含鉴别诊断/评估、关键措施、循证依据与指南回链。</div>
+        <div class="workup-layout"><div id="symptomList" class="indicator-list" aria-label="主诉/复诊/住院列表"></div><div id="symptomDetail" class="workup-detail"></div></div>
+      </section>
+
+      <section id="learningPath" class="view">
+        <div class="section-head"><div><div class="kicker">研究生30天学习路径</div><h2>按系统每天一个主题，快速建立内分泌临床框架</h2></div><p>不按固定教材顺序，可按兴趣调整；每天一个主题+对应病例+回链指南，第30天完成系统闭环。</p></div>
+        <div class="notice"><b>使用方法：</b>按顺序或自由挑选。每周聚焦一个系统，每天完成：读主题要点 → 做对应病例 → 回原文核对推荐。第30天综合复习并做病例推演。</div>
+        <div class="workup-toolbar"><input id="pathSearch" class="deep-search" type="search" aria-label="搜索学习路径" placeholder="搜索主题：糖尿病、甲亢、原醛、骨质疏松、病例……"><div id="pathGroups" class="workup-groups"></div></div>
+        <div id="pathSummary" class="search-summary">30天路径：第1-7天糖代谢、第8-14天甲状腺、第15-21天垂体/肾上腺、第22-28天骨与代谢、第29-30天综合。</div>
+        <div class="workup-layout"><div id="pathList" class="indicator-list" aria-label="学习路径列表"></div><div id="pathDetail" class="workup-detail"></div></div>
       </section>
 
       <section id="workups" class="view">
@@ -355,13 +371,13 @@ window.DISEASE_DIRECTORY=[
 ['甲状腺危象',['BWPS评分：≥45分为甲状腺危象，25~44分为危象前期。','PTU 600 mg/d(最大1600 mg/d)或MMI 60 mg/d(最大120 mg/d)；普萘洛尔60~80 mg每4~6 h，必要时心衰监护下使用。']],
 ['Graves眼病(TAO)分期',['活动性：CAS≥3分(7项)，随访10项CAS≥4分；非活动期CAS<3分。7项包括自发性球后痛、眼球运动痛、眼睑充血、眼睑水肿、结膜充血、结膜水肿、泪阜肿胀。','严重度(EUGOGO)：轻度(退缩<2 mm、轻度软组织、突出≤上限+3 mm、一过性复视)；中重度(退缩≥2 mm、中重度软组织、突出≥上限+3 mm、间歇/持续复视)；极重度(视神经病变DON或严重暴露性角膜病变)。','NOSPECS 0~6级(软组织/突眼/眼外肌/角膜/视力)每级分0、a、b、c。','轻度活动期可补硒(亚硒酸钠200 μg/d共6个月)；中重度活动期首选静脉糖皮质激素，DON用大剂量冲击并考虑眶减压。','吸烟增加TAO发病和病情并降低疗效，所有TAO患者应戒烟。']],
 ['随访',['131I治疗后1~3个月复查，其后每1~2个月监测至半年，缓解后至少每年1次。','SH年轻患者每6~12个月监测；妊娠期早孕每1~2周、中晚孕每2~4周、达标后每4~6周。','GD患者吸烟增加眼病发病与病情，应戒烟并保持甲状腺功能正常。']]
-],sources:['中国甲状腺功能亢进症和其他原因所致甲状腺毒症诊治指南','甲状腺功能亢进症伴肝功能异常诊断和治疗多学科专家共识（2025年）','中国甲状腺相关眼病诊断和治疗指南（2022年）']},,
+],sources:['中国甲状腺功能亢进症和其他原因所致甲状腺毒症诊治指南','甲状腺功能亢进症伴肝功能异常诊断和治疗多学科专家共识（2025年）','中国甲状腺相关眼病诊断和治疗指南（2022年）']},
 {id:'hypothyroidism',name:'甲状腺功能减退症',status:'已整合',summary:'分原发性/中枢性、临床/亚临床甲减；首选左甲状腺素按年龄与心脏状况分层起始，妊娠和老年为特殊人群，黏液性水肿昏迷为急症。',evidence:'基层合理用药指南与检验共识、甲状腺结节癌指南的TSH抑制目标互补；妊娠目标按相应指南执行。',path:[
 ['诊断与分型',['原发性甲减：TSH升高伴FT4降低；亚临床甲减TSH升高而FT4正常，需结合症状、TPOAb、年龄和妊娠状态决定是否治疗。','中枢性甲减TSH不高或偏低而FT4低，不能用TSH目标调整；甲状腺激素抵抗综合征另论。','病因：自身免疫性最常见(TPOAb阳性)，药物(胺碘酮、锂)、手术/131I后、垂体手术等需询问。']],
 ['左甲状腺素替代',['成人起始25~50 μg/d，每3~7天增加25 μg直至达标；老年人/心脏病者小剂量起始12.5 μg/d，每1~2周增加12.5 μg。','宜晨起空腹(早餐前至少半小时)或睡前，每日1次。监测TSH与FT4，调整期4~6周复查。','妊娠期起始50~100 μg/d并尽快增至治疗剂量；妊娠目标TSH按妊娠特异参考区间。']],
 ['儿童与新生儿',['新生儿10~15 μg·kg⁻¹·d⁻¹；6个月内6~8、6~12月6、1~5岁5、6~12岁4、>12岁2 μg·kg⁻¹·d⁻¹。','先天性甲减尽早治疗可避免智力发育损害；确诊后立即启动，定期按生长和甲功调整。']],
 ['急症与安全',['黏液性水肿昏迷：低体温、意识改变、低通气、低钠、心动过缓时急诊处理，需替代+支持治疗。','碳酸钙、氢氧化铝、铁剂、消胆胺等影响L-T4吸收，需间隔服用；复查时核对依从性与药物相互作用。']]
-],sources:['甲状腺功能减退症基层合理用药指南','甲状腺疾病常用检验项目的应用专家共识（2025版）','先天性甲状腺功能减退症诊治指南']},,
+],sources:['甲状腺功能减退症基层合理用药指南','甲状腺疾病常用检验项目的应用专家共识（2025版）','先天性甲状腺功能减退症诊治指南']},
 {id:'thyroiditis',name:'甲状腺炎',status:'待补充原始指南',summary:'本批新增资料未发现甲状腺炎专项原始指南。',evidence:'为避免无依据扩写，当前仅保留目录入口。',path:[],sources:[]},
 {id:'hyponatremia',name:'低钠血症和不适当抗利尿综合征',status:'已整合',summary:'血钠<135 mmol/L即低钠血症，是最常见电解质紊乱。从分级(按血钠/渗透压/病程/症状)、容量分型(低/等/高容量)、病因鉴别(含SIAD)，到控速纠钠与ODS预防建立闭环。',evidence:'中华医学会电解质紊乱学组共识采用证据等级与推荐强度(如1b|A)；纠钠速度须按ODS风险分层执行。',path:[
 ['确认低钠并分级',['血清钠<135 mmol/L为低钠血症。按血钠：轻度130~135、中度125~129、重度<125 mmol/L。','按血浆渗透压：低渗性<275、等渗性275~295、高渗性>295 mOsm/kg；按病程：急性<48 h、慢性≥48 h。','按症状：轻(注意力不集中、易怒、性格改变、抑郁)、中(恶心不伴呕吐、意识模糊、头痛)、严重(呕吐、呼吸窘迫或停止、深度嗜睡、癫痫、昏迷，GCS≤8)。']],
@@ -370,7 +386,7 @@ window.DISEASE_DIRECTORY=[
 ['治疗——按严重度分层',['严重症状(呕吐、嗜睡、癫痫、昏迷)：20 min内输3%氯化钠150 mL，20 min后复测可再150 mL，最多重复2次或直至血钠升5 mmol/L/症状改善；之后每小时升幅≤1 mmol/L直至改善或总升10 mmol/L或达130 mmol/L。','中度症状：第1个24 h升幅≤10 mmol/L，此后每24 h≤8 mmol/L。','无严重症状急性低钠：4 h后复查，按病因处理。']],
 ['慢性和ODS风险控制',['ODS高危者(慢性低钠、血钠<120、酒精/营养不良/肝病/低钾等)：24 h升幅≤4~6 mmol/L；一般风险24 h≤10 mmol/L、48 h≤18 mmol/L。','纠正过快时停现有治疗，补水3 mL/kg/h，必要时去氨加压素每8 h 2~4 μg肠道外给药，酌用糖皮质激素。','输3%氯化钠至少每4 h复查血钠；症状改善停高渗盐水后6、12、24 h复查。']],
 ['病因治疗',['低容量性：静脉0.9%氯化钠恢复血容量。','等容量/高容量性：先治原发病，限液每日≤1 L且低于24 h尿量；SIAD中重度限液不足时可考虑托伐普坦，从小剂量起始、起始24~48 h每6~8 h监测血钠，渴感减退或水摄入困难立即停药。','地美环素、锂剂因肾毒性和光敏感不推荐使用。']]
-],sources:['低钠血症的中国专家共识','中国老年2型糖尿病防治临床指南（2026年版，涉老年低钠评估）']},,
+],sources:['低钠血症的中国专家共识','中国老年2型糖尿病防治临床指南（2026年版，涉老年低钠评估）']},
 {id:'diabetes-insipidus',name:'尿崩症',status:'待补充原始指南',summary:'本批新增资料未发现尿崩症专项原始指南。',evidence:'暂不补写去氨加压素剂量和水剥夺试验流程。',path:[],sources:[]},
 {id:'primary-hyperpara',name:'原发性甲状旁腺功能亢进症',status:'待补充原始指南',summary:'本批新增资料未发现原发性甲旁亢专项原始指南。',evidence:'暂不扩写手术阈值和药物剂量。',path:[],sources:[]},
 {id:'primary-aldosteronism',name:'原发性醛固酮增多症',status:'已整合',summary:'原醛症是最常见继发性高血压。从筛查指征、ARR切点与干扰因素、4种确诊试验、6型病因分型、肾上腺CT与AVS，到单侧手术/双侧药物治疗和术后评估建立闭环。',evidence:'2024中华医学会共识采用推荐/建议(1/2)与证据质量(●●●●)分级；分型共识(2026)与AVS共识作为补充。',path:[
@@ -2639,6 +2655,321 @@ window.GUIDELINE_COMPARISONS = [
 
 </script>
 <script>
+/* 主诉入口：从患者主诉进入鉴别诊断与指南路径，全部依据指南原文。 */
+window.SYMPTOM_DIRECTORY=[
+{
+id:'palpitation-weightloss',group:'心血管与代谢',priority:1,title:'心悸 + 消瘦',
+trigger:'心悸、怕热、多汗、体重下降、手抖，或伴大便次数增多。',
+summary:'先排除甲状腺毒症(尤其Graves病)，同时考虑低血糖、嗜铬细胞瘤等。',
+differential:[
+['甲状腺功能亢进症','心悸+消瘦+怕热多汗+手抖为典型甲亢表现。','查TSH、FT4、FT3；TSH降低+FT4/FT3升高支持甲亢，TRAb阳性支持Graves病。','中国甲状腺功能亢进症诊治指南'],
+['低血糖(交感兴奋)','心悸+出汗+震颤，多在餐前或运动后，伴血糖低。','查发作时血糖；<3.9 mmol/L伴交感症状支持低血糖。','ADA低血糖章节'],
+['嗜铬细胞瘤/副神经节瘤','阵发性心悸+头痛+大汗+血压骤升。','血浆游离或24h尿甲氧基肾上腺素。','PPGL诊疗共识'],
+['心律失常(房颤等)','心悸+脉搏不规则，老年甲亢可伴房颤。','心电图/动态心电图；同时评估甲功。','甲亢指南、心血管主题']
+],
+guides:['hyperthyroidism','ppgl','hypoglycemia'],
+source:'甲状腺功能亢进症诊治指南；ADA；PPGL共识',evidence:'甲亢诊治指南TSH/FT4/TRAb；PPGL甲氧基肾上腺素；ADA低血糖'
+},
+{
+id:'polyuria-polydipsia',group:'糖代谢',priority:2,title:'多饮 + 多尿',
+trigger:'口渴多饮、夜尿增多、体重下降，或伴乏力。',
+summary:'首先区分糖尿病、尿崩症、原发性烦渴；查血糖和尿比重是关键。',
+differential:[
+['糖尿病(1型/2型/LADA)','多饮多尿+体重下降+血糖升高。','查空腹血糖/HbA1c/随机血糖；酮症提示1型可能。','ADA诊断标准'],
+['尿崩症(中枢性/肾性)','多尿+低比重尿(<1.005)+烦渴，禁水试验尿量不减少。','尿比重、血/尿渗透压、禁水试验；中枢性者MRI查垂体。','尿崩症相关指南'],
+['原发性烦渴/精神性多饮','多尿但禁水试验正常，血钠可低。','排除后诊断；心理评估。','尿崩症鉴别'],
+['高钙血症','多尿+烦渴+便秘+乏力。','查血钙、PTH；高钙可致肾性尿崩。','高钙处理指南']
+],
+guides:['diabetes','diabetes-insipidus','primary-hyperpara'],
+source:'ADA诊断标准；尿崩症鉴别；高钙处理',evidence:'ADA诊断标准；尿崩症禁水试验；高钙处理'
+},
+{
+id:'bone-pain-fracture',group:'骨与矿物质',priority:3,title:'骨痛 / 脆性骨折',
+trigger:'腰背痛、身高变矮、轻微外伤即骨折，或骨密度下降。',
+summary:'骨质疏松为最常见原因，但需排查继发因素(甲旁亢、库欣、多发性骨髓瘤等)。',
+differential:[
+['骨质疏松症','绝经后/老年、脆性骨折、DXA T值≤-2.5。','DXA、椎体影像；评估继发原因和维生素D。','骨质疏松诊疗指南'],
+['原发性甲状旁腺功能亢进症','高钙+高PTH+骨量低，可有肾结石。','血钙、PTH、尿钙；定位(超声/MIBI)。','甲旁亢诊疗'],
+['库欣综合征','骨量低+向心性肥胖+紫纹+易瘀斑。','1mg过夜DST、24h UFC、午夜唾液皮质醇。','库欣指南'],
+['多发性骨髓瘤','骨痛+贫血+肾功能异常+球蛋白升高。','血/尿蛋白电泳、免疫固定电泳。','相关血液病指南']
+],
+guides:['osteoporosis','primary-hyperpara','cushing'],
+source:'骨质疏松诊疗指南；甲旁亢；库欣；骨髓瘤',evidence:'骨质疏松DXA T值；甲旁亢PTH；库欣DST；骨髓瘤电泳'
+},
+{
+id:'hypertension-hypokalemia',group:'肾上腺与高血压',priority:4,title:'高血压 + 低钾',
+trigger:'高血压伴自发性低钾，或难治性高血压、早发高血压。',
+summary:'原醛症(醛固酮瘤/特醛症)是核心考虑，同时排查库欣、Liddle综合征等。',
+differential:[
+['原发性醛固酮增多症','高血压+低钾+醛固酮高/肾素低(ARR高)。','纠正低钾后测醛固酮+肾素(DRC)算ARR；确诊试验；CT/AVS分型。','原醛共识'],
+['库欣综合征','高血压+低钾+向心性肥胖+紫纹。','过夜DST、UFC、午夜唾液皮质醇。','库欣指南'],
+['Liddle综合征','高血压+低钾+低醛固酮+低肾素(与醛固酮瘤相反)。','醛固酮/肾素低支持；家族史。','继发性高血压鉴别'],
+['嗜铬细胞瘤','阵发性高血压+低钾+心悸大汗。','甲氧基肾上腺素类。','PPGL共识']
+],
+guides:['primary-aldosteronism','cushing','ppgl'],
+source:'原醛共识；库欣指南；PPGL共识；继发性高血压筛查',evidence:'原醛ARR切点与确诊试验；库欣DST；PPGL甲氧基肾上腺素'
+},
+{
+id:'fatigue-weightgain',group:'代谢与甲状腺',priority:5,title:'乏力 + 体重增加',
+trigger:'乏力、畏寒、体重增加、便秘、皮肤干燥、反应迟钝。',
+summary:'甲状腺功能减退症为最常见内分泌病因，需与肥胖、抑郁等鉴别。',
+differential:[
+['甲状腺功能减退症','乏力+畏寒+体重增+便秘+皮肤干+TSH升高。','查TSH、FT4；TPOAb评估自身免疫病因。','甲减基层指南'],
+['肥胖/代谢综合征','体重增加+腹型肥胖，甲功正常。','BMI、腰围、血糖血脂。','成人体重管理指南'],
+['库欣综合征','体重增+向心性肥胖+紫纹。','过夜DST等。','库欣指南'],
+['抑郁/慢性疲劳','乏力+情绪低落，内分泌检查正常。','甲功正常后心理评估。','鉴别诊断']
+],
+guides:['hypothyroidism','obesity','cushing'],
+source:'甲减基层指南；肥胖指南；库欣指南',evidence:'甲减TSH/FT4/TPOAb；肥胖BMI；库欣DST'
+},
+{
+id:'hypercalcemia',group:'骨与矿物质',priority:6,title:'血钙升高',
+trigger:'无症状体检发现，或伴便秘、多尿、肾结石、骨痛、乏力。',
+summary:'原发性甲旁亢最常见，但需排查恶性肿瘤、维生素D中毒等。',
+differential:[
+['原发性甲状旁腺功能亢进症','高钙+高PTH+高尿钙，最常见。','血钙、PTH、25OHD、尿钙；超声/MIBI定位。','甲旁亢诊疗'],
+['恶性肿瘤相关高钙','高钙+PTH低，伴肿瘤病史或体重下降。','查PTHrP、肿瘤筛查。','高钙危象处理'],
+['维生素D中毒','高钙+高25OHD，大量补D史。','查25OHD。','维生素D共识'],
+['家族性低尿钙性高钙血症(FHH)','高钙+高PTH但尿钙低。','尿钙/肌酐比；CASR基因检测。','甲旁亢鉴别']
+],
+guides:['primary-hyperpara','osteoporosis'],
+source:'甲旁亢诊疗；高钙处理；维生素D共识',evidence:'甲旁亢PTH/尿钙；高钙危象处理；维生素D'
+},
+{
+id:'hirsutism-menstrual',group:'性腺与生殖',priority:7,title:'多毛 / 月经紊乱',
+trigger:'多毛、痤疮、月经稀发、肥胖，育龄女性。',
+summary:'多囊卵巢综合征最常见，需排查库欣、先天性肾上腺增生、泌乳素瘤等。',
+differential:[
+['多囊卵巢综合征(PCOS)','月经稀发+高雄激素+卵巢多囊样改变，常伴肥胖。','性激素、AMH、超声；排除其他高雄激素原因。','PCOS共识'],
+['库欣综合征','多毛+向心性肥胖+紫纹。','过夜DST等。','库欣指南'],
+['先天性肾上腺增生(CAH)','青春期前发病，高雄激素+可伴高血压。','17-OHP、ACTH、肾上腺CT。','21-OHD指南'],
+['高泌乳素血症','月经紊乱+溢乳+PRL升高。','查PRL、垂体MRI。','泌乳素瘤共识']
+],
+guides:['pcos-androgen','cushing','pituitary-tumor'],
+source:'PCOS共识；库欣；21-OHD；泌乳素瘤',evidence:'PCOS诊断标准；库欣DST；21-OHD 17-OHP；泌乳素瘤PRL'
+},
+{
+id:'pituitary-headache-vision',group:'垂体',priority:8,title:'头痛 / 视力视野障碍',
+trigger:'头痛、视力下降、视野缺损，或伴内分泌症状。',
+summary:'垂体瘤(尤其大腺瘤)压迫视交叉可致双颞侧偏盲，需急诊评估。',
+differential:[
+['垂体大腺瘤压迫','头痛+双颞侧偏盲+可伴内分泌异常。','垂体MRI；快速视力恶化需急诊。','垂体瘤指南'],
+['泌乳素瘤(大)','头痛+视力障碍+PRL显著升高+性腺功能减退。','PRL、垂体MRI；多巴胺激动剂一线。','泌乳素瘤共识'],
+['颅咽管瘤/其他鞍区病变','头痛+视力障碍+可伴尿崩。','垂体MRI+内分泌全轴评估。','鞍区病变鉴别'],
+['垂体卒中','突发头痛+视力下降+恶心，垂体瘤基础上。','急诊MRI；需激素替代评估。','垂体卒中处理']
+],
+guides:['pituitary-tumor'],
+source:'垂体瘤指南；泌乳素瘤共识；垂体卒中',evidence:'垂体瘤MRI；泌乳素瘤PRL；垂体卒中'
+},
+{
+id:'hypoglycemia-episodes',group:'糖代谢',priority:9,title:'反复低血糖发作',
+trigger:'发作性出汗、心悸、饥饿、意识模糊，血糖低，进食后缓解(Whipple三联征)。',
+summary:'糖尿病用药(胰岛素/促泌剂)最常见，但需排查胰岛素瘤等内源性高胰岛素血症。',
+differential:[
+['药物相关低血糖','用胰岛素/磺脲类/格列奈类，发作与用药相关。','调整用药、查血糖；记录诱因。','ADA低血糖'],
+['胰岛素瘤','空腹低血糖+内源性高胰岛素(高C肽+高胰岛素)。','72h饥饿试验、胰岛素/C肽/血糖。','低血糖鉴别'],
+['肝肾功能不全','清除胰岛素能力下降，用药后低血糖。','查肝肾功能。','低血糖管理'],
+['肾上腺皮质功能不全','低血糖+乏力+低血压+皮肤色素沉着。','晨皮质醇、ACTH。','肾上腺功能不全指南']
+],
+guides:['hypoglycemia','adrenal-other'],
+source:'ADA低血糖；胰岛素瘤鉴别；肾上腺功能不全',evidence:'ADA低血糖Whipple三联征；胰岛素瘤72h饥饿试验；肾上腺功能不全'
+},
+{
+id:'edema-osteoporosis',group:'骨与矿物质',priority:10,title:'身高变矮 / 驼背',
+trigger:'中老年人身高缩短>3-4cm、驼背、腰背痛，提示椎体压缩骨折。',
+summary:'骨质疏松性椎体骨折是主要考虑，需评估骨密度和骨折风险。',
+differential:[
+['骨质疏松性椎体骨折','身高变矮+驼背+腰背痛，DXA低骨量。','脊柱影像(压缩骨折)、DXA、FRAX。','骨质疏松指南'],
+['多发性骨髓瘤','骨痛+贫血+高钙+肾功能异常。','蛋白电泳、免疫固定电泳。','骨髓瘤'],
+['转移性骨肿瘤','骨痛+既往肿瘤史，可伴高钙。','骨扫描/影像、肿瘤标志物。','肿瘤相关'],
+['Paget骨病','骨痛+碱性磷酸酶升高+影像异常。','ALP、骨影像。','Paget病']
+],
+guides:['osteoporosis'],
+source:'骨质疏松诊疗指南；椎体骨折管理',evidence:'骨质疏松椎体骨折；骨髓瘤电泳'
+}
+,
+{
+id:'joint-swelling-pain',group:'骨与矿物质',priority:11,title:'关节红肿痛(急性)',
+trigger:'第一跖趾关节或大关节突发红肿热痛，24h内达峰，或反复发作。',
+summary:'痛风急性发作是最典型场景，但需与化脓性关节炎、假性痛风鉴别。',
+differential:[
+['痛风急性发作','足第一跖趾关节最常受累、剧痛红肿、血尿酸可正常。','关节液偏振光镜检见MSU结晶为金标准；血尿酸、超声双轨征/双能CT。','痛风诊疗规范'],
+['化脓性关节炎','单关节红肿热痛+发热+白细胞升高，关节液混浊。','关节液培养、革兰染色、细胞计数；需急诊排感染。','感染性关节炎'],
+['焦磷酸钙沉积病(假性痛风)','膝/腕关节急性发作，关节液见CPPD结晶。','关节液偏振光镜检(弱正性双折光)、X线软骨钙化。','晶体性关节炎鉴别'],
+['反应性关节炎/银屑病关节炎','非对称下肢关节肿痛，可有尿道炎/皮疹。','病史、关节外表现、影像。','炎性关节病']
+],
+guides:['gout'],
+source:'痛风诊疗规范；晶体性关节炎鉴别',evidence:'痛风MSU结晶金标准；化脓性关节炎培养'
+},
+{
+id:'neck-mass-thyroid',group:'甲状腺',priority:12,title:'颈部肿块 / 甲状腺肿',
+trigger:'颈部前方肿块、吞咽异物感、颈围增大，或体检发现甲状腺结节。',
+summary:'先分甲状腺结节良恶性风险(C-TIRADS)，同时评估甲功和压迫症状。',
+differential:[
+['甲状腺结节','颈部肿块随吞咽上下移动，超声评估。','TSH、甲状腺超声C-TIRADS分层、必要时FNA。','甲状腺结节癌指南'],
+['甲状腺肿(单纯性/结节性)','弥漫或结节性肿大，甲功可正常。','TSH/FT4、超声、必要时摄碘率。','甲状腺疾病'],
+['甲状腺癌(可疑)','结节硬、固定、声嘶、淋巴结肿大，超声恶性征象。','FNA/Bethesda、颈部淋巴结超声。','甲状腺结节癌指南'],
+['甲状腺炎','颈前区疼痛+甲功异常(甲亢期/甲减期)。','甲功、ESR、TPOAb/TgAb、甲状腺摄碘率。','甲状腺炎']
+],
+guides:['thyroid-nodule','hyperthyroidism','hypothyroidism'],
+source:'甲状腺结节癌指南；甲状腺炎鉴别',evidence:'甲状腺结节癌指南C-TIRADS与FNA；甲功'
+},
+{
+id:'vision-blurred',group:'代谢与甲状腺',priority:13,title:'视物模糊 / 视力下降',
+trigger:'视物模糊、眼前黑影、视力下降，糖尿病患者或甲亢患者出现。',
+summary:'糖尿病视网膜病变和甲状腺相关眼病(DON)是内分泌两大致盲原因，需与白内障等鉴别。',
+differential:[
+['糖尿病视网膜病变','糖尿病病程长，视物模糊、飞蚊症，眼底出血渗出。','散瞳眼底检查、OCT、荧光造影；按严重度分级。','糖尿病视网膜病变指南'],
+['糖尿病黄斑水肿(DME)','中心视力下降、视物变形。','OCT评估黄斑中心受累。','DME管理'],
+['甲状腺相关眼病视神经病变(DON)','甲亢/甲减患者，视力下降+色觉异常+RAPD。','CAS评分、眼眶MRI、视野、视觉诱发电位；需紧急处理。','甲亢眼病指南'],
+['白内障/青光眼','渐进性视力下降，糖尿病患者更早发生。','裂隙灯、眼压、眼底。','眼科常规']
+],
+guides:['diabetes','hyperthyroidism'],
+source:'糖尿病视网膜病变指南；甲亢眼病指南',evidence:'糖网分期筛查；甲亢眼病DON评估'
+},
+{
+id:'foot-ulcer',group:'代谢与甲状腺',priority:14,title:'足部溃疡 / 足痛',
+trigger:'糖尿病患者足部破溃、经久不愈、足趾发黑、行走痛，或足部红热肿。',
+summary:'糖尿病足需同时评估神经、缺血、感染三方面；警惕Charcot神经骨关节病。',
+differential:[
+['糖尿病足溃疡/感染','糖尿病患者足部溃疡，可伴红肿热痛或探针触骨。','Wagner/IWGDF分级、神经(10g单丝)、ABI/TBI、感染评估。','糖尿病足指南'],
+['糖尿病周围动脉病变(PAD)','间歇性跛行、足凉、趾压降低、ABI<0.9。','ABI、TBI、CTA/MRA血管评估。','糖尿病足缺血'],
+['Charcot神经骨关节病','足部红热肿但不痛，神经病变明显，X线骨破坏。','X线/MRI、立即减负固定，避免负重。','Charcot病'],
+['蜂窝织炎/骨髓炎','红肿热痛+发热，探针触骨/ESR升高提示骨髓炎。','深部培养、骨X线/MRI、ESR/CRP。','糖尿病足感染']
+],
+guides:['diabetes'],
+source:'糖尿病足诊治指南；糖尿病足感染共识',evidence:'IWGDF足感染分级；ABI/TBI；Charcot影像'
+},
+{
+id:'galactorrhea-amenorrhea',group:'性腺与生殖',priority:15,title:'溢乳 / 闭经',
+trigger:'非哺乳期溢乳、月经稀发或闭经、不孕、性欲减退。',
+summary:'高泌乳素血症(泌乳素瘤最常见)为核心，需排除药物、甲状腺功能减退等。',
+differential:[
+['高泌乳素血症/泌乳素瘤','溢乳+闭经+PRL升高；大腺瘤可压迫视交叉。','PRL(需稀释防钩状效应)、垂体MRI；多巴胺激动剂。','泌乳素瘤共识'],
+['甲状腺功能减退','溢乳+乏力+畏寒+TSH升高(TRH升高刺激PRL)。','TSH/FT4、PRL。','甲减指南'],
+['药物性高泌乳素','服用抗精神病药/胃动力药/雌激素等。','停药/换药评估、PRL。','高泌乳素药物'],
+['多囊卵巢综合征','闭经/稀发+高雄激素，PRL正常。','性激素、超声。','PCOS共识']
+],
+guides:['pituitary-tumor','hypothyroidism'],
+source:'泌乳素瘤共识；甲减指南；PCOS共识',evidence:'泌乳素瘤PRL与MRI；甲减TSH；PCOS'
+},
+{
+id:'hypokalemia',group:'电解质',priority:16,title:'低钾血症',trigger:'血钾<3.5 mmol/L，或伴乏力、心律失常、肌无力、多尿。',summary:'低钾需评估摄入/丢失/分布，排查利尿剂、原醛、库欣、甲亢周期性麻痹等内分泌病因。',differential:[['利尿剂/胃肠道丢失','噻嗪/袢利尿剂、腹泻、呕吐、泻药。','停药/补钾、查尿钾、血镁。','电解质管理'],['原发性醛固酮增多症','高血压+低钾+醛固酮高/肾素低。','纠正低钾后测ARR，确诊试验。','原醛共识'],['库欣综合征','高血压+低钾+向心性肥胖。','过夜DST、UFC。','库欣指南'],['甲亢周期性麻痹','低钾+肌无力，亚洲男性甲亢患者。','甲功、血钾。','甲亢指南']],guides:['primary-aldosteronism','cushing','hyperthyroidism'],source:'原醛共识；库欣指南；甲亢指南',evidence:'低钾鉴别'},
+{
+id:'gynecomastia',group:'性腺与生殖',priority:17,title:'男性乳房发育',trigger:'男性单侧/双侧乳房增大、胀痛，或乳晕下盘状肿块。',summary:'男性乳房发育需鉴别生理性、药物性、性腺功能减退、肝硬化、肿瘤等。',differential:[['生理性/老年性','青春期或老年，睾酮/雌二醇比例变化。','观察、查性激素。','乳房发育指南'],['药物性','螺内酯、抗雄激素、阿片、部分抗抑郁药等。','停用/换药评估。','乳房发育指南'],['性腺功能减退','乳房发育+性欲减退+睾酮低+FSH/LH升高。','睾酮、FSH/LH、泌乳素。','性腺功能减退'],['其他病因','肝硬化、甲亢、泌乳素瘤、睾丸肿瘤。','肝功、甲功、PRL、睾酮、HCG。','乳房发育指南']],guides:['gynecomastia-hypogonadism','pituitary-tumor'],source:'SIAMS男性乳房发育指南',evidence:'乳房发育病因鉴别'},
+{
+id:'edema',group:'代谢与甲状腺',priority:18,title:'下肢水肿 / 面部浮肿',trigger:'下肢/眼睑水肿、体重增加、乏力、怕冷。',summary:'水肿需排查甲减(黏液性水肿)、肾病、心衰、低蛋白等内分泌与非内分泌病因。',differential:[['甲状腺功能减退症','水肿+怕冷+乏力+便秘+TSH升高。','甲功、TPOAb。','甲减指南'],['肾病综合征/糖尿病肾病','水肿+蛋白尿+低蛋白。','UACR、24h尿蛋白、肾功能。','DKD共识'],['心衰','水肿+呼吸困难+颈静脉怒张。','BNP/NT-proBNP、超声。','心衰'],['低蛋白/肝病','水肿+腹水+肝功异常。','白蛋白、肝功。','肝病']],guides:['hypothyroidism','diabetes'],source:'甲减指南；DKD共识',evidence:'水肿鉴别'},
+{
+id:'hypernatremia',group:'电解质',priority:19,title:'高钠血症 / 烦渴多尿',trigger:'血钠>145 mmol/L，或烦渴、多尿、意识改变。',summary:'高钠多由水丢失/摄入不足引起，需排查尿崩症(中枢性/肾性)、原发性烦渴。',differential:[['尿崩症(中枢性)','多尿+低比重尿+高钠，禁水试验尿量不减少，去氨加压素有效。','禁水试验、尿比重、垂体MRI。','尿崩症'],['肾性尿崩症','多尿+对去氨加压素无反应。','病因(锂剂、高钙、低钾)。','尿崩症'],['水摄入不足/丢失','老年、卧床、发热、腹泻，饮水不足。','补液、评估容量。','电解质'],['原发性烦渴','多饮多尿，禁水试验正常。','精神评估。','尿崩症鉴别']],guides:['diabetes-insipidus'],source:'尿崩症诊治；电解质管理',evidence:'高钠与尿崩'},
+{
+id:'lipid-abnormal',group:'代谢与甲状腺',priority:20,title:'血脂异常(体检发现)',trigger:'体检LDL-C升高、TG升高，或伴黄色瘤、早发冠心病家族史。',summary:'血脂异常需评估原发性/继发性(甲减、肾病、库欣、糖尿病)，按心血管风险分层。',differential:[['原发性高脂血症','家族史、早发ASCVD、黄色瘤。','血脂全套、Lp(a)、家族筛查。','血脂指南'],['甲状腺功能减退','血脂升高+甲减表现+TSH升高。','甲功；甲减致继发高脂。','甲减指南'],['糖尿病/代谢综合征','血脂异常+高血糖+腹型肥胖。','血糖、HbA1c。','糖尿病血脂共识'],['肾病/库欣','肾病综合征、库欣综合征可致血脂升高。','尿蛋白、皮质醇。','血脂鉴别']],guides:['dyslipidemia','hypothyroidism','diabetes'],source:'糖尿病患者血脂管理共识2024；SIE血脂声明',evidence:'血脂继发因素'},
+{
+id:'abnormal-tft',group:'甲状腺',priority:21,title:'体检甲功异常(无症状)',trigger:'体检TSH/FT4异常但无症状，或亚临床甲亢/甲减。',summary:'无症状甲功异常需判断是亚临床甲亢/甲减，结合年龄、妊娠、抗体决定处理。',differential:[['亚临床甲减','TSH升高+FT4正常，TPOAb阳性提示自身免疫。','复查甲功、TPOAb；妊娠/高TSH者考虑治疗。','甲减指南'],['亚临床甲亢','TSH降低+FT4正常。','复查、TRAb、超声；老年/房颤评估治疗。','甲亢指南'],['检验干扰/一过性','药物(胺碘酮、锂)、近期甲炎恢复期。','复查、停药评估。','甲功检验共识'],['妊娠特异','妊娠期TSH参考区间不同。','妊娠特异区间、产科协同。','甲减妊娠']],guides:['hypothyroidism','hyperthyroidism'],source:'甲减指南；甲亢指南；甲功检验共识',evidence:'亚临床甲功处理'},
+{
+id:'incidental-adrenal',group:'肾上腺',priority:22,title:'肾上腺意外瘤(影像发现)',trigger:'CT/MRI偶然发现肾上腺结节，无相关症状。',summary:'肾上腺意外瘤需激素功能评估(皮质醇/儿茶酚胺/醛固酮)和影像恶性风险评估。',differential:[['无功能腺瘤','HU≤10，激素评估正常，<4cm。','影像+激素评估；随访。','肾上腺意外瘤共识'],['自主皮质醇分泌','过夜DST抑制异常，库欣样表现。','过夜DST、UFC、ACTH。','肾上腺意外瘤共识'],['嗜铬细胞瘤','甲氧基肾上腺素升高，可阵发高血压。','血/尿甲氧基肾上腺素。','PPGL共识'],['醛固酮瘤','高血压+低钾+ARR高。','ARR、确诊试验。','原醛共识']],guides:['adrenal-incidentaloma','primary-aldosteronism','ppgl','cushing'],source:'老年人肾上腺意外瘤专家意见2025',evidence:'意外瘤激素评估'},
+{
+id:'incidental-thyroid',group:'甲状腺',priority:23,title:'甲状腺结节(体检发现)',trigger:'体检/超声偶然发现甲状腺结节，无症状。',summary:'甲状腺结节评估分两步：甲功+超声风险分层(C-TIRADS)，按大小决定FNA。',differential:[['良性结节','C-TIRADS 2-3类，低恶性风险。','随访6-12月超声。','甲状腺结节癌指南'],['可疑结节','C-TIRADS 4A-5类，按大小FNA。','4A≥1.5cm、4B-5≥1cm FNA。','甲状腺结节癌指南'],['甲状腺癌','超声恶性征象、淋巴结转移。','FNA/Bethesda、颈淋巴结超声。','甲状腺结节癌指南'],['高功能结节','TSH降低+热结节。','核素显像；热结节恶性风险低。','甲状腺结节癌指南']],guides:['thyroid-nodule'],source:'甲状腺结节和分化型甲状腺癌诊治指南(第二版)',evidence:'C-TIRADS与FNA'},
+{
+id:'hypercalcemia-symptom',group:'骨与矿物质',priority:24,title:'高钙相关症状(便秘/多尿/乏力)',trigger:'便秘、多尿、口渴、乏力、肾结石，或血钙升高。',summary:'高钙血症最常见原因为甲旁亢和恶性肿瘤，需按PTH水平鉴别并紧急处理重度高钙。',differential:[['原发性甲旁亢','高钙+高PTH+高尿钙。','血钙、PTH、25OHD、尿钙；定位。','甲旁亢'],['恶性肿瘤高钙','高钙+低PTH，伴肿瘤。','PTHrP、肿瘤筛查。','高钙危象'],['维生素D中毒/结节病','高钙+高25OHD或肉芽肿。','25OHD、ACE、胸片。','高钙鉴别'],['家族性低尿钙高钙(FHH)','高钙+高PTH+低尿钙。','尿钙/肌酐比、CASR基因。','甲旁亢鉴别']],guides:['primary-hyperpara'],source:'甲旁亢诊疗；高钙危象处理',evidence:'高钙鉴别'}
+
+];
+
+/* 研究生30天学习路径：按系统组织，每天主题+病例+指南，完全依据指南原文。 */
+window.LEARNING_PATH=[
+{day:1,group:'糖代谢',title:'糖尿病诊断与分型',focus:'从血糖/HbA1c/OGTT确诊，区分1型/2型/LADA，不凭年龄体型定型',key:'诊断',caseRef:'1型还是2型',guide:'ADA诊断与分型',disease:'diabetes'},
+{day:2,group:'糖代谢',title:'糖尿病前期与预防',focus:'切点、高危人群、强化生活方式减重5-7%、二甲双胍指征',key:'预防',caseRef:'糖尿病前期干预',guide:'ADA预防主题',disease:'prediabetes'},
+{day:3,group:'糖代谢',title:'2型糖尿病选药总原则',focus:'先排主导共病(心衰/ASCVD/CKD/肥胖)，再按降糖效力/低血糖/体重/费用选药',key:'选药',caseRef:'T2D合并心衰',guide:'ADA药物治疗',disease:'diabetes'},
+{day:4,group:'糖代谢',title:'二甲双胍与其他口服药',focus:'二甲双胍一线地位、eGFR<30禁用、联合策略(DPP-4/SGLT2/磺脲)',key:'口服药',caseRef:'二甲双胍禁忌',guide:'基层糖尿病指南',disease:'diabetes'},
+{day:5,group:'糖代谢',title:'SGLT2i与GLP-1RA心肾获益',focus:'合并ASCVD/心衰/CKD时优先结局获益药物，不受A1C限制',key:'心肾保护',caseRef:'SGLT2i心衰',guide:'ADA心血管主题',disease:'diabetes'},
+{day:6,group:'糖代谢',title:'胰岛素起始与调整',focus:'1型持续基础；2型起始0.1-0.2U/kg，防过度基础化',key:'胰岛素',caseRef:'基础胰岛素起始',guide:'ADA胰岛素主题',disease:'diabetes'},
+{day:7,group:'糖代谢',title:'糖尿病急症：DKA/HHS/低血糖',focus:'DKA三要素、补钾优先、HHS诊断、低血糖分级与处理',key:'急症',caseRef:'DKA补钾原则',guide:'高血糖危象共识',disease:'hypoglycemia'},
+{day:8,group:'甲状腺',title:'甲亢：诊断与ATD治疗',focus:'TSH/FT4/TRAb，MMI起始10-30mg，妊娠早期PTU',key:'甲亢',caseRef:'甲亢ATD选择',guide:'甲亢诊治指南',disease:'hyperthyroidism'},
+{day:9,group:'甲状腺',title:'甲状腺危象',focus:'BWPS≥45危象、PTU+β阻滞剂+碘+激素综合治疗',key:'危象',caseRef:'甲状腺危象识别',guide:'甲亢诊治指南',disease:'hyperthyroidism'},
+{day:10,group:'甲状腺',title:'Graves眼病(TAO)',focus:'CAS活动性≥3、EUGOGO严重度、戒烟、糖皮质激素',key:'眼病',caseRef:'TAO活动性评估',guide:'甲亢眼病指南',disease:'hyperthyroidism'},
+{day:11,group:'甲状腺',title:'甲减与左甲状腺素',focus:'TSH+FT4诊断、老年人12.5μg起始、妊娠目标',key:'甲减',caseRef:'甲减起始剂量',guide:'甲减基层指南',disease:'hypothyroidism'},
+{day:12,group:'甲状腺',title:'甲状腺结节与FNA',focus:'C-TIRADS分层、FNA指征、Bethesda细胞学',key:'结节',caseRef:'甲状腺结节FNA',guide:'甲状腺结节癌指南',disease:'thyroid-nodule'},
+{day:13,group:'甲状腺',title:'分化型甲状腺癌管理',focus:'复发风险分层、TSH抑制目标、131I清甲',key:'甲状腺癌',caseRef:'甲状腺癌TSH抑制',guide:'甲状腺结节癌指南',disease:'thyroid-nodule'},
+{day:14,group:'甲状腺',title:'甲状腺功能检验解读',focus:'TSH/FT4组合、亚临床甲亢甲减、检验干扰',key:'检验',caseRef:'亚临床甲亢处理',guide:'甲状腺检验共识',disease:'hyperthyroidism'},
+{day:15,group:'垂体肾上腺',title:'垂体瘤与泌乳素瘤',focus:'PRL升高鉴别、多巴胺激动剂一线、大腺瘤压迫',key:'垂体',caseRef:'泌乳素瘤药物',guide:'泌乳素瘤共识',disease:'pituitary-tumor'},
+{day:16,group:'垂体肾上腺',title:'肢端肥大症与GH',focus:'IGF-1筛查、OGTT抑制试验',key:'GH',caseRef:'肢端肥大症筛查',guide:'垂体瘤指南',disease:'pituitary-tumor'},
+{day:17,group:'垂体肾上腺',title:'库欣综合征',focus:'过夜DST/UFC/唾液皮质醇筛查、ACTH分型',key:'库欣',caseRef:'库欣筛查',guide:'库欣指南',disease:'cushing'},
+{day:18,group:'垂体肾上腺',title:'原发性醛固酮增多症',focus:'筛查人群、ARR切点、确诊试验、AVS分型',key:'原醛',caseRef:'原醛症筛查',guide:'原醛共识',disease:'primary-aldosteronism'},
+{day:19,group:'垂体肾上腺',title:'嗜铬细胞瘤与副神经节瘤',focus:'甲氧基肾上腺素筛查、α阻滞术前准备',key:'PPGL',caseRef:'嗜铬细胞瘤诊断',guide:'PPGL共识',disease:'ppgl'},
+{day:20,group:'垂体肾上腺',title:'肾上腺意外瘤',focus:'HU分流、激素功能评估、手术指征',key:'意外瘤',caseRef:'肾上腺意外瘤评估',guide:'肾上腺意外瘤专家意见',disease:'adrenal-incidentaloma'},
+{day:21,group:'垂体肾上腺',title:'肾上腺皮质功能不全与危象',focus:'晨皮质醇/ACTH、危象立即糖皮质激素',key:'肾上腺',caseRef:'肾上腺危象',guide:'肾上腺功能不全',disease:'adrenal-other'},
+{day:22,group:'骨与代谢',title:'骨质疏松诊断与分层',focus:'DXA T值、FRAX、脆性骨折高危路径',key:'骨质疏松',caseRef:'骨质疏松诊断',guide:'骨质疏松指南',disease:'osteoporosis'},
+{day:23,group:'骨与代谢',title:'骨质疏松治疗',focus:'双膦酸盐/地舒/促骨形成、序贯与复评',key:'骨松治疗',caseRef:'骨质疏松治疗',guide:'骨质疏松指南',disease:'osteoporosis'},
+{day:24,group:'骨与代谢',title:'钙磷代谢与甲状旁腺',focus:'高钙/低钙、甲旁亢/甲旁减、维生素D',key:'钙磷',caseRef:'低钙血症',guide:'甲旁亢/低钙处置',disease:'primary-hyperpara'},
+{day:25,group:'骨与代谢',title:'维生素D',focus:'25OHD切点、补充剂量、与骨健康',key:'VitD',caseRef:'维生素D缺乏',guide:'维生素D共识',disease:'osteoporosis'},
+{day:26,group:'骨与代谢',title:'痛风与高尿酸',focus:'诊断金标准、急性分层、降尿酸达标<360',key:'痛风',caseRef:'痛风急性期选药',guide:'痛风诊疗规范',disease:'gout'},
+{day:27,group:'骨与代谢',title:'电解质紊乱：低钠',focus:'分级、容量分型、纠钠速度防ODS',key:'低钠',caseRef:'低钠血症处理',guide:'低钠共识',disease:'hyponatremia'},
+{day:28,group:'骨与代谢',title:'电解质紊乱：钾',focus:'高钾急症、低钾处理与诱因',key:'钾',caseRef:'高钾处理',guide:'电解质管理',disease:'hypoglycemia'},
+{day:29,group:'综合',title:'内分泌综合征与遗传',focus:'MEN-1/MEN-2识别、多腺体受累筛查',key:'综合征',caseRef:'MEN-1 筛查',guide:'AACE MEN-1共识',disease:'men1'},
+{day:30,group:'综合',title:'综合复习与病例推演',focus:'随机病例推演、查漏补缺、回原文核对',key:'复习',caseRef:'病例推演',guide:'全站指南',disease:'diabetes'}
+];
+
+</script>
+<script>
+/* 随访/复诊/共病管理场景：长期随访、复诊调药、合并症管理，全部依据指南原文。 */
+window.FOLLOWUP_DIRECTORY=[
+{id:'fu-diabetes-annual',group:'糖尿病随访',title:'糖尿病年度复诊',trigger:'已诊断糖尿病，定期复诊评估血糖控制、并发症与心肾风险。',summary:'糖尿病管理是长期闭环：评估血糖达标、低血糖、微血管/大血管并发症、心肾代谢共病和药物安全性。',differential:[['血糖控制评估','A1C、CGM/血糖谱、低血糖事件、治疗负担与依从性。','每3-6个月A1C；稳定者至少每年2次；评估TIR/TBR。','ADA 2026随访'],['并发症筛查','眼底、UACR/eGFR、神经病变、足部风险。','T2D每年；T1D按病程时点。','ADA 11-12章'],['心肾代谢共病','血压、血脂、体重、心衰、ASCVD、CKD、MAFLD。','每年评估综合风险，按共病调整目标。','ADA 9-10章'],['药物安全','降糖/降压/调脂/肾保护药物相互作用、肾功能调整。','核对eGFR、肝功能、低血糖风险药物。','基层糖尿病指南']],guides:['diabetes','obesity','dyslipidemia'],source:'ADA糖尿病诊疗标准2026；中国糖尿病防治指南2024',evidence:'ADA随访建议11.1a、12.3、9.7等多章'},
+{id:'fu-diabetes-ascvd',group:'糖尿病随访',title:'糖尿病合并ASCVD管理',trigger:'糖尿病合并动脉粥样硬化性心血管疾病(心梗、卒中、外周动脉病)，复诊评估。',summary:'合并ASCVD是强化综合管理的核心：控制血糖同时，他汀、降压、抗血小板和心肾保护药物协同。',differential:[['血糖管理','A1C目标个体化，优选有心血管获益的GLP-1 RA/SGLT2i。','GLP-1 RA或SGLT2i有结局证据者优先，不受A1C限制。','ADA 9.7 A'],['血脂强化','LDL-C目标更低，高强度他汀为基础。','ASCVD者LDL-C<1.4 mmol/L(<55 mg/dL)或降低≥50%。','血脂管理共识'],['血压','血压目标<130/80，ACEI/ARB优先。','优选有心血管获益的降压药。','ADA血压主题'],['抗栓与综合','按指征抗血小板、戒烟、体重管理、心衰评估。','评估射血分数、心衰类型。','糖尿病患者CVD共识']],guides:['diabetes','dyslipidemia'],source:'ADA 2026心血管风险主题；糖尿病患者合并心血管疾病诊治共识2026',evidence:'ADA 10.7-10.9'},
+{id:'fu-diabetes-ckd',group:'糖尿病随访',title:'糖尿病肾病(CKD)随访',trigger:'糖尿病合并慢性肾脏病(UACR升高或eGFR下降)，长期随访调整肾保护治疗。',summary:'糖尿病肾病管理以肾心结局为目标：RAS阻断、SGLT2i、非甾体MRA，监测血钾和肾功能。',differential:[['分期评估','按eGFR(G1-G5)和UACR(A1-A3)分期，确认持续性。','3-6个月内2/3标本异常确认。','KDIGO/ADA CKD分期'],['RAS阻断','ACEI/ARB至最大耐受剂量，管理肌酐和钾。','UACR≥300或eGFR<60时强推荐。','ADA 11.4'],['SGLT2i与MRA','eGFR≥20用SGLT2i；白蛋白尿持续可加非甾体MRA。','监测血钾；eGFR<45降糖作用减弱但保护仍在。','ADA 11.7-11.8'],['转诊','eGFR<30、快速下降、难治高钾/高血压转肾内科。','每年复查，急病时提前。','DKD共识']],guides:['diabetes'],source:'ADA 2026慢性肾脏病主题；糖尿病肾脏病早期筛查共识2025',evidence:'ADA 11.1-11.11'},
+{id:'fu-diabetes-hf',group:'糖尿病随访',title:'糖尿病合并心衰管理',trigger:'糖尿病合并射血分数降低/保留的心衰，复诊评估药物与容量。',summary:'心衰改变糖尿病用药优先级：SGLT2i有明确心衰获益，避免加重心衰药物。',differential:[['SGLT2i核心','HFrEF/HFpEF均推荐SGLT2i，降低心衰住院。','达格列净/恩格列净10mg qd，监测容量。','ADA/ESC心衰'],['血糖管理','避免磺脲类等增重/低血糖药物，GLP-1 RA可考虑。','选择低低血糖风险、体重中性的方案。','ADA 9.7'],['容量与电解质','监测容量负荷、血钾、肾功能；利尿剂协同。','心衰恶化时评估住院。','心衰管理'],['合并用药','二甲双胍在稳定心衰可用，心衰急性期慎用。','核对心衰药物(ARNI/β阻滞剂/MRA)相互作用。','心衰指南']],guides:['diabetes'],source:'ADA 2026心血管主题；糖尿病患者合并心血管疾病共识2026',evidence:'ADA 9.7、10.7'},
+{id:'fu-diabetes-mafld',group:'糖尿病随访',title:'糖尿病合并代谢相关脂肪肝(MAFLD)随访',trigger:'糖尿病合并脂肪肝/转氨酶异常，复诊评估肝纤维化进展与代谢管理。',summary:'糖尿病与MAFLD互为因果，需无创纤维化分层并同步管理血糖、体重和肝病。',differential:[['纤维化分层','FIB-4初筛+瞬时弹性成像(LSM)确认分期。','FIB-4<1.3且LSM<8排除；>2.67或LSM>12进展期转肝病科。','MASLD共识'],['血糖与体重','减重>5-10%改善脂肪肝；GLP-1 RA/SGLT2i有获益。','血糖目标个体化，优选减重药物。','T2D合并MASLD共识'],['肝酶与代谢','监测ALT/AST、血脂、血糖；评估肌少症。','肝酶正常不能排除纤维化。','MASLD共识'],['转诊','进展期纤维化/肝硬化转肝病专科，筛查静脉曲张。','LSM≥20和/或血小板≤150查胃镜。','Baveno VII']],guides:['diabetes','obesity'],source:'T2D合并代谢相关脂肪性肝病共识2026；老年人MAFLD共识',evidence:'FIB-4/LSM分层，Baveno VII'},
+{id:'fu-diabetes-retina',group:'糖尿病随访',title:'糖尿病视网膜病变随访',trigger:'糖尿病视网膜病变患者复诊，评估进展与治疗指征。',summary:'糖网是进行性疾病，按严重度分级随访，合并黄斑水肿/增殖期需眼科干预。',differential:[['严重度分级','按NPDR轻/中/重、PDR分期。','重度NPDR每<3月；PDR每月；抗VEGF/激光。','糖网指南'],['黄斑水肿','CI-DME影响中心视力，抗VEGF一线。','OCT评估；血糖血压血脂强化。','DME管理'],['危险因素','血糖、血压、血脂、妊娠、肾病均影响进展。','戒烟、强化综合控制。','ADA 12.3-12.16'],['紧急转诊','突发视力下降、玻璃体出血、新生血管。','立即眼科。','糖网指南']],guides:['diabetes'],source:'我国糖尿病视网膜病变临床诊疗指南2022；ADA 12章',evidence:'糖网分期筛查频率'},
+{id:'fu-diabetes-foot',group:'糖尿病随访',title:'糖尿病足高风险随访',trigger:'糖尿病足溃疡史/神经病变/外周动脉病，规律复诊预防复发。',summary:'糖尿病足高风险者需定期神经、缺血、足部皮肤评估和患者教育。',differential:[['足部风险分级','IWGDF风险0-3级，按级定随访频率。','风险1每6-12月；风险3每1-3月。','IWGDF'],['神经与缺血','10g单丝、踝反射、ABI/TBI评估。','保护性感觉丧失=高危足。','糖尿病足指南'],['皮肤与畸形','胼胝、畸形、Charcot识别；专业修剪。','避免自行处理胼胝。','糖尿病足共识'],['患者教育','每日足部自查、合适鞋袜、及时就医。','感染/缺血信号告知。','糖尿病足防治']],guides:['diabetes'],source:'IWGDF/IDSA糖尿病足指南；中国糖尿病足诊治指南',evidence:'IWGDF风险分层'},
+{id:'fu-diabetes-hypoglycemia',group:'糖尿病随访',title:'反复低血糖/低血糖感知受损随访',trigger:'反复低血糖发作或低血糖感知受损，复诊调整治疗方案。',summary:'低血糖是强化降糖的主要限制，需减量高风险药物、放宽目标并排查诱因。',differential:[['低血糖分级','ADA 1/2/3级，识别无感知低血糖。','反复2级或3级事件触发方案再评估。','ADA 6.15-6.19'],['药物调整','减量/停用磺脲、格列奈、胰岛素；换低风险药。','SGLT2i/GLP-1 RA/DPP-4i低风险。','ADA 6.6-6.8'],['诱因排查','进食、运动、肾功能、饮酒、感染、肝病。','CGM记录趋势，调餐时剂量。','ADA低血糖'],['教育','低血糖处理培训、胰高糖素配备。','高风险者家属培训。','ADA低血糖']],guides:['diabetes','hypoglycemia'],source:'ADA 2026低血糖主题；中国老年糖尿病指南',evidence:'ADA 6.15-6.19'},
+{id:'fu-elderly-diabetes',group:'糖尿病随访',title:'老年糖尿病综合管理随访',trigger:'老年糖尿病，多病共存、多药联用，复诊评估功能、认知与治疗负担。',summary:'老年糖尿病以功能为导向：简化方案、防低血糖、管理肌少症、多重用药和认知功能。',differential:[['健康状态分层','按健康/复杂/极复杂分层设A1C目标。','健康者<7.0-7.5%；复杂<8.0%；极复杂避免依赖A1C。','ADA 13章/中国老年指南'],['多重用药','DPP-4i等多药安全，筛查潜在不适当用药。','减量/停用高风险药，简化方案。','老年多重用药共识'],['功能与肌少','认知、跌倒、营养、肌少症、日常生活能力评估。','抗阻+蛋白支持；防跌倒。','老年糖尿病指南'],['并发症筛查','眼、肾、神经、足按风险随访。','衰弱者优先生活质量。','ADA 13章']],guides:['diabetes','obesity'],source:'中国老年糖尿病诊疗指南2024；ADA 13章',evidence:'健康状态分层目标'},
+{id:'fu-prediabetes',group:'糖尿病随访',title:'糖尿病前期随访与预防',trigger:'糖尿病前期(A1C 5.7-6.4%)定期随访，评估进展与干预效果。',summary:'糖尿病前期是可逆转窗口：强化生活方式，高危者二甲双胍，监测进展。',differential:[['进展监测','至少每年复查是否进展为糖尿病。','接近切点/快速上升时提前。','ADA 3.1'],['生活方式','减重5-7%、每周≥150min运动。','结构化预防项目。','ADA 3.3 A'],['药物预防','高危亚组可讨论二甲双胍。','25-59岁、BMI≥35、FPG≥110、A1C≥6.0、GDM史。','ADA 3.7 A'],['共病管理','同步管理血压、血脂、肥胖、心血管风险。','每年综合评估。','ADA 3章']],guides:['prediabetes','obesity'],source:'ADA 2026预防主题；中国糖尿病前期共识2023',evidence:'ADA 3.1、3.3、3.7'},
+{id:'fu-hypertension-aldosterone',group:'肾上腺随访',title:'原醛症治疗后随访',trigger:'原醛症手术后或药物治疗后，复诊评估血压、血钾与生化缓解。',summary:'原醛症治疗(手术/药物)后需按PASO标准评估临床与生化结局，长期监测。',differential:[['术后评估','术后1-3月及6-12月评估血压、血钾、醛固酮/肾素。','PASO标准：临床/生化完全、部分、未缓解。','原醛共识'],['药物随访','特醛症螺内酯/依普利酮长期监测血钾、肾功能。','螺内酯20-100mg/d，CKD3期慎用4期禁用。','原醛共识'],['生化监测','复查醛固酮、肾素(DRC)、血钾、肾功能。','确认是否需继续MRA。','原醛共识'],['合并症','评估心肾靶器官损害、房颤、糖尿病风险。','原醛患者心肾损害更重。','原醛共识']],guides:['primary-aldosteronism'],source:'原醛诊断治疗专家共识2024；AVS共识',evidence:'PASO标准'},
+{id:'fu-cushing',group:'肾上腺随访',title:'库欣综合征治疗后随访',trigger:'库欣综合征手术/药物/放疗后，复诊评估缓解、复发与合并症。',summary:'库欣治疗后需终身随访：评估HPA轴恢复、复发、心血管代谢后遗症和骨病。',differential:[['缓解评估','术后皮质醇水平、HPA轴恢复情况。','术后低皮质醇者激素替代并减停。','库欣指南'],['复发监测','长期监测皮质醇、症状、影像。','每6-12月临床+生化评估。','库欣指南'],['后遗症管理','心血管、血糖、血压、骨密度、感染、血栓。','治疗高血压/糖尿病/骨质疏松。','库欣指南'],['药物随访','奥唑司他等药物监测皮质醇、血钾、QTc。','>4mg/d防低皮质醇症。','奥唑司他共识']],guides:['cushing'],source:'库欣病诊治专家共识2025；奥唑司他共识',evidence:'HPA轴恢复与复发监测'},
+{id:'fu-thyroid-atd',group:'甲状腺随访',title:'抗甲状腺药物治疗随访',trigger:'甲亢(Graves病)用抗甲状腺药治疗，复诊调整剂量、监测不良反应。',summary:'ATD治疗需规律监测甲功、白细胞、肝功能，按疗程18-24个月减量停药。',differential:[['剂量调整','按甲功调整MMI/PTU，达标后减量维持。','MMI起始10-30mg，维持5mg；18-24个月疗程。','甲亢指南'],['不良反应','粒细胞缺乏、肝损伤、皮疹监测。','发热/咽痛立即停药查血常规；前3月血象、前6月肝功。','甲亢指南'],['缓解评估','TRAb转阴、停药后复发监测。','停药首年每3月甲功，之后每6-12月。','甲亢指南'],['眼病监测','GO风险，131I/手术前评估。','吸烟者戒烟，预防性糖皮质激素评估。','甲亢眼病指南']],guides:['hyperthyroidism'],source:'中国甲亢诊治指南；甲亢伴肝损共识2025',evidence:'ATD疗程18-24个月'},
+{id:'fu-thyroid-lt4',group:'甲状腺随访',title:'甲减左甲状腺素替代随访',trigger:'甲减长期左甲状腺素替代治疗，复诊评估TSH达标与剂量调整。',summary:'L-T4替代以TSH为目标，调整期4-6周复查，稳定后每6-12月，妊娠/老年特殊管理。',differential:[['TSH目标','原发性甲减以TSH达标为目标。','成人通常TSH在参考范围；妊娠按特异区间。','甲减指南'],['剂量调整','老年人/心脏病小剂量起始缓慢加量。','12.5μg起始；妊娠需增加剂量。','甲减基层指南'],['吸收干扰','铁、钙、抑酸药等影响吸收需间隔服用。','晨起空腹服药，间隔4小时。','甲减指南'],['依从与复查','稳定后每6-12月复查TSH/FT4。','妊娠期每4-6周至达标。','甲减指南']],guides:['hypothyroidism'],source:'甲减基层合理用药指南；先天性甲减指南',evidence:'TSH目标与复查频率'},
+{id:'fu-thyroid-cancer',group:'甲状腺随访',title:'分化型甲状腺癌术后随访',trigger:'甲状腺癌术后，复诊监测Tg/TgAb、TSH抑制、复发风险动态评估。',summary:'DTC术后终身随访：动态复发风险分层、TSH抑制目标、Tg监测和影像。',differential:[['动态风险分层','按治疗反应(生化/结构/影像)动态调整。','反应良好者延长复查间隔。','甲状腺癌指南'],['Tg/TgAb监测','术后/清甲后6-8周首次，按风险频率复查。','低-中危反应良好每6-12月，2年后1-2年。','甲状腺癌指南'],['TSH抑制','按风险调整TSH抑制目标。','高危<0.1；中危0.1-0.5；低危0.5-2.0。','甲状腺癌指南'],['影像随访','颈部超声按风险频率。','第1年每3-6月，无瘤后每6-12月。','甲状腺癌指南']],guides:['thyroid-nodule'],source:'甲状腺结节和分化型甲状腺癌诊治指南(第二版)',evidence:'DTC复发风险分层与TSH抑制'},
+{id:'fu-thyroid-nodule',group:'甲状腺随访',title:'甲状腺结节随访',trigger:'甲状腺结节(未手术)定期超声随访，评估大小/特征变化。',summary:'多数良性结节仅需定期超声随访，FNA指征按大小和C-TIRADS变化。',differential:[['超声随访','按C-TIRADS分层和大小定随访频率。','低风险6-12月；体积增大>50%或径线增>20%需评估。','甲状腺结节癌指南'],['FNA指征','结节增大或分类升级时评估FNA。','实性区体积增大>50%或≥2径线增>20%且>0.2cm。','甲状腺结节癌指南'],['甲功监测','结节患者定期TSH。','TSH降低者核素显像。','甲状腺结节癌指南'],['压迫症状','吞咽困难、声嘶、呼吸困难评估。','明显压迫考虑手术。','甲状腺结节癌指南']],guides:['thyroid-nodule'],source:'甲状腺结节和分化型甲状腺癌诊治指南(第二版)',evidence:'结节随访与FNA指征'},
+{id:'fu-osteoporosis',group:'骨代谢随访',title:'骨质疏松治疗随访',trigger:'骨质疏松患者药物治疗后，复诊评估疗效、依从性与药物假期。',summary:'骨质疏松治疗需监测骨密度、骨折风险变化，评估药物安全性(双膦酸盐长期使用)。',differential:[['骨密度复查','治疗后1-2年复查DXA评估疗效。','骨量稳定或改善提示有效。','骨质疏松指南'],['疗效标准','无新发骨折、骨密度稳定/上升。','FRAX风险再评估。','骨质疏松指南'],['药物安全','口服双膦酸盐3-5年复评，评估药物假期。','低-中风险可假期，高风险继续。','骨质疏松指南'],['钙维生素D','维持充足钙和维生素D。','25OHD>20-30 ng/mL。','维生素D共识']],guides:['osteoporosis'],source:'骨质疏松性骨折一级预防指南2026；骨质疏松诊疗',evidence:'双膦酸盐药物假期'},
+{id:'fu-gout',group:'骨代谢随访',title:'痛风降尿酸治疗随访',trigger:'痛风患者降尿酸治疗中，复诊评估血尿酸达标与发作预防。',summary:'痛风长期管理以血尿酸达标为核心，降尿酸启动期需预防发作，监测药物安全。',differential:[['血尿酸目标','长期<360 μmol/L，有痛风石<300。','≥2次达标提示缓解。','痛风诊疗规范'],['发作预防','降尿酸启动3-6个月秋水仙碱预防。','0.5mg 1-2次/日，或NSAIDs/激素替代。','痛风诊疗规范'],['药物调整','按血尿酸滴定别嘌醇/非布司他/苯溴马隆。','别嘌醇HLA-B*5801、非布司他心血管风险。','痛风诊疗规范'],['共病管理','高血压、CKD、心血管、肥胖同步管理。','优选促尿酸排泄降压药。','高尿酸共识']],guides:['gout'],source:'痛风诊疗规范；高血压伴无症状高尿酸共识',evidence:'血尿酸达标与预防'},
+{id:'fu-hyperpara',group:'骨代谢随访',title:'甲状旁腺功能亢进症随访',trigger:'甲旁亢手术或药物治疗后，复诊评估血钙、PTH与骨肾并发症。',summary:'甲旁亢需评估高钙血症控制、肾结石、骨量变化和术后低钙风险。',differential:[['术后评估','术后血钙监测，评估低钙(骨饥饿)风险。','术后血钙、PTH、肾功能。','甲旁亢诊疗'],['药物随访','不能手术者西那卡塞等药物+监测。','按血钙PTH调整。','甲旁亢诊疗'],['并发症','肾结石、骨量、肾功能、消化性溃疡。','每年评估。','甲旁亢诊疗'],['MEN筛查','年轻/多腺体病变者评估MEN-1/2。','PTH+钙磷筛查。','MEN共识']],guides:['primary-hyperpara','men1'],source:'甲旁亢诊疗；MEN-1共识',evidence:'术后血钙与长期监测'},
+{id:'fu-ppgl',group:'肾上腺随访',title:'嗜铬细胞瘤/副神经节瘤随访',trigger:'PPGL治疗后或遗传携带者，长期随访监测复发与转移。',summary:'PPGL术后和遗传携带者需长期生化+影像随访，评估复发/转移和血压。',differential:[['术后随访','术后评估儿茶酚胺、血压、复发。','术后首年6月1次，之后每年。','PPGL指南'],['遗传筛查','所有PPGL遗传检测，携带者规律筛查。','RET/VHL/SDH等基因。','PPGL遗传共识'],['转移监测','转移性PPGL按进展监测影像+生化。','SSTR PET-CT随访。','MPP共识'],['血压管理','α阻滞/血压控制，避免儿茶酚胺危象。','术前/有症状者α阻滞。','PPGL围术期']],guides:['ppgl'],source:'PPGL围术期共识；转移性PPGL共识',evidence:'PPGL术后随访'},
+{id:'fu-pituitary',group:'垂体随访',title:'垂体瘤/泌乳素瘤随访',trigger:'垂体瘤药物或手术后，复诊评估肿瘤大小、激素水平和功能。',summary:'垂体瘤需规律影像+激素评估，多巴胺激动剂减量/停药需符合标准。',differential:[['影像随访','垂体MRI按肿瘤类型和大小复查。','微腺瘤每1-2年；大腺瘤更频繁。','垂体瘤指南'],['激素评估','PRL、GH/IGF-1、ACTH等按肿瘤类型。','泌乳素瘤PRL随访。','泌乳素瘤共识'],['药物调整','多巴胺激动剂达标后减至最小维持量。','治疗>2年满足条件可考虑停药。','泌乳素瘤共识'],['垂体功能','评估全垂体轴(甲减/肾上腺/性腺)。','必要时替代治疗。','垂体功能减退']],guides:['pituitary-tumor','hypopituitarism'],source:'垂体泌乳素腺瘤诊治共识2025；垂体瘤指南',evidence:'垂体瘤随访频率'},
+{id:'fu-obesity',group:'代谢随访',title:'肥胖长期体重管理随访',trigger:'超重/肥胖患者体重管理(生活方式/药物/术后)长期随访，评估减重维持。',summary:'肥胖是慢性病，长期随访核心是减重维持、代谢改善、共病减少和药物/手术安全。',differential:[['减重评估','定期体重、腰围、BMI和代谢指标。','药物3个月复评：非糖>5%、糖>3%有效。','基层肥胖指南'],['药物安全','GLP-1 RA等监测胃肠道、胆囊、心率和停药。','个体化起始和滴定。','减重药物共识'],['代谢共病','血糖、血压、血脂、脂肪肝、OSA改善。','减重5-10%带来代谢获益。','肥胖指南'],['长期维持','行为、营养、运动支持防反弹。','术后/停药后持续管理。','长期体重管理指南']],guides:['obesity'],source:'肥胖患者长期体重管理指南2024；国家基层肥胖指南',evidence:'减重疗效与维持'},
+{id:'fu-dyslipidemia',group:'代谢随访',title:'血脂异常随访',trigger:'血脂异常患者他汀等降脂治疗，复诊评估LDL-C达标与肌病/肝酶安全。',summary:'血脂管理以LDL-C目标为核心，按心血管风险分层，监测肌痛、肝酶和依从性。',differential:[['LDL-C目标','按ASCVD风险分层定目标。','极高危<1.4 mmol/L；高危<1.8；中危<2.6。','血脂指南'],['药物安全','他汀肌痛、肝酶、肌酸激酶监测。','阿托伐/瑞舒伐他汀相互作用核对。','血脂管理共识'],['联合降脂','他汀+依折麦布/PCSK9i未达标时。','依折麦布10mg，PCSK9按方案。','血脂指南'],['继发因素','甲减、肾病、库欣等排查。','同步管理糖尿病。','血脂异常立场声明']],guides:['dyslipidemia','diabetes'],source:'糖尿病患者血脂管理共识2024；SIE血脂立场声明',evidence:'LDL-C分层目标'},
+{id:'fu-gestational',group:'特殊人群随访',title:'妊娠糖尿病产后随访',trigger:'妊娠糖尿病(GDM)产后4-12周及长期随访，评估血糖与远期糖尿病风险。',summary:'GDM产后需重新分型评估，并长期随访，GDM女性远期T2D风险显著升高。',differential:[['产后评估','产后4-12周75g OGTT重新分型。','排除持续糖尿病/糖尿病前期。','ADA 15章'],['哺乳与营养','鼓励母乳喂养，健康饮食。','母乳喂养可能降低远期风险。','GDM母乳共识'],['长期随访','GDM史者每1-3年筛查糖尿病。','终身关注。','ADA 2.3'],['再次妊娠','下次妊娠早期筛查。','计划妊娠前评估。','ADA 15章']],guides:['diabetes'],source:'ADA 2026妊娠主题；妊娠期糖尿病母乳喂养共识',evidence:'GDM产后OGTT'},
+{id:'fu-adrenal-insufficiency',group:'肾上腺随访',title:'肾上腺皮质功能不全随访',trigger:'原发性/继发性肾上腺皮质功能不全，长期糖皮质激素替代，复诊评估替代与应激管理。',summary:'肾上腺功能不全需长期替代治疗，重点在应激剂量、危象预防和替代过量监测。',differential:[['替代评估','氢化可的松/泼尼松剂量、症状、血压电解质。','避免替代不足(乏力/低血压)或过量(库欣样)。','肾上腺功能不全指南'],['应激管理','感染、手术、创伤时应激剂量，危象预案。','发热/呕吐不能口服时注射氢化可的松。','肾上腺危象处置'],['危象预防','患者教育、急救卡、注射用激素配备。','家属培训。','肾上腺危象指南'],['合并评估','骨密度(激素过量)、血糖、感染风险。','长期激素者监测。','肾上腺功能不全']],guides:['adrenal-other'],source:'肾上腺功能不全诊治；肾上腺危象处置',evidence:'替代与应激管理'},
+{id:'fu-gsd-gh',group:'垂体随访',title:'成人生长激素缺乏(GHD)随访',trigger:'GHD替代治疗中，复诊评估IGF-1、体成分、代谢和不良反应。',summary:'GHD替代以IGF-1为目标，监测体成分、血糖、血脂、骨密度和肿瘤风险。',differential:[['IGF-1监测','调整GH剂量使IGF-1达同龄均值±1SD。','每月监测，每1-3月调剂量。','GHD共识'],['体成分','体脂/肌肉量、腰围、骨密度。','每年评估。','GHD共识'],['代谢安全','血糖、血脂、水肿、关节痛、腕管。','不良反应减量或停药。','GHD共识'],['肿瘤监测','治疗前肿瘤风险评估，定期随访。','活动性肿瘤禁用。','GHD共识']],guides:['hypopituitarism'],source:'成人生长激素缺乏症诊治专家共识2025；GHD衰老共识',evidence:'IGF-1目标与监测'},
+{id:'fu-hypopara',group:'骨代谢随访',title:'甲状旁腺功能减退症随访',trigger:'甲旁减(术后/特发性/自身免疫)长期补钙+活性维生素D或PTH替代，复诊评估血钙、尿钙与并发症。',summary:'甲旁减长期管理目标是控制症状、维持安全血钙、避免高尿钙和肾损害，监测补钙和PTH替代安全。',differential:[['血钙管理','校正钙/离子钙在目标范围，避免低钙症状和高钙。','定期复查血钙、磷、镁、肌酐/eGFR、24h尿钙。','甲旁减治疗共识'],['补钙与维生素D','钙剂+活性维生素D(骨化三醇/阿法骨化醇)调整。','骨化三醇>2μg/d或元素钙>2500mg/d提示控制不足。','甲旁减立场声明'],['PTH替代','常规治疗控制不足时可评估PTH替代。','帕洛培特立帕肽18μg/d，滴定期3-14天查钙磷。','甲旁减立场声明'],['并发症监测','肾结石、肾钙质沉着、骨密度、白内障、颅内钙化。','每年eGFR、24h尿钙、肾脏超声。','甲旁减共识']],guides:['hypopara'],source:'2026波兰甲旁减治疗立场声明；甲旁减长期管理',evidence:'PTH替代指征与监测'},
+{id:'fu-thyroiditis',group:'甲状腺随访',title:'甲状腺炎(亚甲炎/桥本)随访',trigger:'亚急性甲状腺炎或桥本甲状腺炎，复诊评估甲功演变、疼痛与替代需求。',summary:'甲状腺炎多为自限或慢性自身免疫过程，需随访甲功演变(甲亢期→甲减期→恢复)和长期替代。',differential:[['亚甲炎演变','颈痛+发热+甲功波动，早期甲亢后甲减。','甲功、ESR、甲状腺摄碘率/超声。','甲状腺炎共识'],['桥本甲减','TPOAb阳性，缓慢进展为甲减。','TSH/FT4、TPOAb；必要时L-T4。','桥本甲减'],['一过性甲功异常','甲亢期不用ATD，仅β阻滞剂对症。','避免误诊为Graves病。','甲亢指南'],['复发监测','亚甲炎可复发，桥本需长期随访甲功。','TSH定期复查。','甲状腺炎']],guides:['thyroiditis','hyperthyroidism','hypothyroidism'],source:'甲状腺炎诊治；甲亢指南(破坏性甲状腺炎)',evidence:'甲状腺炎甲功演变'},
+{id:'fu-hyponatremia',group:'电解质随访',title:'低钠血症病因管理与随访',trigger:'低钠血症纠正后或慢性低钠(SIAD等)，复诊评估血钠稳定性、病因控制与再发预防。',summary:'慢性低钠(SIAD、心衰、肝硬化等)需持续管理诱因，监测血钠、容量和药物(托伐普坦)安全。',differential:[['病因管理','SIAD限液、心衰/肝硬化治原发病、药物调整。','限液≤1L/d，监测尿渗透压/尿钠。','低钠共识'],['血钠监测','慢性低钠定期复查血钠，防再发。','根据病因和稳定性定复查频率。','低钠共识'],['托伐普坦随访','SIAD限液不足时用药，监测血钠、肝功能、渴感。','起始24-48h每6-8h监测，停药指征明确。','低钠共识'],['药物安全','地美环素/锂剂不推荐，注意肾毒性。','避免不适当用药。','低钠共识']],guides:['hyponatremia'],source:'低钠血症中国专家共识',evidence:'慢性低钠管理'},
+{id:'fu-diabetes-insipidus',group:'电解质随访',title:'尿崩症随访',trigger:'中枢性或肾性尿崩，去氨加压素或病因治疗后，复诊评估尿量、电解质与药物安全。',summary:'尿崩症随访核心是控制多尿、维持水电解质平衡、评估病因(中枢性MRI/肾性病因)和药物安全。',differential:[['尿量控制','中枢性尿崩去氨加压素调整，肾性治病因。','监测尿量、尿比重、血钠。','尿崩症诊治'],['电解质监测','防低钠(过量用药)或高钠(水摄入不足)。','定期血钠、渗透压。','尿崩症'],['病因随访','中枢性者MRI随访(肿瘤/浸润)，肾性查病因。','垂体MRI、肾功能。','尿崩症'],['药物安全','去氨加压素过量致水潴留低钠。','按口渴和尿量调整，防水中毒。','尿崩症']],guides:['diabetes-insipidus'],source:'尿崩症诊治；电解质管理',evidence:'尿崩症随访'},
+{id:'fu-adrenal-incidentaloma',group:'肾上腺随访',title:'肾上腺意外瘤随访',trigger:'肾上腺意外瘤(无功能或亚临床功能)定期随访，评估大小变化与功能出现。',summary:'意外瘤随访核心是监测影像大小和激素功能演变，识别新发自主分泌或恶性转化。',differential:[['影像随访','按初始大小和HU特征定随访频率。','良性HU≤10两年内4次；>4cm 6-12月。','意外瘤共识'],['功能随访','每年激素功能评估(过夜DST、儿茶酚胺、ARR)。','亚临床库欣每年评估。','意外瘤共识'],['手术指征','增大>20%且径增≥5mm或新发功能。','评估手术。','意外瘤共识'],['虚弱患者','高龄衰弱者以生活质量为主，避免过度检查。','个体化随访。','意外瘤专家意见']],guides:['adrenal-incidentaloma'],source:'老年人肾上腺意外瘤专家意见2025',evidence:'意外瘤随访频率'},
+{id:'fu-related',group:'综合随访',title:'内分泌交叉/多病共管随访',trigger:'多内分泌疾病或内分泌-其他系统共病(三高共管、代谢综合征、OSA等)，综合随访管理。',summary:'内分泌疾病常多病共存，需综合管理血糖、血压、血脂、体重、睡眠呼吸暂停等，评估药物相互作用和整体风险。',differential:[['三高共管','高血压+糖尿病+血脂异常综合达标。','血压、血糖、血脂定期评估，联合用药。','三高共管共识'],['代谢综合征','腹型肥胖+血压+血糖+血脂+HDL异常。','腰围、五项指标综合评估。','代谢综合征'],['OSA','肥胖者睡眠呼吸暂停，影响血糖血压。','睡眠监测、CPAP评估。','OSA共识'],['多重用药','多病多药，筛查药物相互作用和低血糖/低血压风险。','用药重整。','多重用药共识']],guides:['related','diabetes','obesity','dyslipidemia'],source:'三高共管共识2023；OSA合并代谢综合征共识2022',evidence:'多病共管综合评估'}
+
+];
+</script>
+<script>
+/* 住院-出院-再入院动态路径：严重度动态管理，全部依据指南原文。 */
+window.INPATIENT_DIRECTORY=[
+{id:'in-dka-hhs',group:'糖尿病急症',title:'DKA/HHS 住院-出院-再入院路径',trigger:'糖尿病酮症酸中毒或高血糖高渗状态，评估住院/监护级别与出院时机。',summary:'DKA/HHS按严重度决定监护地点(普通病房/ICU)，恢复标准明确后可过渡皮下胰岛素并出院，警惕再入院。',pathway:[['住院指征','DKA：pH<7.3或HCO₃⁻<18伴酮症；HHS：血糖≥600 mg/dL伴渗透压>300。重度(pH<7.0/意识障碍)入ICU；SGLT2i相关正常血糖DKA也需住院。','2024高血糖危象共识；ADA 2026'],['住院治疗','补液、胰岛素(先补钾K>3.3再启动)、纠正电解质、找诱因(感染/漏药/新发)。','按危象路径监测血糖、血酮、钾每2-4h。','高血糖危象共识'],['出院标准','DKA缓解：pH>7.3、HCO₃⁻≥15-18、血酮<0.6 mmol/L、能进食；过渡到皮下胰岛素后观察24-48h无反弹。','HHS：渗透压正常、意识恢复、能口服。','ADA 2026危象章节'],['再入院警戒','出院后72h内再发高血糖/酮症、反复DKA、治疗依从性差、缺乏照护。','出院前教育病日方案、胰岛素调整、随访安排。','高血糖危象共识']],guides:['diabetes','hypoglycemia'],source:'2024成人高血糖危象国际共识；ADA 2026',evidence:'DKA缓解标准；HHS诊断标准'},
+{id:'in-hypoglycemia',group:'糖尿病急症',title:'低血糖 住院-出院-再入院路径',trigger:'严重低血糖(3级)或反复低血糖导致急诊/住院，评估安全出院与再发预防。',summary:'严重低血糖需住院观察并调整方案，出院前确保低血糖感知恢复、诱因纠正和照护支持。',pathway:[['住院指征','3级低血糖(需他人帮助)、反复2级低血糖、低血糖昏迷、无法安全口服。','需监测血糖、调整降糖方案。','ADA低血糖'],['住院治疗','静脉葡萄糖/胰高糖素，纠正低血糖，查找诱因(药物过量、肾衰、感染)。','停用/减量高风险药，考虑CGM。','ADA 6.15-6.19'],['出院标准','血糖稳定、能规律进食、诱因纠正、低血糖感知改善。','出院前教育、胰高糖素配备、家属培训。','ADA低血糖'],['再入院警戒','反复严重低血糖、无感知低血糖未改善、自行调整药物风险高。','需专科随访、方案重整。','老年糖尿病指南']],guides:['hypoglycemia','diabetes'],source:'ADA 2026低血糖主题；中国老年糖尿病指南',evidence:'低血糖分级与处理'},
+{id:'in-adrenal-crisis',group:'肾上腺急症',title:'肾上腺危象 住院-出院-再入院路径',trigger:'肾上腺皮质功能不全患者应激时出现休克、低钠、高钾、低血糖，疑肾上腺危象。',summary:'肾上腺危象是急症：立即糖皮质激素+补液，病情稳定后转口服并制定长期替代和应激方案。',pathway:[['住院指征','疑肾上腺危象：低血压/休克、低钠、高钾、低血糖、意识改变。','不因等待确诊延误治疗，立即静脉氢化可的松。','肾上腺危象处置'],['住院治疗','氢化可的松100mg静推后持续输注/分次，0.9%氯化钠补液，纠正电解质和低血糖。','监测血压、血钠、血钾、血糖。','肾上腺危象指南'],['出院标准','血流动力学稳定、电解质纠正、能口服、转口服替代(氢化可的松15-25mg/d分次)。','出院前教育应激剂量、危象急救卡、注射用激素。','肾上腺功能不全'],['再入院警戒','感染/手术/呕吐不能口服时未加应激剂量、反复危象、依从性差。','制定应激预案，提醒任何应激加倍剂量。','肾上腺危象']],guides:['adrenal-other'],source:'肾上腺危象处置；原发性肾上腺皮质功能不全指南',evidence:'危象治疗方案'},
+{id:'in-thyroid-storm',group:'甲状腺急症',title:'甲状腺危象 住院-出院-再入院路径',trigger:'甲状腺毒症患者高热、心悸、谵妄，BWPS≥45分甲状腺危象，需ICU级别治疗。',summary:'甲状腺危象需综合治疗并ICU监护，缓解后转ATD维持，出院后防复发和诱因。',pathway:[['住院指征','BWPS≥45分甲状腺危象，或25-44分危象前期伴全身失代偿。','ICU监护；ATD+β阻滞剂+碘+激素综合治疗。','甲亢诊治指南'],['住院治疗','PTU600mg/d(最大1600)或MMI60mg/d(最大120)、普萘洛尔、无机碘、糖皮质激素、退热。','监测心功能、体温、意识、电解质。','甲亢指南危象'],['出院标准','体温/心率控制、意识恢复、甲功改善、能口服ATD。','转ATD维持治疗并随访。','甲亢指南'],['再入院警戒','感染、ATD停药、131I/手术前准备不足诱发复发。','出院教育坚持用药、避免诱因。','甲亢指南']],guides:['hyperthyroidism'],source:'中国甲亢诊治指南；甲状腺危象处理',evidence:'BWPS评分与综合治疗'},
+{id:'in-hypercalcemia',group:'钙磷急症',title:'高钙危象 住院-出院-再入院路径',trigger:'重度症状性高钙(血钙>3.5 mmol/L或伴意识改变/心律失常)，需紧急住院。',summary:'高钙危象需积极补液+降钙素/双膦酸盐，明确病因(甲旁亢/恶性肿瘤)后针对性治疗并防复发。',pathway:[['住院指征','症状性高钙、血钙>3.5 mmol/L、意识改变、心律失常、AKI。','立即补液，监测心电。','高钙危象处理'],['住院治疗','0.9%氯化钠补液3-6L/24h(按心肾功能)、唑来膦酸/帕米膦酸、降钙素快速降钙。','明确病因(PTH、PTHrP、25OHD)。','高钙危象'],['出院标准','血钙下降、症状缓解、病因明确并启动治疗。','甲旁亢者安排手术；恶性肿瘤者专科治疗。','高钙处理'],['再入院警戒','病因未治(如未手术甲旁亢)、双膦酸盐作用消退后反弹。','长期随访血钙、原发病管理。','甲旁亢']],guides:['primary-hyperpara'],source:'急性高钙处置；甲旁亢诊疗',evidence:'高钙危象方案'},
+{id:'in-hyponatremia',group:'电解质急症',title:'重度低钠血症 住院-出院-再入院路径',trigger:'重度低钠(<125 mmol/L)或伴严重症状，需住院控速纠钠并防渗透性脱髓鞘。',summary:'重度低钠需住院按ODS风险控速纠钠，症状缓解后转病因管理，防快速纠正和再发。',pathway:[['住院指征','血钠<125 mmol/L、严重症状(呕吐/嗜睡/癫痫/昏迷)、急性低钠。','严重症状立即3%氯化钠。','低钠共识'],['住院治疗','3%氯化钠150mL/20min(严重症状)，按ODS风险控速(24h≤4-6 mmol/L高危)。','每4h复查血钠，纠正过快用去氨加压素。','低钠共识'],['出院标准','症状缓解、血钠进入安全范围、病因明确并管理(限液/停药/治原发病)。','转口服/病因维持治疗。','低钠共识'],['再入院警戒','慢性低钠未控制、限液依从差、药物(噻嗪)未调整、心衰/肝硬化再发。','门诊随访血钠、容量和药物。','低钠共识']],guides:['hyponatremia'],source:'低钠血症中国专家共识',evidence:'纠钠速度与ODS预防'},
+{id:'in-pituitary-apoplexy',group:'垂体急症',title:'垂体卒中 住院-出院-再入院路径',trigger:'垂体腺瘤患者突发头痛、视力下降、眼肌麻痹，疑垂体卒中，需急诊评估。',summary:'垂体卒中可危及视力和生命，需激素替代稳定、监测神经状态、必要时手术减压。',pathway:[['住院指征','突发严重头痛+视力/视野缺损+眼肌麻痹，CT/MRI示垂体出血/梗死。','急诊MRI、激素评估(ACTH/皮质醇)、眼科。','垂体卒中'],['住院治疗','大剂量糖皮质激素(氢化可的松)、神经监测、视力随访；占位压迫重者手术减压。','处理垂体功能减退各轴。','垂体瘤指南'],['出院标准','神经症状稳定/改善、激素替代到位、无生命危险。','出院后长期垂体功能随访。','垂体功能减退'],['再入院警戒','视力再度下降、肾上腺危象、术后出血。','长期随访、应激剂量教育。','垂体卒中']],guides:['pituitary-tumor','hypopituitarism'],source:'垂体瘤诊治；垂体卒中处理',evidence:'垂体卒中急诊管理'},
+{id:'in-ppgl-crisis',group:'肾上腺急症',title:'嗜铬细胞瘤危象 住院-出院-再入院路径',trigger:'嗜铬细胞瘤患者阵发性高血压危象、儿茶酚胺心肌病、反复发作，需住院控制。',summary:'PPGL危象需α阻滞控制血压和容量，术前充分准备，术后随访防复发。',pathway:[['住院指征','高血压危象、儿茶酚胺心肌病/心律失常、反复发作、拟手术前评估。','α阻滞剂控制血压、扩容。','PPGL围术期共识'],['住院治疗','α受体阻滞剂(酚苄明/多沙唑嗪)滴定，血压控制后加β阻滞剂(必须先α后β)。','监测血压、心率、血糖(儿茶酚胺致高糖)。','PPGL围术期'],['出院标准','血压稳定、α阻滞充分、手术完成或计划明确。','术后继续监测儿茶酚胺、血压。','PPGL'],['再入院警戒','术前α阻滞不足致术中危象、术后复发、转移进展。','遗传随访、影像+生化复查。','转移性PPGL共识']],guides:['ppgl'],source:'PPGL围术期专家共识2025；转移性PPGL共识',evidence:'PPGL术前α阻滞'}
+
+,
+{id:'in-myxedema-coma',group:'甲状腺急症',title:'黏液性水肿昏迷 住院-出院-再入院路径',trigger:'严重甲减患者低体温、意识改变、低通气、低钠、心动过缓，疑黏液性水肿昏迷。',summary:'黏液性水肿昏迷是甲减的致命急症，需ICU监护：静脉左甲状腺素(或T3)、糖皮质激素、支持治疗并处理诱因。',pathway:[['住院指征','意识改变+低体温+低通气+低钠+心动过缓，符合黏液性水肿昏迷。','ICU监护；立即启动甲状腺素替代。','甲减诊治'],['住院治疗','静脉左甲状腺素负荷后维持，氢化可的松(防肾上腺功能不全)，保温、纠正低钠、机械通气支持。','监测体温、意识、血气、电解质、心功能。','甲减急症处理'],['出院标准','意识恢复、体温稳定、能口服替代、心肺功能稳定。','转口服左甲状腺素并长期随访。','甲减指南'],['再入院警戒','诱因未除(感染/低温/停药)、心衰/心律失常并发症、依从性差。','出院教育坚持服药、避免诱因。','甲减指南']],guides:['hypothyroidism'],source:'甲减诊治；黏液性水肿昏迷处理',evidence:'甲减昏迷急症方案'},
+{id:'in-tao-don',group:'甲状腺急症',title:'TAO视神经病变(DON) 住院-出院-再入院路径',trigger:'甲状腺相关眼病患者视力下降、色觉异常、RAPD，疑DON需紧急住院。',summary:'DON威胁视功能，需住院大剂量糖皮质激素冲击，必要时眶减压，监测视力恢复。',pathway:[['住院指征','DON：视力下降+色觉受损+RAPD+视盘异常；或严重暴露性角膜病变。','急诊眼科评估、眼眶MRI、视野。','甲亢眼病指南'],['住院治疗','甲泼尼龙0.5-1.0g/次静滴，连续或隔天，1-2周评估；视力不改善考虑眶减压。','监测视力、血糖、肝功能；戒烟。','甲亢眼病指南'],['出院标准','视力稳定/改善、能转口服糖皮质激素+放疗维持。','DON改善后继续专科随访。','甲亢眼病指南'],['再入院警戒','视力再度下降、激素减量后复发、角膜暴露未控制。','维持甲功正常、戒烟、规律随访。','甲亢眼病指南']],guides:['hyperthyroidism'],source:'中国甲状腺相关眼病诊断和治疗指南2022',evidence:'DON糖皮质激素冲击方案'},
+{id:'in-cushing-severe',group:'肾上腺急症',title:'库欣综合征重症 住院-出院-再入院路径',trigger:'库欣综合征伴严重高血压、低钾、糖代谢紊乱、感染或术后HPA轴评估，需住院。',summary:'重症库欣需住院控制皮质醇、血压、血糖和感染，术后评估HPA轴并防肾上腺危象。',pathway:[['住院指征','严重高血压/低钾、明显高血糖、活动性感染、术后/药物治疗调整期。','控制血压血糖、纠正低钾、抗感染。','库欣指南'],['住院治疗','手术(经蝶/肾上腺切除)或药物(奥唑司他等)降皮质醇，围术期糖皮质激素。','监测皮质醇、血压、血糖、血钾、感染。','库欣指南'],['出院标准','皮质醇控制、血压血糖稳定、感染控制、HPA轴评估清楚。','转长期随访和后遗症管理。','库欣指南'],['再入院警戒','术后肾上腺危象、感染加重、皮质醇反跳、药物副作用。','终身随访复发和合并症。','库欣指南']],guides:['cushing'],source:'库欣病诊治专家共识2025；奥唑司他共识',evidence:'库欣围术期管理'},
+{id:'in-pa-severe',group:'肾上腺急症',title:'原醛症低钾危象/术前 住院-出院-再入院路径',trigger:'原醛症严重低钾、心律失常、难治性高血压，或术前准备需住院。',summary:'原醛症严重低钾或术前需住院纠正电解质、控制血压，术后评估生化缓解。',pathway:[['住院指征','严重低钾(<3.0 mmol/L)伴心律失常/肌无力、难治性高血压、术前准备。','纠正低钾、螺内酯/依普利酮、控制血压。','原醛共识'],['住院治疗','静脉补钾、MRA治疗、血压控制，术前2-4周准备。','监测血钾、血压、肾功能、心电图。','原醛共识'],['出院标准','血钾正常、血压控制、手术完成或计划明确。','术后监测血钾、醛固酮/肾素(PASO)。','原醛共识'],['再入院警戒','术后低醛固酮(高钾)、血压未控制、术前准备不足。','术后1-3月及6-12月随访。','原醛共识']],guides:['primary-aldosteronism'],source:'原醛诊断治疗专家共识2024',evidence:'原醛术前准备与PASO'},
+{id:'in-foot-severe',group:'糖尿病急症',title:'糖尿病足重度感染 住院-出院-再入院路径',trigger:'糖尿病足溃疡伴深部感染、骨髓炎、脓毒症或急性缺血，需住院。',summary:'重度糖尿病足感染需住院静脉抗感染、评估缺血和骨髓炎、必要时清创/血运重建。',pathway:[['住院指征','全身感染征象(发热/白细胞升高)、深部脓肿、骨髓炎、急性缺血、脓毒症。','静脉抗感染、血培养、影像(MRI/CTA)。','糖尿病足指南'],['住院治疗','广谱抗生素、清创/引流、评估血运重建、血糖控制。','按IWGDF感染分级处理，监测足部。','糖尿病足感染'],['出院标准','感染控制、无脓毒症、伤口计划明确、能居家换药。','转口服抗生素、专科随访。','糖尿病足指南'],['再入院警戒','感染复发、缺血加重、骨髓炎未清、依从性差。','足部护理教育、定期复诊。','糖尿病足指南']],guides:['diabetes'],source:'IWGDF/IDSA糖尿病足感染指南；中国糖尿病足诊治',evidence:'糖尿病足感染分级处置'},
+{id:'in-osteoporosis-fracture',group:'骨代谢急症',title:'骨质疏松椎体骨折 住院-出院-再入院路径',trigger:'骨质疏松患者急性腰背痛、椎体压缩骨折，需疼痛管理和骨代谢评估。',summary:'椎体骨折需住院镇痛、评估骨折类型和骨代谢，启动抗骨质疏松治疗，防再骨折。',pathway:[['住院指征','急性椎体骨折剧烈疼痛、活动受限、神经症状、多节段骨折。','影像(椎体MRI/CT)、评估神经受压。','骨质疏松指南'],['住院治疗','镇痛(NSAIDs/阿片)、卧床制动或椎体成形术评估、钙维生素D、抗骨吸收/促骨形成。','监测疼痛、活动、电解质。','骨质疏松指南'],['出院标准','疼痛控制、能安全活动、治疗方案启动。','转康复和长期抗骨松治疗。','骨质疏松指南'],['再入院警戒','新发骨折、抗骨松后骨密度下降、跌倒。','防跌倒、随访DXA。','骨质疏松指南']],guides:['osteoporosis'],source:'骨质疏松性骨折一级预防指南2026',evidence:'椎体骨折管理'}
+
+];
+</script>
+<script>
 const localGuides=[
 {id:'ada26',cat:'糖尿病综合',title:'ADA《Standards of Care in Diabetes—2026》',year:'2026',pages:'全卷',file:'在线指南',scope:'儿童、青少年及成人糖尿病和糖尿病前期的综合循证照护。',entry:'糖尿病筛查、诊断、治疗目标、共病驱动选药和并发症管理。',points:['多数非妊娠成人 A1C 目标 <7%，并结合 CGM 和低血糖风险个体化。','ASCVD、心衰、CKD 和肥胖可独立改变 2 型糖尿病药物选择。','2026 强调早期 CGM、心肾保护、肥胖治疗及特殊场景。'],boundary:'动态更新；临床使用前核对官网最新版。',url:'https://professional.diabetes.org/standards-of-care'},
 {id:'primarydm',cat:'糖尿病综合',title:'国家基层糖尿病防治管理指南（2025）',year:'2025',pages:'18页',file:'国家基层糖尿病防治管理指南（2025）.pdf',scope:'基层医疗卫生机构开展糖尿病筛查、诊断、治疗、并发症识别、随访和双向转诊。',entry:'基层新诊糖尿病、常规复诊、急慢性并发症识别。',points:['覆盖基层健康管理全流程，并给出诊断、血糖监测、HbA1c 分层目标和转诊节点。','2 型糖尿病确诊时即筛查肾脏病；按风险安排眼、足、神经等慢性并发症评估。','疑高血糖危象、分型困难、控制不佳或出现复杂并发症时及时转诊。'],boundary:'用于基层规范管理；危重、疑难和需要专科检查者应转诊。'},
@@ -3084,6 +3415,17 @@ const comparisonItems=window.GUIDELINE_COMPARISONS||[],comparisonCategories=['�
 function comparisonStatusClass(status){return status==='基本一致'?'agree':status==='范围不同'?'scope':status==='不可直接比较'?'incomparable':''}
 function renderComparisons(term=''){const tools=document.getElementById('comparisonTools'),grid=document.getElementById('comparisonGrid'),summary=document.getElementById('comparisonSummary'),tokens=term.trim().toLowerCase().split(/\s+/).filter(Boolean);tools.innerHTML=comparisonCategories.map(x=>`<button class="${x===activeComparisonCategory?'active':''}" data-comparison-cat="${safe(x)}">${fmt(x)}</button>`).join('');tools.querySelectorAll('[data-comparison-cat]').forEach(b=>b.onclick=()=>{activeComparisonCategory=b.dataset.comparisonCat;renderComparisons(document.getElementById('comparisonSearch').value)});const arr=comparisonItems.filter(x=>(activeComparisonCategory==='全部'||x.category===activeComparisonCategory)&&tokens.every(t=>searchText(JSON.stringify(x)).includes(t)));const statusCounts=arr.reduce((a,x)=>(a[x.status]=(a[x.status]||0)+1,a),{});summary.textContent=`找到 ${arr.length} 张对照卡：存在差异 ${statusCounts['存在差异']||0}，基本一致 ${statusCounts['基本一致']||0}，范围不同 ${statusCounts['范围不同']||0}，不可直接比较 ${statusCounts['不可直接比较']||0}。`;grid.innerHTML=arr.length?arr.map(x=>`<article id="comparison-${safe(x.id)}" class="conflict" data-status="${safe(x.status)}"><span class="tag">${fmt(x.category)}</span><span class="compare-status ${comparisonStatusClass(x.status)}">${fmt(x.status)}</span><h3>${safe(x.title)}</h3><p class="compare-question"><b>临床问题：</b>${safe(x.question)}</p>${x.rows.map(r=>`<div class="scope-row"><b>${safe(r.guide)}</b><span><span class="rec-txt">${safe(r.recommendation)}</span><span class="scope-txt"><b>适用范围：</b>${safe(r.scope)}</span></span></div>`).join('')}<div class="compare-takeaway"><b>怎么用：</b>${safe(x.takeaway)}</div><div class="compare-sources"><b>核对来源：</b>${x.sources.map(safe).join('；')}</div></article>`).join(''):'<div class="empty">没有匹配的差异卡。可尝试指南缩写、疾病、药物类别、目标值或分级名称。</div>'}
 function openComparison(id){activeComparisonCategory='全部';document.getElementById('comparisonSearch').value='';renderComparisons();show('compare');const x=comparisonItems.find(y=>y.id===id);if(x)recordLearning('差异对照',x.title,'comparison',x.id);requestAnimationFrame(()=>document.getElementById('comparison-'+id)?.scrollIntoView({behavior:'smooth',block:'start'}))}
+const symptomItems=(window.SYMPTOM_DIRECTORY||[]).sort((a,b)=>a.priority-b.priority),followupItems=(window.FOLLOWUP_DIRECTORY||[]),inpatientItems=(window.INPATIENT_DIRECTORY||[]);let activeSymptom=symptomItems[0]?.id||'',activeSymptomGroup='全部',activeSymTab='initial',activeFollowup=followupItems[0]?.id||'',activeInpatient=inpatientItems[0]?.id||'';
+function symptomDetail(s){const evid=s.evidence?`<div class="evidence-note"><b>循证依据：</b>${fmt(s.evidence)}</div>`:'';return `<div class="workup-head"><span class="tag" style="color:#cfe877">${fmt(s.group)}</span><h3>${fmt(s.title)}</h3><p>${fmt(s.summary)}</p></div><div class="workup-body"><section class="workup-section"><h4>进入条件 / 触发主诉</h4><p>${fmt(s.trigger)}</p></section><section class="workup-section"><h4>鉴别诊断与关键检查</h4><div class="aux-list">${s.differential.map(x=>`<div class="aux-row"><b>${fmt(x[0])}</b><span><strong>何时考虑：</strong>${fmt(x[1])}<br><strong>怎样查：</strong>${fmt(x[2])}<br><small><strong>依据：</strong>${fmt(x[3])}</small></span></div>`).join('')}</div></section>${evid}<section class="workup-section"><h4>回链指南路径</h4><div class="source-chips">${s.guides.map(g=>`<button class="source-chip" style="cursor:pointer" data-sym-guide="${safe(g)}">${fmt((window.DISEASE_DIRECTORY||[]).find(d=>d.id===g)?.name||g)}</button>`).join('')}</div><p class="plain">点击疾病名进入对应诊疗路径，再回原文核对完整推荐。</p><div class="trace"><b>综合来源：</b>${fmt(s.source)}</div></section></div>`}
+function followupDetail(s){const evid=s.evidence?`<div class="evidence-note"><b>循证依据：</b>${fmt(s.evidence)}</div>`:'';return `<div class="workup-head"><span class="tag" style="color:#cfe877">${fmt(s.group)}</span><h3>${fmt(s.title)}</h3><p>${fmt(s.summary)}</p></div><div class="workup-body"><section class="workup-section"><h4>复诊评估要点</h4><p>${fmt(s.trigger)}</p></section><section class="workup-section"><h4>随访维度与关键措施</h4><div class="aux-list">${s.differential.map(x=>`<div class="aux-row"><b>${fmt(x[0])}</b><span><strong>评估/管理：</strong>${fmt(x[1])}<br><strong>关键措施：</strong>${fmt(x[2])}<br><small><strong>依据：</strong>${fmt(x[3])}</small></span></div>`).join('')}</div></section>${evid}<section class="workup-section"><h4>回链指南路径</h4><div class="source-chips">${s.guides.map(g=>`<button class="source-chip" style="cursor:pointer" data-sym-guide="${safe(g)}">${fmt((window.DISEASE_DIRECTORY||[]).find(d=>d.id===g)?.name||g)}</button>`).join('')}</div><div class="trace"><b>综合来源：</b>${fmt(s.source)}</div></section></div>`}
+function inpatientDetail(p){const evid=p.evidence?`<div class="evidence-note"><b>循证依据：</b>${fmt(p.evidence)}</div>`:'';return `<div class="workup-head"><span class="tag" style="color:#cfe877">${fmt(p.group)}</span><h3>${fmt(p.title)}</h3><p>${fmt(p.summary)}</p></div><div class="workup-body"><section class="workup-section"><h4>严重度动态管理路径</h4><p>${fmt(p.trigger)}</p></section><div class="protocol-steps">${p.pathway.map(x=>`<article class="protocol-step ${x[0].includes('住院指征')?'critical':''}"><h5>${fmt(x[0])}</h5><div>${fmt(x[1])}</div><div class="dose-line"><b>关键参数/标准：</b>${fmt(x[2])}</div></article>`).join('')}</div>${evid}<section class="workup-section"><h4>回链指南路径</h4><div class="source-chips">${p.guides.map(g=>`<button class="source-chip" style="cursor:pointer" data-sym-guide="${safe(g)}">${fmt((window.DISEASE_DIRECTORY||[]).find(d=>d.id===g)?.name||g)}</button>`).join('')}</div><div class="trace"><b>综合来源：</b>${fmt(p.source)}</div></section></div>`}
+function renderSymptoms(term=''){const q=term.trim().toLowerCase(),groups=document.getElementById('symptomGroups'),list=document.getElementById('symptomList'),detail=document.getElementById('symptomDetail'),summary=document.getElementById('symptomSummary');const tabBtn=document.querySelectorAll('[data-symtab]');tabBtn.forEach(b=>b.classList.toggle('active',b.dataset.symtab===activeSymTab));const isIn=activeSymTab==='inpatient',isFollow=activeSymTab==='followup',source=isIn?inpatientItems:isFollow?followupItems:symptomItems,groupNames=['全部',...new Set(source.map(x=>x.group))];if(!groupNames.includes(activeSymptomGroup))activeSymptomGroup='全部';groups.innerHTML=groupNames.map(x=>`<button class="${x===activeSymptomGroup?'active':''}" data-symptom-group="${safe(x)}">${fmt(x)}</button>`).join('');groups.querySelectorAll('[data-symptom-group]').forEach(b=>b.onclick=()=>{activeSymptomGroup=b.dataset.symptomGroup;renderSymptoms(document.getElementById('symptomSearch').value)});const arr=source.filter(s=>(activeSymptomGroup==='全部'||s.group===activeSymptomGroup)&&(!q||searchText(JSON.stringify(s)).includes(q)));summary.textContent=isIn?`找到 ${arr.length} 个住院-出院-再入院路径。每个路径含住院指征、出院标准、再入院警戒与循证依据。`:isFollow?`找到 ${arr.length} 个随访复诊/共病管理场景。每个场景含随访维度、关键措施、循证依据与指南回链。`:`找到 ${arr.length} 条初诊主诉路径。每条含鉴别诊断、关键检查、循证依据与指南回链。`;const curId=isIn?activeInpatient:isFollow?activeFollowup:activeSymptom;if(arr.length&&!arr.some(x=>x.id===curId)){isIn?(activeInpatient=arr[0].id):isFollow?(activeFollowup=arr[0].id):(activeSymptom=arr[0].id)}list.innerHTML=arr.length?arr.map(s=>`<button class="indicator-button ${s.id===curId?'active':''}" data-symptom="${safe(s.id)}"><small>${fmt(s.group)}</small>${fmt(s.title)}</button>`).join(''):'<div class="empty">没有匹配项。可尝试心悸、低钾、糖尿病随访、甲亢危象、DKA住院等。</div>';list.querySelectorAll('[data-symptom]').forEach(b=>b.onclick=()=>{if(isIn)activeInpatient=b.dataset.symptom;else if(isFollow)activeFollowup=b.dataset.symptom;else activeSymptom=b.dataset.symptom;renderSymptoms(document.getElementById('symptomSearch').value)});const s=arr.find(x=>x.id===curId);detail.innerHTML=s?(isIn?inpatientDetail(s):isFollow?followupDetail(s):symptomDetail(s)):'<div class="empty">请选择主诉、复诊或住院场景。</div>';detail.querySelectorAll('[data-sym-guide]').forEach(b=>b.onclick=()=>openDiseaseFromSymptom(b.dataset.symGuide))}
+document.getElementById('symptomSearch').oninput=e=>renderSymptoms(e.target.value);
+document.querySelectorAll('[data-symtab]').forEach(b=>b.onclick=()=>{activeSymTab=b.dataset.symtab;document.getElementById('symptomSearch').value='';renderSymptoms('')});
+const pathItems=(window.LEARNING_PATH||[]).slice().sort((a,b)=>a.day-b.day),pathGroupNames=['全部',...new Set(pathItems.map(x=>x.group))];let activePath=pathItems[0]?.day||1,activePathGroup='全部';
+function pathDetail(p){const caseBtn=p.caseRef?`<button class="primary" data-path-case style="margin-top:8px">做对应病例：${fmt(p.caseRef)}</button>`:'';return `<div class="workup-head"><span class="tag" style="color:#cfe877">${fmt(p.group)} · 第${p.day}天</span><h3>${fmt(p.title)}</h3></div><div class="workup-body"><section class="workup-section"><h4>本日学习要点</h4><p>${fmt(p.focus)}</p></section><section class="workup-section"><h4>主题关键词</h4><div class="source-chips"><span class="source-chip">${fmt(p.key)}</span><span class="source-chip">依据：${fmt(p.guide)}</span></div></section><section class="workup-section"><h4>回链</h4><div class="source-chips"><button class="source-chip" style="cursor:pointer" data-path-guide="${safe(p.disease)}">打开疾病路径</button><button class="primary" data-path-case style="margin-top:8px">做对应病例：${fmt(p.caseRef)}</button></div><p class="plain">每天完成：读要点 → 做病例 → 回原文核对推荐编号。</p></section></div>`}
+function renderPath(term=''){const q=term.trim().toLowerCase(),groups=document.getElementById('pathGroups'),list=document.getElementById('pathList'),detail=document.getElementById('pathDetail'),summary=document.getElementById('pathSummary');groups.innerHTML=pathGroupNames.map(x=>`<button class="${x===activePathGroup?'active':''}" data-path-group="${safe(x)}">${fmt(x)}</button>`).join('');groups.querySelectorAll('[data-path-group]').forEach(b=>b.onclick=()=>{activePathGroup=b.dataset.pathGroup;renderPath(document.getElementById('pathSearch').value)});const arr=pathItems.filter(p=>(activePathGroup==='全部'||p.group===activePathGroup)&&(!q||searchText(JSON.stringify(p)).includes(q)));summary.textContent=`找到 ${arr.length} 天路径。按系统每天一个主题，可自由调整顺序。`;if(arr.length&&!arr.some(x=>x.day===activePath))activePath=arr[0].day;list.innerHTML=arr.length?arr.map(p=>`<button class="indicator-button ${p.day===activePath?'active':''}" data-path="${p.day}"><small>第${p.day}天 · ${fmt(p.group)}</small>${fmt(p.title)}</button>`).join(''):'<div class="empty">没有匹配主题。</div>';list.querySelectorAll('[data-path]').forEach(b=>b.onclick=()=>{activePath=+b.dataset.path;renderPath(document.getElementById('pathSearch').value)});const p=arr.find(x=>x.day===activePath);detail.innerHTML=p?pathDetail(p):'<div class="empty">请选择学习日。</div>';const guideBtn=detail.querySelector('[data-path-guide]');if(guideBtn)guideBtn.onclick=()=>openDiseaseFromSymptom(guideBtn.dataset.pathGuide);const caseBtn=detail.querySelector('[data-path-case]');if(caseBtn&&p)caseBtn.onclick=()=>{const idx=cases.findIndex(c=>c.t===p.caseRef);if(idx>=0){refreshCasePool();show('cases');ci=casePool.findIndex(i=>i===idx);if(ci<0){casePool[0]=idx;ci=0}caseAnswered=false;renderCase()}}}
+document.getElementById('pathSearch').oninput=e=>renderPath(e.target.value);
 function renderEvidence(id,term=''){const d=deepGuides[id],box=document.getElementById('evidenceRows');if(!box||!d)return;const q=term.trim().toLowerCase(),rows=d.recs.filter(r=>(r.join(' ')).toLowerCase().includes(q));box.innerHTML=rows.length?rows.map(r=>`<div class="evidence-row"><div class="code">${fmt(r[0])}</div><div>${fmt(r[1])}</div><div><span class="grade ${r[2].includes('未')?'ungraded':''}">${fmt(r[2])}</span></div></div>`).join(''):'<div class="empty">没有匹配的推荐条目。</div>'}
 function openGuide(id){const g=localGuides.find(x=>x.id===id),d=deepGuides[id],target=document.getElementById('guideDetail');if(!d)return;recordLearning('核心指南',g.title,'guide',g.id);target.innerHTML=`<article class="guide-detail"><div class="category">${fmt(g.cat)} · ${fmt(g.year)}</div><h2>${fmt(g.title)}</h2><div class="deep-intro"><div class="deep-box"><h3>适用范围与临床入口</h3><p><b>范围：</b>${fmt(g.scope)}</p><p><b>入口：</b>${fmt(g.entry)}</p></div><div class="deep-box"><h3>证据体系怎么读</h3><p>${fmt(d.grade)}</p></div></div><div class="notice"><b>不可误用：</b>${fmt(g.boundary)}</div><h2>诊断—治疗全流程</h2><div class="phase-grid">${d.phases.map(p=>`<section class="phase-card"><h3>${fmt(p.title)}</h3><ul>${p.items.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul></section>`).join('')}</div><div class="evidence-head"><div><h2>循证推荐逐条速查</h2><p class="plain">等级完全沿用该指南自己的体系，不能跨指南直接比较。</p></div></div><input id="deepSearch" class="deep-search" aria-label="筛选本指南推荐" placeholder="筛选：诊断、MRI、手术、强推荐、证据A……"><div id="evidenceRows" class="evidence-list"></div><div class="evidence-note"><b>临床使用前：</b>请核对原指南全文中的完整适用条件、排除标准、剂量、禁忌、监测和原始证据摘要。</div>${guideSource(g)}</article>`;renderEvidence(id);document.getElementById('deepSearch').oninput=e=>renderEvidence(id,e.target.value);target.scrollIntoView({behavior:'smooth'})}
 function scenarioText(s){return `${s.title}\n${s.intro}\n\n`+s.blocks.map(b=>`【${b[0]}】\n- ${b[2].join('\n- ')}`).join('\n\n')+`\n\n来源：${s.source}\n\n注意：本清单仅用于指南学习和诊疗思路整理，不是可直接执行的真实医嘱。`}
@@ -3096,7 +3438,10 @@ function recordLearning(type,title,route,key){const rows=readLearningRecords().f
 document.getElementById('clearLearning').onclick=e=>{e.preventDefault();e.stopPropagation();safeStore.removeItem(learningKey);renderLearningRecord()};
 function renderScenarios(){const list=document.getElementById('scenarioList');list.innerHTML=patientScenarios.map((s,i)=>`<button class="${i===scenarioIndex?'active':''}" data-scenario="${i}"><small>${s.cat}</small>${s.title}</button>`).join('');list.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=()=>{scenarioIndex=+b.dataset.scenario;const chosen=patientScenarios[scenarioIndex];if(chosen)recordLearning('患者场景',chosen.title,'scenario',String(scenarioIndex));renderScenarios()});const s=patientScenarios[scenarioIndex],savedChecks=safeParse(safeStore.getItem('endo-check-'+s.id),[]),savedNote=safeStore.getItem('endo-note-'+s.id)||'';document.getElementById('orderSheet').innerHTML=`<div class="order-head"><span class="tag" style="color:#cfe877">${s.cat}</span><h3>${fmt(s.title)}</h3><p>${fmt(s.intro)}</p></div><div class="order-body"><div class="order-grid">${s.blocks.map((b,bi)=>`<section class="order-block ${b[1]}"><h4>${bi+1}. ${fmt(b[0])}</h4>${b[2].map((x,ii)=>{const key=bi+'-'+ii;return `<label class="order-item"><input type="checkbox" data-ock="${key}" ${savedChecks.includes(key)?'checked':''}><span>${fmt(x)}</span></label>`}).join('')}</section>`).join('')}</div><div class="trace"><b>指南来源：</b>${fmt(s.source)}</div><h4>个人学习备注</h4><textarea id="scenarioNote" class="note" placeholder="记录为什么保留或删除某项…">${safe(savedNote)}</textarea><p><button id="copyScenario" class="primary">复制教学清单</button> <button id="clearScenario" class="primary" style="background:#6a756f">清空勾选</button></p></div>`;document.querySelectorAll('[data-ock]').forEach(c=>c.onchange=()=>{const vals=[...document.querySelectorAll('[data-ock]:checked')].map(x=>x.dataset.ock);safeStore.setItem('endo-check-'+s.id,JSON.stringify(vals))});document.getElementById('scenarioNote').oninput=e=>safeStore.setItem('endo-note-'+s.id,e.target.value);document.getElementById('copyScenario').onclick=e=>copyText(scenarioText(s),e.target);document.getElementById('clearScenario').onclick=()=>{safeStore.removeItem('endo-check-'+s.id);renderScenarios()}}
 let activeMed='全部';
-function renderMedications(term=''){const tools=document.getElementById('medTools'),grid=document.getElementById('medGrid'),q=term.trim().toLowerCase();tools.innerHTML=medicationGroups.map(c=>`<button class="${c===activeMed?'active':''}" data-medcat="${c}">${c}</button>`).join('');tools.querySelectorAll('[data-medcat]').forEach(b=>b.onclick=()=>{activeMed=b.dataset.medcat;renderMedications(document.getElementById('medSearch').value)});const arr=medications.filter(m=>{const s=medicationSafetyFor(m);return(activeMed==='全部'||m.cat===activeMed)&&(!q||searchText(Object.values(m).join(' ')+' '+Object.values(s).join(' ')).includes(q))});grid.innerHTML=arr.length?arr.map(m=>{const s=medicationSafetyFor(m);return `<article class="med-card ${m.risk==='high'?'risk-high':m.risk==='special'?'risk-special':''}"><span class="tag">${fmt(m.cat)}</span>${m.risk==='high'?'<span class="tag red">专病高风险</span>':m.risk==='special'?'<span class="tag" style="color:#956400">需专科评估</span>':''}<h3>${fmt(m.name)}</h3><p><b>适用患者：</b>${fmt(m.patients)}</p><div class="med-dose">${fmt(m.dose)}</div><dl><dt>指南/说明书明确禁用</dt><dd>${fmt(s.contra)}</dd><dt>不宜使用、需慎用或调整</dt><dd>${fmt(s.caution)}</dd><dt>调整要点</dt><dd>${fmt(m.adjust)}</dd><dt>监测</dt><dd>${fmt(m.monitor)}</dd></dl><div class="med-source">剂量来源：${fmt(m.source)}<br>安全依据：${fmt(s.source)}</div></article>`}).join(''):'<div class="empty">没有匹配药物。</div>'}
+function medToDisease(cat,name){const map=[['2型糖尿病','diabetes'],['胰岛素','diabetes'],['肥胖症','obesity'],['痛性神经病变','diabetes'],['垂体疾病','pituitary-tumor'],['库欣病','cushing'],['成人GHD','hypopituitarism'],['转移性PPGL','ppgl'],['血脂紊乱','dyslipidemia'],['高尿酸与痛风','gout'],['骨质疏松','osteoporosis'],['甲状旁腺功能减退','hypopara'],['肾上腺相关','adrenal-other'],['原发性醛固酮增多症','primary-aldosteronism'],['甲状腺','hyperthyroidism'],['电解质','hyponatremia'],['糖尿病慢性并发症','diabetes']];const hit=map.find(x=>cat.includes(x[0]));if(hit)return hit[1];if(/甲巯咪唑|丙硫|左甲状腺素|替妥木/.test(name))return name.includes('左甲状腺素')?'hypothyroidism':'hyperthyroidism';if(/螺内酯|依普利酮|GRA/.test(name))return 'primary-aldosteronism';if(/非奈利酮/.test(name))return 'diabetes';return null}
+function openDiseaseFromSymptom(id){const d=(window.DISEASE_DIRECTORY||[]).find(x=>x.id===id);if(d){show('diseases');activeDisease=id;renderDiseases()}else{const w=(window.ABNORMAL_WORKUPS||[]).find(x=>x.id===id);if(w){openWorkup(id)}else{show('workups')}}}
+function openMedDisease(id){const d=(window.DISEASE_DIRECTORY||[]).find(x=>x.id===id);if(d){show('diseases');activeDisease=id;renderDiseases()}}
+function renderMedications(term=''){const tools=document.getElementById('medTools'),grid=document.getElementById('medGrid'),q=term.trim().toLowerCase();tools.innerHTML=medicationGroups.map(c=>`<button class="${c===activeMed?'active':''}" data-medcat="${c}">${c}</button>`).join('');tools.querySelectorAll('[data-medcat]').forEach(b=>b.onclick=()=>{activeMed=b.dataset.medcat;renderMedications(document.getElementById('medSearch').value)});const arr=medications.filter(m=>{const s=medicationSafetyFor(m);return(activeMed==='全部'||m.cat===activeMed)&&(!q||searchText(Object.values(m).join(' ')+' '+Object.values(s).join(' ')).includes(q))});grid.innerHTML=arr.length?arr.map(m=>{const s=medicationSafetyFor(m),diseaseId=medToDisease(m.cat,m.name),diseaseName=diseaseId?((window.DISEASE_DIRECTORY||[]).find(d=>d.id===diseaseId)?.name||''):'';return `<article class="med-card ${m.risk==='high'?'risk-high':m.risk==='special'?'risk-special':''}"><span class="tag">${fmt(m.cat)}</span>${m.risk==='high'?'<span class="tag red">专病高风险</span>':m.risk==='special'?'<span class="tag" style="color:#956400">需专科评估</span>':''}<h3>${fmt(m.name)}</h3><p><b>适用患者：</b>${fmt(m.patients)}</p>${diseaseId?`<p><button class="primary" data-med-disease="${safe(diseaseId)}" style="padding:5px 10px;font-size:13px">🔗 查看适用疾病诊断路径：${fmt(diseaseName)}</button></p>`:''}<div class="med-dose">${fmt(m.dose)}</div><dl><dt>指南/说明书明确禁用</dt><dd>${fmt(s.contra)}</dd><dt>不宜使用、需慎用或调整</dt><dd>${fmt(s.caution)}</dd><dt>调整要点</dt><dd>${fmt(m.adjust)}</dd><dt>监测</dt><dd>${fmt(m.monitor)}</dd></dl><div class="med-source">剂量来源：${fmt(m.source)}<br>安全依据：${fmt(s.source)}</div></article>`}).join(''):'<div class="empty">没有匹配药物。</div>';grid.querySelectorAll('[data-med-disease]').forEach(b=>b.onclick=()=>openMedDisease(b.dataset.medDisease))}
 function renderGlossary(term=''){const q=term.trim().toLowerCase(),arr=abbreviations.filter(a=>a.join(' ').toLowerCase().includes(q)),grid=document.getElementById('abbrGrid');grid.innerHTML=arr.length?arr.map(a=>`<article class="abbr-card"><b>${safe(a[0])}</b><small>${safe(a[1])}</small><p>${safe(a[2])}</p></article>`).join(''):'<div class="empty">没有匹配缩写。</div>'}
 let activeDisease=(window.DISEASE_DIRECTORY||[])[0]?.id||'';
 function renderDiseases(){const list=document.getElementById('diseaseNav'),detail=document.getElementById('diseaseDetail'),items=(window.DISEASE_DIRECTORY||[]).filter(x=>!x.hidden);if(!items.length)return;let d=items.find(x=>x.id===activeDisease)||items[0];activeDisease=d.id;list.innerHTML=items.map(x=>`<button class="${x.id===activeDisease?'active':''}" data-disease="${safe(x.id)}"><b>${fmt(x.name)}</b><small>${fmt(x.status)}</small></button>`).join('');list.querySelectorAll('[data-disease]').forEach(b=>b.onclick=()=>{activeDisease=b.dataset.disease;const chosen=items.find(x=>x.id===activeDisease);if(chosen)recordLearning('疾病路径',chosen.name,'disease',chosen.id);renderDiseases()});const pending=d.status.includes('待补充'),path=d.path?.length?d.path.map(p=>`<section class="path-block"><h4>${fmt(p[0])}</h4><ul>${p[1].map(x=>`<li>${fmt(x)}</li>`).join('')}</ul></section>`).join(''):`<div class="notice"><b>为什么没有补写：</b>当前资料不足以完整核对该疾病的诊断阈值、治疗选择和药物剂量。目录先保留，待纳入相应原始指南后再更新。</div>`;detail.innerHTML=`<span class="status-pill ${pending?'pending':''}">${fmt(d.status)}</span><h3>${fmt(d.name)}</h3><p>${fmt(d.summary)}</p><div class="evidence-note"><b>证据说明：</b>${fmt(d.evidence)}</div>${path}<div class="trace"><b>纳入来源：</b>${d.sources?.length?d.sources.map(fmt).join('；'):'当前批次无对应专项指南'}</div>`}
@@ -3115,11 +3460,11 @@ const evidenceSearchItems=[
   ['1A、2C、Ⅱa B、1b｜A 怎么读','组合编码应拆分推荐强度、推荐类别与证据质量，并先确认指南使用的分级体系。'],
   ['原文未逐条分级','指南没有为每条陈述附等级时，不应由学习网站自行补造。']
 ];
-function globalItems(){const disease=(window.DISEASE_DIRECTORY||[]).filter(x=>!x.hidden).map(x=>({kind:'疾病路径',title:x.name,text:JSON.stringify(x),route:'disease',key:x.id}));const guide=localGuides.map(x=>({kind:'核心指南',title:x.title,text:JSON.stringify(x)+JSON.stringify(deepGuides[x.id]||{}),route:'guide',key:x.id}));const catalog=newCatalog.map((x,i)=>({kind:'新增指南',title:x.title,text:JSON.stringify(x),route:'catalog',key:String(i)}));const med=medications.map((x,i)=>({kind:'药物剂量',title:x.name,text:'明确禁用 慎用 调整 '+JSON.stringify(x)+JSON.stringify(medicationSafetyFor(x)),route:'med',key:String(i)}));const abbr=abbreviations.map((x,i)=>({kind:'缩写词典',title:x[0]+'｜'+x[2],text:x.join(' '),route:'abbr',key:String(i)}));const scenario=patientScenarios.map((x,i)=>({kind:'患者场景',title:x.title,text:JSON.stringify(x),route:'scenario',key:String(i)}));const workup=workups.map(x=>({kind:'异常指标追查',title:x.title,text:'辅助检查 结果解释 鉴别诊断 '+JSON.stringify(x),route:'workup',key:x.id}));const severity=severityItems.map(x=>({kind:'分期与严重度',title:x.title,text:JSON.stringify(x),route:'severity',key:x.id}));const complication=complicationItems.map(x=>({kind:'并发症分级处置',title:x.title,text:JSON.stringify(x),route:'complication',key:x.id}));const module=modules.map(x=>({kind:'糖尿病专题',title:x.t,text:JSON.stringify(x)+' '+JSON.stringify((window.DIABETES_MODULE_DETAILS||{})[x.id]||{}),route:'module',key:x.id}));const quick=quickItems.map(x=>({kind:'床旁速查',title:x.title,text:JSON.stringify(x),route:'quick',key:x.id}));const comparison=comparisonItems.map(x=>({kind:'指南差异',title:x.title,text:JSON.stringify(x),route:'comparison',key:x.id}));const evidence=evidenceSearchItems.map((x,i)=>({kind:'循证等级',title:x[0],text:x.join(' '),route:'evidence',key:String(i)}));return[...disease,...guide,...catalog,...med,...abbr,...scenario,...workup,...severity,...complication,...module,...quick,...comparison,...evidence]}
+function globalItems(){const disease=(window.DISEASE_DIRECTORY||[]).filter(x=>!x.hidden).map(x=>({kind:'疾病路径',title:x.name,text:JSON.stringify(x),route:'disease',key:x.id}));const guide=localGuides.map(x=>({kind:'核心指南',title:x.title,text:JSON.stringify(x)+JSON.stringify(deepGuides[x.id]||{}),route:'guide',key:x.id}));const catalog=newCatalog.map((x,i)=>({kind:'新增指南',title:x.title,text:JSON.stringify(x),route:'catalog',key:String(i)}));const med=medications.map((x,i)=>({kind:'药物剂量',title:x.name,text:'明确禁用 慎用 调整 '+JSON.stringify(x)+JSON.stringify(medicationSafetyFor(x)),route:'med',key:String(i)}));const abbr=abbreviations.map((x,i)=>({kind:'缩写词典',title:x[0]+'｜'+x[2],text:x.join(' '),route:'abbr',key:String(i)}));const scenario=patientScenarios.map((x,i)=>({kind:'患者场景',title:x.title,text:JSON.stringify(x),route:'scenario',key:String(i)}));const workup=workups.map(x=>({kind:'异常指标追查',title:x.title,text:'辅助检查 结果解释 鉴别诊断 '+JSON.stringify(x),route:'workup',key:x.id}));const severity=severityItems.map(x=>({kind:'分期与严重度',title:x.title,text:JSON.stringify(x),route:'severity',key:x.id}));const complication=complicationItems.map(x=>({kind:'并发症分级处置',title:x.title,text:JSON.stringify(x),route:'complication',key:x.id}));const module=modules.map(x=>({kind:'糖尿病专题',title:x.t,text:JSON.stringify(x)+' '+JSON.stringify((window.DIABETES_MODULE_DETAILS||{})[x.id]||{}),route:'module',key:x.id}));const quick=quickItems.map(x=>({kind:'床旁速查',title:x.title,text:JSON.stringify(x),route:'quick',key:x.id}));const comparison=comparisonItems.map(x=>({kind:'指南差异',title:x.title,text:JSON.stringify(x),route:'comparison',key:x.id}));const evidence=evidenceSearchItems.map((x,i)=>({kind:'循证等级',title:x[0],text:x.join(' '),route:'evidence',key:String(i)}));const symptom=(window.SYMPTOM_DIRECTORY||[]).map(x=>({kind:'主诉入口',title:x.title,text:'鉴别诊断 主诉 '+JSON.stringify(x),route:'symptom',key:x.id}));const path=(window.LEARNING_PATH||[]).map(x=>({kind:'学习路径',title:'第'+x.day+'天 '+x.title,text:'学习 '+JSON.stringify(x),route:'path',key:String(x.day)}));return[...disease,...guide,...catalog,...med,...abbr,...scenario,...workup,...severity,...complication,...module,...quick,...comparison,...evidence,...symptom,...path]}
 const allGlobalItems=globalItems();
-function openSearchResult(route,key,title){if(route==='disease'){activeDisease=key;recordLearning('疾病路径',title,'disease',key);renderDiseases();show('diseases')}else if(route==='guide'){show('library');openGuide(key)}else if(route==='catalog'){show('updates');document.getElementById('catalogSearch').value=title;activeCatalog='全部';renderCatalog(title)}else if(route==='med'){show('medications');document.getElementById('medSearch').value=title;activeMed='全部';renderMedications(title)}else if(route==='abbr'){show('glossary');document.getElementById('abbrSearch').value=title.split('｜')[0];renderGlossary(title.split('｜')[0])}else if(route==='scenario'){scenarioIndex=+key;recordLearning('患者场景',title,'scenario',String(key));renderScenarios();show('clinic')}else if(route==='workup'){openWorkup(key)}else if(route==='severity'){openSeverity(key)}else if(route==='complication'){openComplication(key)}else if(route==='module'){show('modules');openModule(key)}else if(route==='comparison'){openComparison(key)}else if(route==='evidence'){show('evidenceGuide')}}
+function openSearchResult(route,key,title){if(route==='disease'){activeDisease=key;recordLearning('疾病路径',title,'disease',key);renderDiseases();show('diseases')}else if(route==='guide'){show('library');openGuide(key)}else if(route==='catalog'){show('updates');document.getElementById('catalogSearch').value=title;activeCatalog='全部';renderCatalog(title)}else if(route==='med'){show('medications');document.getElementById('medSearch').value=title;activeMed='全部';renderMedications(title)}else if(route==='abbr'){show('glossary');document.getElementById('abbrSearch').value=title.split('｜')[0];renderGlossary(title.split('｜')[0])}else if(route==='scenario'){scenarioIndex=+key;recordLearning('患者场景',title,'scenario',String(key));renderScenarios();show('clinic')}else if(route==='workup'){openWorkup(key)}else if(route==='severity'){openSeverity(key)}else if(route==='complication'){openComplication(key)}else if(route==='module'){show('modules');openModule(key)}else if(route==='comparison'){openComparison(key)}else if(route==='evidence'){show('evidenceGuide')}else if(route==='symptom'){activeSymptom=key;activeSymptomGroup='全部';document.getElementById('symptomSearch').value='';renderSymptoms();show('symptoms')}else if(route==='path'){activePath=+key;activePathGroup='全部';document.getElementById('pathSearch').value='';renderPath();show('learningPath')}}
 function renderGlobalSearch(term=''){const q=term.trim().toLowerCase(),summary=document.getElementById('globalSearchSummary'),grid=document.getElementById('globalSearchResults');if(!q){summary.textContent='输入关键词后开始检索。';grid.innerHTML='';return}const tokens=q.split(/\s+/).filter(Boolean),arr=allGlobalItems.filter(x=>tokens.every(t=>searchText(x.title+' '+x.text).includes(t))).slice(0,100);summary.textContent=`找到 ${arr.length}${arr.length===100?'+' :''} 条结果。可继续增加疾病、药名、剂量或证据等级缩小范围。`;grid.innerHTML=arr.length?arr.map((x,i)=>`<button class="search-card" data-search-i="${i}" style="text-align:left"><span class="search-kind">${fmt(x.kind)}</span><h3>${fmt(x.title)}</h3><p class="plain">${fmt(x.text.replace(/[{}[\]\"]/g,' ').replace(/\s+/g,' ').slice(0,180))}</p></button>`).join(''):'<div class="empty">未找到匹配内容。可尝试中文名称、英文缩写或去掉单位空格。</div>';grid.querySelectorAll('[data-search-i]').forEach(b=>{const x=arr[+b.dataset.searchI];b.onclick=()=>openSearchResult(x.route,x.key,x.title)})}
-renderLibrary();renderScenarios();renderMedications();renderGlossary();renderDiseases();renderCatalog();renderWorkups();renderSeverity();renderComplications();renderQuick();renderComparisons();renderLearningRecord();
+renderLibrary();renderScenarios();renderMedications();renderGlossary();renderDiseases();renderCatalog();renderWorkups();renderSeverity();renderComplications();renderQuick();renderComparisons();renderSymptoms();renderPath();renderLearningRecord();
 document.getElementById('medSearch').oninput=e=>renderMedications(e.target.value);
 document.getElementById('abbrSearch').oninput=e=>renderGlossary(e.target.value);
 document.getElementById('catalogSearch').oninput=e=>renderCatalog(e.target.value);
