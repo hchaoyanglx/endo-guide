@@ -5,6 +5,42 @@
   if (!root) return;
 
   var STORAGE_KEY = 'endo-guide-patient-simulator-v1';
+  var DIAGNOSTIC_SYMPTOM_BANK = [
+    { id: 'fever', label: '发热', question: '有没有发热？最高体温、持续时间、寒战或出汗怎样？', keywords: ['发热', '体温', '寒战', '出汗'] },
+    { id: 'bleeding', label: '皮肤黏膜出血', question: '有没有皮肤瘀点瘀斑、鼻出血、牙龈出血或其他异常出血？', keywords: ['出血', '瘀点', '瘀斑', '鼻出血', '牙龈'] },
+    { id: 'edema', label: '水肿', question: '有没有眼睑或下肢水肿？何时出现，晨起或傍晚是否不同？', keywords: ['水肿', '肿'] },
+    { id: 'cough', label: '咳嗽与咳痰', question: '有没有咳嗽、咳痰？痰量、颜色、气味和出现时间怎样？', keywords: ['咳嗽', '咳痰', '痰'] },
+    { id: 'hemoptysis', label: '咯血', question: '有没有咯血或痰中带血？大约多少，是否反复？', keywords: ['咯血', '痰中带血'] },
+    { id: 'cyanosis', label: '发绀', question: '有没有口唇或指甲发紫？与活动、寒冷或呼吸困难是否相关？', keywords: ['发绀', '发紫', '紫'] },
+    { id: 'dyspnea', label: '呼吸困难', question: '有没有呼吸困难？活动后、平卧时或夜间是否加重？', keywords: ['呼吸困难', '气短', '喘'] },
+    { id: 'chest-pain', label: '胸痛', question: '有没有胸痛？部位、性质、持续时间，是否与活动或呼吸有关？', keywords: ['胸痛', '胸闷'] },
+    { id: 'palpitation', label: '心悸', question: '有没有心悸？发作是否突然，持续多久，是否伴晕厥或胸痛？', keywords: ['心悸', '心慌', '心跳'] },
+    { id: 'nausea-vomit', label: '恶心与呕吐', question: '有没有恶心呕吐？次数、呕吐物性状、与进食及腹痛的关系怎样？', keywords: ['恶心', '呕吐', '吐'] },
+    { id: 'reflux', label: '烧心与反流', question: '有没有烧心、反酸或胃内容物反流？平卧或进食后是否加重？', keywords: ['烧心', '反流', '反酸'] },
+    { id: 'dysphagia', label: '吞咽困难', question: '有没有吞咽困难？固体或液体更明显，是否进行性加重？', keywords: ['吞咽困难', '吞咽'] },
+    { id: 'hematemesis', label: '呕血', question: '有没有呕血或咖啡色呕吐物？大约量、颜色和是否伴黑便？', keywords: ['呕血', '咖啡色'] },
+    { id: 'melena', label: '便血', question: '有没有黑便或便血？颜色、次数、量以及是否头晕乏力？', keywords: ['便血', '黑便'] },
+    { id: 'abdominal-pain', label: '腹痛', question: '有没有腹痛？部位、起病方式、性质、持续时间及放射部位怎样？', keywords: ['腹痛', '肚子痛'] },
+    { id: 'diarrhea', label: '腹泻', question: '有没有腹泻？次数、性状、是否带血或黏液，是否伴发热和呕吐？', keywords: ['腹泻', '拉肚子'] },
+    { id: 'constipation', label: '便秘', question: '排便是否减少或困难？大便性状、持续时间及是否腹胀腹痛怎样？', keywords: ['便秘', '排便'] },
+    { id: 'jaundice', label: '黄疸', question: '有没有眼白或皮肤发黄、尿色加深、大便变浅或皮肤瘙痒？', keywords: ['黄疸', '发黄', '尿色', '瘙痒'] },
+    { id: 'back-pain', label: '腰背痛', question: '有没有腰背痛？是否与活动、体位或排尿相关，是否伴下肢麻木无力？', keywords: ['腰背痛', '腰痛', '背痛'] },
+    { id: 'arthralgia', label: '关节痛', question: '有没有关节痛或肿胀？涉及哪些关节，晨僵多久，是否对称或游走？', keywords: ['关节痛', '关节肿', '晨僵'] },
+    { id: 'hematuria', label: '血尿', question: '有没有肉眼血尿或尿色异常？是否伴腰痛、尿痛或血块？', keywords: ['血尿', '尿色异常'] },
+    { id: 'urinary-irritation', label: '尿频尿急尿痛', question: '有没有尿频、尿急或尿痛？是否伴发热、腰痛或血尿？', keywords: ['尿频', '尿急', '尿痛'] },
+    { id: 'urine-volume', label: '少尿无尿多尿', question: '近期尿量有没有明显变化？大致次数和夜尿情况怎样？', keywords: ['少尿', '无尿', '多尿', '尿量', '夜尿'] },
+    { id: 'urinary-difficulty', label: '排尿困难', question: '有没有排尿费力、尿线变细、尿潴留或排尿不尽感？', keywords: ['排尿困难', '尿线', '尿潴留'] },
+    { id: 'vaginal-bleeding', label: '阴道流血', question: '有没有异常阴道流血？与月经、妊娠可能、性交或疼痛的关系怎样？', keywords: ['阴道流血', '月经', '妊娠'] },
+    { id: 'obesity', label: '肥胖相关表现', question: '体重和腰围近年如何变化？是否有打鼾、白天嗜睡、月经异常或运动耐量下降？', keywords: ['体重', '腰围', '肥胖', '打鼾'] },
+    { id: 'weight-loss', label: '消瘦', question: '体重从何时开始下降？是否伴食欲、口渴多尿、腹泻或发热变化？', keywords: ['消瘦', '体重下降', '减重'] },
+    { id: 'headache', label: '头痛', question: '有没有头痛？起病是否突然，部位、性质、频率及是否伴呕吐或视力改变？', keywords: ['头痛', '头晕'] },
+    { id: 'vertigo', label: '眩晕', question: '有没有旋转感或站立不稳？与体位、听力变化、耳鸣或神经症状有关吗？', keywords: ['眩晕', '旋转', '站立不稳'] },
+    { id: 'syncope', label: '晕厥', question: '有没有短暂意识丧失？发生前是否心悸、胸痛、体位改变或运动，恢复后是否遗留症状？', keywords: ['晕厥', '意识丧失'] },
+    { id: 'seizure', label: '抽搐与惊厥', question: '有没有抽搐？发作时意识、肢体动作、持续时间和发作后状态怎样？', keywords: ['抽搐', '惊厥'] },
+    { id: 'consciousness', label: '意识障碍', question: '有没有嗜睡、定向力改变、反应变慢或行为异常？起病和进展怎样？', keywords: ['意识障碍', '嗜睡', '反应变慢'] },
+    { id: 'sleep', label: '睡眠障碍', question: '有没有入睡困难、夜间反复醒、白天嗜睡或打鼾憋醒？', keywords: ['睡眠', '失眠', '嗜睡', '打鼾'] },
+    { id: 'mood', label: '情感症状', question: '近期情绪、兴趣、焦虑和精力有没有明显变化？是否影响睡眠和日常功能？', keywords: ['情绪', '焦虑', '抑郁', '兴趣'] }
+  ];
   var CASES = [
     {
       id: 'new-t2d', group: '糖尿病/糖尿病前期', title: '体检发现血糖升高',
@@ -700,6 +736,37 @@
   function ctaChoiceButton(action, id, label, selected, note) {
     return '<button type="button" class="sim-choice ' + (selected ? 'is-selected' : '') + '" data-sim-action="' + action + '" data-sim-id="' + esc(id) + '"><span class="sim-choice-index">' + (selected ? '✓' : '•') + '</span><span><b>' + esc(label) + '</b>' + (note ? '<small>' + esc(note) + '</small>' : '') + '</span></button>';
   }
+  function ctaHistoryMatchByKeywords(item) {
+    if (!item || !item.keywords) return null;
+    var hay = String(item.question || '') + ' ' + String(item.answer || '');
+    return template.history.find(function (historyItem) {
+      var source = String(historyItem.question || '') + ' ' + String(historyItem.answer || '');
+      return item.keywords.some(function (keyword) { return keyword.length >= 2 && source.includes(keyword); }) || hay.includes(String(historyItem.id || ''));
+    }) || null;
+  }
+  function ctaSymptomQuickHtml() {
+    return '<details class="sim-cta-quick-panel"><summary>按《诊断学》常见症状目录选择问法</summary><p class="sim-muted">快捷项来自《诊断学（第10版）》常见症状目录（发热至情感症状）。点击后患者只会返回本病例已经设定的资料；未设定的项目会明确提示“本例未预设”，不等于阴性。</p><div class="sim-cta-question-list">' + DIAGNOSTIC_SYMPTOM_BANK.map(function (item) { return '<button type="button" class="sim-choice" data-sim-action="cta-symptom-question" data-sim-id="' + esc(item.id) + '"><span class="sim-choice-index">？</span><span><b>' + esc(item.label) + '</b><small>' + esc(item.question) + '</small></span></button>'; }).join('') + '</div></details>';
+  }
+  function ctaQuickTestHtml() {
+    var tests = template.tests || [];
+    if (!tests.length) return '';
+    return '<details class="sim-cta-quick-panel"><summary>本病例可快捷开立的检查</summary><p class="sim-muted">只列本病例已有指南路径和预设结果的检查；点击后显示文字结果和参考区间。影像检查只显示文字报告，不生成图片。</p><div class="sim-cta-question-list">' + tests.map(function (item) { return '<button type="button" class="sim-choice" data-sim-action="cta-quick-test" data-sim-id="' + esc(item.id) + '"><span class="sim-choice-index">检</span><span><b>' + esc(item.name) + '</b><small>' + esc(item.stage || '按当前问题选择') + '</small></span></button>'; }).join('') + '</div></details>';
+  }
+  function ctaQuickResultsHtml() {
+    var tests = (template.tests || []).filter(function (item) { return (state.interview.selectedTests || []).includes(item.id); });
+    if (!tests.length) return '';
+    return '<div class="sim-cta-results sim-cta-quick-results"><h4>已获得的检查结果</h4>' + tests.map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.name) + '</h4><p><b>' + esc(ctaResultLabel(item)) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('') + '</div>';
+  }
+  function decorateCtaHistory() {
+    if (!state.interview || !state.interview.started || state.interview.submitted || state.interview.phase !== 'history') return;
+    var body = root.querySelector('.sim-body');
+    var anchor = body && body.querySelector('.sim-free-question');
+    if (!anchor || body.querySelector('.sim-cta-symptom-bank')) return;
+    var panel = document.createElement('div');
+    panel.className = 'sim-cta-symptom-bank';
+    panel.innerHTML = ctaSymptomQuickHtml() + ctaQuickTestHtml() + ctaQuickResultsHtml();
+    anchor.parentNode.insertBefore(panel, anchor);
+  }
   function ctaTranscript() {
     if (!state.interview.askedHistory.length && !(state.interview.freeQuestions || []).length) return '<p class="sim-muted">患者还没有回答任何问题。请从下面选择一个你想主动询问的问题。</p>';
     var history = state.interview.askedHistory.map(function (id, index) {
@@ -875,6 +942,7 @@
     if (tabs && !tabs.querySelector('[data-sim-tab="workflow"]') && !(state.interview && state.interview.started && !state.interview.submitted)) tabs.insertAdjacentHTML('beforeend', '<button type="button" class="sim-tab ' + (state.activeTab === 'workflow' ? 'active' : '') + '" data-sim-tab="workflow">病历与流程</button>');
     if (state.activeTab === 'workflow') decorateWorkflow();
     if (state.activeTab === 'interview') decorateCtaResults();
+    if (state.activeTab === 'interview') decorateCtaHistory();
     if (state.activeTab === 'start') decorateStart();
   }
   function decorateWorkflow() {
@@ -897,6 +965,22 @@
       var questionItem = template.history.find(function (x) { return x.id === id; });
       if (questionItem && !state.interview.askedHistory.includes(id)) { state.interview.askedHistory.push(id); saveState(); render(); }
       return;
+    }
+    if (action === 'cta-symptom-question') {
+      var symptomItem = DIAGNOSTIC_SYMPTOM_BANK.find(function (item) { return item.id === id; });
+      if (!symptomItem) return;
+      var matchedHistory = ctaHistoryMatchByKeywords(symptomItem);
+      if (matchedHistory && !state.interview.askedHistory.includes(matchedHistory.id)) state.interview.askedHistory.push(matchedHistory.id);
+      state.interview.freeQuestions.push({ question: symptomItem.question, answer: matchedHistory ? matchedHistory.answer : '本病例预设资料没有提供这一项，不能据此判断有无；请在真实问诊中继续追问并客观记录。', sourceId: matchedHistory ? matchedHistory.id : '' });
+      state.response = matchedHistory ? '已按本病例资料返回患者回答；练习阶段不显示指南解析。' : '本病例没有预设这一项资料，未编造患者回答。';
+      saveState(); render(); return;
+    }
+    if (action === 'cta-quick-test') {
+      var quickTest = template.tests.find(function (item) { return item.id === id; });
+      if (!quickTest) return;
+      if (!state.interview.selectedTests.includes(id)) state.interview.selectedTests.push(id);
+      state.response = '已开立本病例预设检查；结果区只显示文字结果和参考区间，不显示提交后的解析。';
+      saveState(); render(); return;
     }
     if (action === 'cta-free-question') {
       var input = root.querySelector('[data-cta-free-question]');
