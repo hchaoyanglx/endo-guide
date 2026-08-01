@@ -755,8 +755,11 @@
       return item.keywords.some(function (keyword) { return keyword.length >= 2 && source.includes(keyword); }) || hay.includes(String(historyItem.id || ''));
     }) || null;
   }
+  function ctaSymptomAsked(item) {
+    return (state.interview.freeQuestions || []).some(function (entry) { return entry.symptomId === item.id || entry.question === item.question; });
+  }
   function ctaSymptomQuickHtml() {
-    return '<details class="sim-cta-quick-panel"><summary>按《诊断学》常见症状目录选择问法</summary><p class="sim-muted">快捷项来自《诊断学（第10版）》常见症状目录（发热至情感症状）。点击后患者只会返回本病例已经设定的资料；未设定的项目会明确提示“本例未预设”，不等于阴性。</p><div class="sim-cta-question-list">' + DIAGNOSTIC_SYMPTOM_BANK.map(function (item) { return '<button type="button" class="sim-choice" data-sim-action="cta-symptom-question" data-sim-id="' + esc(item.id) + '"><span class="sim-choice-index">？</span><span><b>' + esc(item.label) + '</b><small>' + esc(item.question) + '</small></span></button>'; }).join('') + '</div></details>';
+    return '<details class="sim-cta-quick-panel"><summary>按《诊断学》常见症状目录选择问法</summary><p class="sim-muted">快捷项来自《诊断学（第10版）》常见症状目录（发热至情感症状）。每个症状在本次病例只能主动询问一次；患者只会返回本病例已经设定的资料，未设定的项目会明确提示“本例未预设”，不等于阴性。</p><div class="sim-cta-question-list">' + DIAGNOSTIC_SYMPTOM_BANK.map(function (item) { var asked = ctaSymptomAsked(item); return '<button type="button" class="sim-choice' + (asked ? ' is-selected' : '') + '" data-sim-action="cta-symptom-question" data-sim-id="' + esc(item.id) + '"' + (asked ? ' disabled aria-disabled="true"' : '') + '><span class="sim-choice-index">' + (asked ? '已' : '？') + '</span><span><b>' + esc(item.label) + '</b><small>' + esc(item.question) + (asked ? ' · 本次已问过，不能重复' : '') + '</small></span></button>'; }).join('') + '</div></details>';
   }
   function ctaQuickTestHtml() {
     var tests = template.tests || [];
@@ -986,9 +989,10 @@
     if (action === 'cta-symptom-question') {
       var symptomItem = DIAGNOSTIC_SYMPTOM_BANK.find(function (item) { return item.id === id; });
       if (!symptomItem) return;
+      if (ctaSymptomAsked(symptomItem)) { state.response = '这个症状本次已经问过，不能重复提问；请继续选择其他症状或进入下一步。'; saveState(); render(); return; }
       var matchedHistory = ctaHistoryMatchByKeywords(symptomItem);
       if (matchedHistory && !state.interview.askedHistory.includes(matchedHistory.id)) state.interview.askedHistory.push(matchedHistory.id);
-      state.interview.freeQuestions.push({ question: symptomItem.question, answer: matchedHistory ? matchedHistory.answer : '本病例预设资料没有提供这一项，不能据此判断有无；请在真实问诊中继续追问并客观记录。', sourceId: matchedHistory ? matchedHistory.id : '' });
+      state.interview.freeQuestions.push({ symptomId: symptomItem.id, question: symptomItem.question, answer: matchedHistory ? matchedHistory.answer : '本病例预设资料没有提供这一项，不能据此判断有无；请在真实问诊中继续追问并客观记录。', sourceId: matchedHistory ? matchedHistory.id : '' });
       state.response = matchedHistory ? '已按本病例资料返回患者回答；练习阶段不显示指南解析。' : '本病例没有预设这一项资料，未编造患者回答。';
       saveState(); render(); return;
     }
