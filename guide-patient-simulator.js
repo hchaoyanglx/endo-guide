@@ -661,6 +661,16 @@
   function ctaQuestionOptions() {
     return template.history.filter(function (item) { return !state.interview.askedHistory.includes(item.id); });
   }
+  function ctaKnownFactsHtml() {
+    var complaints = (template.complaints || []).filter(function (item) { return item && item !== state.person.complaint; });
+    return '<div class="sim-review-block sim-cta-known-data"><h4>问诊前已知病例资料（仅展示本例已设定部分）</h4>' +
+      '<p><b>病例主线：</b>' + esc(template.intro || '本例未提供题干摘要，请从主诉和主动问诊开始。') + '</p>' +
+      '<p><b>本次主诉：</b>' + esc(state.person.complaint || '本例未提供主诉，请先核对患者自述。') + '</p>' +
+      '<p><b>题干公开的时间线：</b>' + esc(timelineInfo()) + '</p>' +
+      (complaints.length ? '<p><b>本病例其他预设就诊切入点（不等于本次患者已陈述）：</b>' + esc(complaints.join('；')) + '</p>' : '') +
+      '<p class="sim-muted"><b>仍需主动追问：</b>起病方式和完整时间线、伴随症状与阴性危险信号、既往史/手术史、用药与过敏、个人与家族史、婚育/月经史（适用时）、系统回顾及照护/依从性。未展示不等于阴性，未预设项目不会被系统补造。</p>' +
+      '<p class="sim-cta-boundary"><b>严格学习边界：</b>年龄、职业、情绪和部分背景为随机训练变量；病例主线、已标注检查结果和指南路径固定。全部内容仅供学习，严禁用于真实患者评估、处方或临床决策。</p></div>';
+  }
   function ctaMedicationOptions() { return (window.SIM_CASE_MEDICATIONS || {})[template.id] || []; }
   function ctaMedicationUnsafe(ref) { return /停用|避免|暂不|不自动|不适用|避免套用/.test(String(ref.type || '') + String(ref.name || '')); }
   function ctaReferenceRange(item) {
@@ -765,7 +775,7 @@
     if (!anchor || body.querySelector('.sim-cta-symptom-bank')) return;
     var panel = document.createElement('div');
     panel.className = 'sim-cta-symptom-bank';
-    panel.innerHTML = ctaSymptomQuickHtml() + ctaQuickTestHtml() + ctaQuickResultsHtml();
+    panel.innerHTML = ctaKnownFactsHtml() + ctaSymptomQuickHtml() + ctaQuickTestHtml() + ctaQuickResultsHtml();
     anchor.parentNode.insertBefore(panel, anchor);
   }
   function ctaTranscript() {
@@ -933,6 +943,8 @@
   function decorateStart() {
     var body = root.querySelector('.sim-body');
     if (!body || body.querySelector('.sim-cta-bridge')) return;
+    var card = body.querySelector('.sim-patient-card');
+    if (card && !body.querySelector('.sim-cta-known-data')) card.insertAdjacentHTML('afterend', ctaKnownFactsHtml());
     var communication = body.querySelector('.sim-communication');
     if (!communication) return;
     communication.insertAdjacentHTML('afterend', '<div class="sim-notice sim-cta-bridge"><b>主动问诊入口</b><p>完整病史不应凭空出现：进入 CTA 后，每点击一个具体问题，患者才回答这一项；你没有问到的内容会明确标记为“尚未获得”。</p><button class="primary" type="button" data-sim-tab="interview">进入 CTA 主动问诊</button></div>');
@@ -944,6 +956,10 @@
     if (state.activeTab === 'workflow') decorateWorkflow();
     if (state.activeTab === 'interview') decorateCtaResults();
     if (state.activeTab === 'interview') decorateCtaHistory();
+    if (state.activeTab === 'interview' && state.interview && !state.interview.started) {
+      var ctaWelcomeCard = root.querySelector('.sim-cta-welcome .sim-patient-card');
+      if (ctaWelcomeCard && !root.querySelector('.sim-cta-welcome .sim-cta-known-data')) ctaWelcomeCard.insertAdjacentHTML('afterend', ctaKnownFactsHtml());
+    }
     if (state.activeTab === 'start') decorateStart();
   }
   function decorateWorkflow() {
