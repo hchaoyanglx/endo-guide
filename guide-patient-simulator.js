@@ -862,12 +862,20 @@
     var last = actions[actions.length - 1];
     if (last) last.insertAdjacentHTML('beforebegin', html);
   }
+  function decorateStart() {
+    var body = root.querySelector('.sim-body');
+    if (!body || body.querySelector('.sim-cta-bridge')) return;
+    var communication = body.querySelector('.sim-communication');
+    if (!communication) return;
+    communication.insertAdjacentHTML('afterend', '<div class="sim-notice sim-cta-bridge"><b>主动问诊入口</b><p>完整病史不应凭空出现：进入 CTA 后，每点击一个具体问题，患者才回答这一项；你没有问到的内容会明确标记为“尚未获得”。</p><button class="primary" type="button" data-sim-tab="interview">进入 CTA 主动问诊</button></div>');
+  }
   function render() {
     renderBase();
     var tabs = root.querySelector('.sim-tabs');
     if (tabs && !tabs.querySelector('[data-sim-tab="workflow"]') && !(state.interview && state.interview.started && !state.interview.submitted)) tabs.insertAdjacentHTML('beforeend', '<button type="button" class="sim-tab ' + (state.activeTab === 'workflow' ? 'active' : '') + '" data-sim-tab="workflow">病历与流程</button>');
     if (state.activeTab === 'workflow') decorateWorkflow();
     if (state.activeTab === 'interview') decorateCtaResults();
+    if (state.activeTab === 'start') decorateStart();
   }
   function decorateWorkflow() {
     var body = root.querySelector('.sim-body');
