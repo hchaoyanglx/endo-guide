@@ -118,9 +118,9 @@
 
       <section id="symptoms" class="view">
         <div class="section-head"><div><div class="kicker">主诉入口</div><h2>从主诉、复诊到住院的完整临床路径</h2></div><p>临床接诊三阶段全覆盖：「初诊主诉」→「随访复诊/共病管理」→「住院-出院-再入院」。每个场景含鉴别诊断/评估维度、关键措施、循证依据和指南回链。</p></div>
-        <div class="library-tools" style="margin-bottom:14px"><button id="symTabInitial" class="active" data-symtab="initial">🏥 初诊主诉（24）</button><button id="symTabFollowup" data-symtab="followup">📋 随访复诊 / 共病管理（32）</button><button id="symTabInpatient" data-symtab="inpatient">🚨 住院-出院-再入院（14）</button></div>
+        <div class="library-tools" style="margin-bottom:14px"><button id="symTabInitial" class="active" data-symtab="initial">🏥 初诊主诉（33）</button><button id="symTabFollowup" data-symtab="followup">📋 随访复诊 / 共病管理（32）</button><button id="symTabInpatient" data-symtab="inpatient">🚨 住院-出院-再入院（14）</button></div>
         <div class="workup-toolbar"><input id="symptomSearch" class="deep-search" type="search" aria-label="搜索主诉" placeholder="搜索主诉、复诊或住院场景，如：心悸、低钾、糖尿病随访、甲亢危象、DKA住院、黏液性水肿昏迷……"><div id="symptomGroups" class="workup-groups"></div></div>
-        <div id="symptomSummary" class="search-summary">初诊主诉24 + 随访复诊32 + 住院-出院-再入院14 = 70个临床场景，每个含鉴别诊断/评估、关键措施、循证依据与指南回链。</div>
+        <div id="symptomSummary" class="search-summary">初诊主诉33 + 随访复诊32 + 住院-出院-再入院14 = 79个临床场景，每个含鉴别诊断/评估、关键措施、循证依据与指南回链。</div>
         <div class="workup-layout"><div id="symptomList" class="indicator-list" aria-label="主诉/复诊/住院列表"></div><div id="symptomDetail" class="workup-detail"></div></div>
       </section>
 
@@ -133,10 +133,10 @@
       </section>
 
       <section id="workups" class="view">
-        <div class="section-head"><div><div class="kicker">异常指标临床追查</div><h2>患者出现异常值后，下一步查什么、为什么查</h2></div><p>25条高频路径按“确认异常—排急症—一线辅助检查—结果分支—鉴别诊断—升级处理”组织，并逐项标注检查意义。</p></div>
+        <div class="section-head"><div><div class="kicker">异常指标临床追查</div><h2>患者出现异常值后，下一步查什么、为什么查</h2></div><p>29条高频路径按“确认异常—排急症—一线辅助检查—结果分支—鉴别诊断—升级处理”组织，并逐项标注检查意义。</p></div>
         <div class="notice"><b>使用顺序：</b>先输入异常指标或疾病线索，例如“TSH低”“UACR 420”“低钾高血压”“PRL升高”“血酮”；打开路径后，按照患者背景删除不适用项目。参考区间、单位、妊娠/儿童切点和检测方法必须以采用的指南与本实验室为准。</div>
         <div class="workup-toolbar"><input id="workupSearch" class="deep-search" type="search" aria-label="搜索异常指标" placeholder="搜索异常值、辅助检查或临床意义，例如：血酮、FIB-4、钩状效应、ABI……"><div id="workupGroups" class="workup-groups"></div></div>
-        <div id="workupSummary" class="search-summary">已整合25条异常指标路径。</div>
+        <div id="workupSummary" class="search-summary">已整合29条异常指标路径。</div>
         <div class="workup-layout"><div id="workupList" class="indicator-list" aria-label="异常指标列表"></div><div id="workupDetail" class="workup-detail"></div></div>
         <details class="coverage"><summary>查看186份指南如何覆盖这些异常指标</summary><p class="plain">186份资料已全部纳入主题映射；每条路径只调用与该异常真正相关的指南，不把营养、护理、运动或特殊场景资料强行当作诊断依据。</p><div id="coverageGrid" class="coverage-grid"></div></details>
       </section>
