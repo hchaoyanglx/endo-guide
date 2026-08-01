@@ -421,6 +421,49 @@
     return DEFAULT_SYMPTOM_RESPONSES[item.id] || '本次训练预设：患者目前未诉该症状，仍需结合完整问诊和查体核实。';
   }
 
+  function freeQuestionAnswer(template, query) {
+    var normalized = String(query || '').trim();
+    var qLower = normalized.toLowerCase();
+    var matched = template.history.find(function (item) {
+      var hay = String(item.question || '') + ' ' + String(item.answer || '');
+      return qLower.length >= 2 && (hay.toLowerCase().includes(qLower) || qLower.split(/[，。；、\s]+/).filter(Boolean).some(function (word) {
+        return word.length >= 2 && hay.toLowerCase().includes(word.toLowerCase());
+      }));
+    });
+    if (matched) return { answer: matched.answer, sourceId: matched.id, historyId: matched.id };
+
+    var symptom = DIAGNOSTIC_SYMPTOM_BANK.find(function (item) {
+      return (item.keywords || []).some(function (keyword) { return keyword.length >= 2 && qLower.includes(keyword.toLowerCase()); });
+    });
+    if (symptom) return { answer: diagnosticSymptomAnswer(template, symptom), sourceId: 'diagnostic-symptom-preset', symptomId: symptom.id };
+
+    var answer = '';
+    if (/过敏|药物过敏|食物过敏/.test(qLower)) {
+      answer = '本次训练预设：患者否认已知药物或食物过敏，也没有发生过严重过敏反应；具体药名仍应在用药核对时逐项确认。';
+    } else if (/既往|手术|住院|病史|结核|肝炎|输血/.test(qLower)) {
+      answer = '本次训练预设：除病例已经显示的相关病史外，患者否认重大手术、长期住院、结核或病毒性肝炎史；本例主线相关病史以已显示的问诊回答为准。';
+    } else if (/家族|遗传|父母|兄弟|姐妹/.test(qLower)) {
+      answer = '本次训练预设：家族史以本病例已显示的遗传或家族线索为主；除已显示内容外，患者否认同类内分泌疾病在近亲中聚集。';
+    } else if (/用药|药物|服药|漏服|剂量|胰岛素|保健品|激素/.test(qLower)) {
+      var medicationAnswers = template.history.filter(function (item) {
+        var source = String(item.id || '') + ' ' + String(item.question || '') + ' ' + String(item.answer || '');
+        return /药|用药|服药|胰岛素|激素|保健/.test(source);
+      }).map(function (item) { return item.answer; }).filter(Boolean);
+      answer = medicationAnswers.length ? '本次训练预设：' + medicationAnswers.join('；') : '本次训练预设：目前没有其他规律用药或近期新增药物；请在真实问诊训练中逐项核对药名、剂量、漏服和不良反应。';
+    } else if (/吸烟|饮酒|酒精|烟草|电子烟/.test(qLower)) {
+      answer = '本次训练预设：不吸烟；饮酒为偶尔少量，近期没有暴饮酒或戒断表现。';
+    } else if (/饮食|吃饭|进食|运动|锻炼|活动|饮料|夜宵/.test(qLower)) {
+      answer = '本次训练预设：近期饮食和活动情况以病例资料中已显示的线索为主，患者没有报告新的明显变化；需要记录具体频率、份量和近期趋势。';
+    } else if (/妊娠|怀孕|月经|生育|性生活|乳房|泌乳|哺乳/.test(qLower)) {
+      answer = state.person && state.person.sex === '男' ? '本次训练预设：患者为男性，本问题不适用；目前没有相关异常主诉。' : '本次训练预设：目前没有妊娠可能或异常大出血；月经、生育和泌乳信息以病例已经显示的问诊回答为准。';
+    } else if (/起病|多久|时间|几天|几周|几月|持续|什么时候|以来|变化/.test(qLower)) {
+      answer = timelineInfo() + '；本次训练预设中未再出现新的时间线变化。';
+    } else {
+      answer = '本次训练预设回答：患者目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + template.intro + '”。以上是本次虚构训练资料中的回答，不能外推到真实患者。';
+    }
+    return { answer: answer, sourceId: 'free-question-preset' };
+  }
+
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
@@ -888,7 +931,7 @@
     if (phase !== 'history' && phase !== 'impression' && phase !== 'exams') body += '<div class="sim-cta-transcript"><h4>已获得的有效问诊信息（只显示你主动问过的内容）</h4>' + ctaTranscript() + '</div>';
     if (phase === 'history') {
       var questions = ctaQuestionOptions();
-      body += '<div class="sim-cta-transcript">' + ctaTranscript() + '</div><h4>选择你下一句要问的问题</h4><p class="sim-muted">每个病例都提供多于三个可选问题；可按症状、起病时间、危险表现、用药和共病逐项追问。下方还可输入你自己的问题，系统只会检索本例已设定的资料，不会补造回答。</p><div class="sim-cta-question-list">' + (questions.length ? questions.map(function (item) { return ctaChoiceButton('cta-question', item.id, item.question, false, ctaGroup(item)); }).join('') : '<p class="sim-muted">本例预设问题已全部问过，可以进入初步印象。</p>') + '</div><div class="sim-free-question"><label><b>自由提问（可问任意症状/时间线/用药/危险表现）</b><input type="text" data-cta-free-question placeholder="例如：有没有呕吐？最近一次用药是什么时候？"></label><button class="sim-secondary" type="button" data-sim-action="cta-free-question">询问患者</button></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-impression">结束问诊，进入初步印象</button></div>';
+      body += '<div class="sim-cta-transcript">' + ctaTranscript() + '</div><h4>选择你下一句要问的问题</h4><p class="sim-muted">每个病例都提供多于三个可选问题；可按症状、起病时间、危险表现、用药和共病逐项追问。下方还可输入你自己的问题，系统会根据本病例预设回答层返回患者回答；未显示指南解析，回答仅供本次训练。</p><div class="sim-cta-question-list">' + (questions.length ? questions.map(function (item) { return ctaChoiceButton('cta-question', item.id, item.question, false, ctaGroup(item)); }).join('') : '<p class="sim-muted">本例预设问题已全部问过，可以进入初步印象。</p>') + '</div><div class="sim-free-question"><label><b>自由提问（可问任意症状/时间线/用药/危险表现）</b><input type="text" data-cta-free-question placeholder="例如：有没有呕吐？最近一次用药是什么时候？"></label><button class="sim-secondary" type="button" data-sim-action="cta-free-question">询问患者</button></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-impression">结束问诊，进入初步印象</button></div>';
     } else if (phase === 'impression') {
       body += '<div class="sim-cta-transcript"><h4>目前患者已回答</h4>' + ctaTranscript() + '</div><h4>选择你的初步判断（不显示对错）</h4><div class="sim-choice-list">' + template.decisions.map(function (item) { return ctaChoiceButton('cta-impression-choice', item.id, item.label, item.id === it.impressionDecision, '初步诊断/鉴别选项'); }).join('') + '</div><label class="sim-note-field"><b>初步印象与鉴别理由</b><small>写支持证据、尚不能排除的危险情况和下一步需要验证的内容。</small><textarea data-cta-text="impression" placeholder="先独立书写，不要等解析...">' + esc(it.text.impression || '') + '</textarea></label><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-exams">进入针对性查体</button></div>';
     } else if (phase === 'exams') {
@@ -1081,14 +1124,10 @@
       var input = root.querySelector('[data-cta-free-question]');
       var query = input ? String(input.value || '').trim() : '';
       if (!query) { state.response = '请先写下你想问的症状、时间线、用药或危险表现。'; saveState(); render(); return; }
-      var qLower = query.toLowerCase();
-      var matched = template.history.find(function (item) {
-        var hay = String(item.question || '') + ' ' + String(item.answer || '');
-        return qLower.length >= 2 && (hay.toLowerCase().includes(qLower) || qLower.split(/[，。；、\s]+/).filter(Boolean).some(function (word) { return word.length >= 2 && hay.toLowerCase().includes(word.toLowerCase()); }));
-      });
-      if (matched && !state.interview.askedHistory.includes(matched.id)) state.interview.askedHistory.push(matched.id);
-      state.interview.freeQuestions.push({ question: query, answer: matched ? matched.answer : '本例预设资料没有提供这一问的患者回答；系统不会据此编造症状、检查结果或病史。请改问下方已有问题，或在后续检查站选择实际可开立的项目。', sourceId: matched ? matched.id : '' });
-      state.response = matched ? '已按本例预设资料回答；未显示指南解析。' : '本例没有这项预设资料，未生成患者回答。';
+      var freeAnswer = freeQuestionAnswer(template, query);
+      if (freeAnswer.historyId && !state.interview.askedHistory.includes(freeAnswer.historyId)) state.interview.askedHistory.push(freeAnswer.historyId);
+      state.interview.freeQuestions.push({ question: query, answer: freeAnswer.answer, sourceId: freeAnswer.sourceId, symptomId: freeAnswer.symptomId || '' });
+      state.response = '已按本病例预设训练资料回答；未显示指南解析。';
       saveState(); render(); return;
     }
     if (action === 'cta-impression') { if (!state.interview.askedHistory.length) { state.response = '至少主动询问一个问题后，才能结束资料收集。'; saveState(); render(); return; } state.interview.phase = 'impression'; state.response = ''; saveState(); render(); return; }
