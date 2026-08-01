@@ -228,7 +228,7 @@
       tests: [
         { id: 'metabolic', name: 'HbA1c、血压、脂质、肝肾功能', stage: '首轮', workupId: 'obesity-measures', result: 'HbA1c 8.4%，甘油三酯升高，ALT 轻度升高，eGFR 68。', interpretation: '减重和糖尿病治疗目标需要共同制定，兼顾心肾代谢获益和低血糖风险。', why: '选择治疗前先明确共病。', essential: true },
         { id: 'sleep-test', name: '睡眠监测（按症状）', stage: '首轮/转诊', workupId: 'obesity-measures', result: '建议进行睡眠呼吸暂停诊断性评估。', interpretation: '不是所有嗜睡都归因于肥胖；需确认并处理。', why: '影响安全、血压和体重管理。', essential: true },
-        { id: 'secondary', name: '继发性肥胖筛查（按病史）', stage: '按需', workupId: 'cortisol-high', result: '无明显库欣特异体征；药物、睡眠和行为因素更突出。', interpretation: '没有指征时不做无差别激素套餐；有红旗再进入相应路径。', why: '避免过度检查和误诊。', essential: false }
+        { id: 'secondary', name: '继发性肥胖筛查（按病史）', stage: '按需', workupId: 'cortisol-high', result: '无明显库欣特异体征；药物、睡眠和行为因素更突出。', interpretation: '没有指征时不做无差别激素套餐；出现需要立即升级或急诊评估的危险表现，再进入相应路径。', why: '避免过度检查和误诊。', essential: false }
       ],
       decisions: [
         { id: 'integrated', label: '制定以健康获益为目标的综合减重计划，并把糖尿病、睡眠和心理/功能共病一起管理', correct: true, why: '肥胖治疗是长期综合管理，药物/手术适应证需要结合 BMI、共病、偏好和禁忌。', links: [{ type: 'workup', id: 'obesity-measures', label: '打开肥胖指标追查' }] },
@@ -363,7 +363,7 @@
       exams: [
         { id: 'body', label: 'BMI、体毛、肌力和乳房', result: 'BMI 31，体毛减少，轻度乳房发育；无睾丸肿块。', meaning: '提示性腺轴问题和肥胖相关因素，需结合激素。' },
         { id: 'testis', label: '睾丸体积与外生殖器', result: '双侧睾丸体积偏小，无压痛或肿块。', meaning: '有助于区分原发/继发性方向，需专科规范测量。' },
-        { id: 'red', label: '垂体红旗', result: '无视野缺损、剧烈头痛或意识改变。', meaning: '无红旗不能排除垂体病变，但可按稳定路径分层。', redFlag: true }
+        { id: 'red', label: '垂体危险表现', result: '无视野缺损、剧烈头痛或意识改变。', meaning: '未出现危险表现不能排除垂体病变，但可按稳定路径分层。', redFlag: true }
       ],
       tests: [
         { id: 'testosterone', name: '两次不同日晨间总睾酮（必要时 SHBG/游离睾酮）', stage: '确认', workupId: 'gynecomastia-hypogonadism', result: '两次晨间总睾酮均低；需结合检测方法和 SHBG。', interpretation: '症状和重复低值共同支持低睾酮；单次结果不足以确诊。', why: '确认可重复性。', essential: true },
@@ -391,7 +391,7 @@
       exams: [
         { id: 'anthro', label: '规范身高、体重、坐高和体态', result: '身高 SDS 约 -1.8，生长速度下降；体重 SDS 也下降。', meaning: '体重先下降提示营养/慢性病可能，不能直接跳到 GH 缺乏。' },
         { id: 'puberty', label: '青春期分期与甲状腺', result: '青春期尚未启动，甲状腺无明显肿大。', meaning: '需结合年龄、骨龄和家族青春期时间。' },
-        { id: 'neuro', label: '神经和视野红旗', result: '无头痛、呕吐、视野异常。', meaning: '出现这些表现需加快垂体影像。', redFlag: true }
+        { id: 'neuro', label: '神经和视野危险表现', result: '无头痛、呕吐、视野异常。', meaning: '出现这些表现需加快垂体影像。', redFlag: true }
       ],
       tests: [
         { id: 'basic', name: '血常规、炎症、肝肾、营养与乳糜泻筛查（按病史）', stage: '首轮', workupId: 'growth-igf1', result: '血常规轻度贫血，需进一步排查营养和慢性炎症。', interpretation: '先排常见可逆原因，避免把矮小直接归因于 GH。', why: '基础评估建立先验概率。', essential: true },
