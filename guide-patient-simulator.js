@@ -435,33 +435,29 @@
     var symptom = DIAGNOSTIC_SYMPTOM_BANK.find(function (item) {
       return (item.keywords || []).some(function (keyword) { return keyword.length >= 2 && qLower.includes(keyword.toLowerCase()); });
     });
-    if (symptom) return { answer: diagnosticSymptomAnswer(template, symptom), sourceId: 'diagnostic-symptom-preset', symptomId: symptom.id };
-
-    var answer = '';
+    var answers = symptom ? [diagnosticSymptomAnswer(template, symptom)] : [];
     if (/过敏|药物过敏|食物过敏/.test(qLower)) {
-      answer = '本次训练预设：患者否认已知药物或食物过敏，也没有发生过严重过敏反应；具体药名仍应在用药核对时逐项确认。';
-    } else if (/既往|手术|住院|病史|结核|肝炎|输血/.test(qLower)) {
-      answer = '本次训练预设：除病例已经显示的相关病史外，患者否认重大手术、长期住院、结核或病毒性肝炎史；本例主线相关病史以已显示的问诊回答为准。';
-    } else if (/家族|遗传|父母|兄弟|姐妹/.test(qLower)) {
-      answer = '本次训练预设：家族史以本病例已显示的遗传或家族线索为主；除已显示内容外，患者否认同类内分泌疾病在近亲中聚集。';
-    } else if (/用药|药物|服药|漏服|剂量|胰岛素|保健品|激素/.test(qLower)) {
+      answers.push('本次训练预设：患者否认已知药物或食物过敏，也没有发生过严重过敏反应；具体药名仍应在用药核对时逐项确认。');
+    }
+    if (/既往|手术|住院|病史|结核|肝炎|输血/.test(qLower)) {
+      answers.push('本次训练预设：除病例已经显示的相关病史外，患者否认重大手术、长期住院、结核或病毒性肝炎史；本例主线相关病史以已显示的问诊回答为准。');
+    }
+    if (/家族|遗传|父母|兄弟|姐妹/.test(qLower)) {
+      answers.push('本次训练预设：家族史以本病例已显示的遗传或家族线索为主；除已显示内容外，患者否认同类内分泌疾病在近亲中聚集。');
+    }
+    if (/用药|药物|服药|漏服|剂量|胰岛素|保健品|激素/.test(qLower)) {
       var medicationAnswers = template.history.filter(function (item) {
         var source = String(item.id || '') + ' ' + String(item.question || '') + ' ' + String(item.answer || '');
         return /药|用药|服药|胰岛素|激素|保健/.test(source);
       }).map(function (item) { return item.answer; }).filter(Boolean);
-      answer = medicationAnswers.length ? '本次训练预设：' + medicationAnswers.join('；') : '本次训练预设：目前没有其他规律用药或近期新增药物；请在真实问诊训练中逐项核对药名、剂量、漏服和不良反应。';
-    } else if (/吸烟|饮酒|酒精|烟草|电子烟/.test(qLower)) {
-      answer = '本次训练预设：不吸烟；饮酒为偶尔少量，近期没有暴饮酒或戒断表现。';
-    } else if (/饮食|吃饭|进食|运动|锻炼|活动|饮料|夜宵/.test(qLower)) {
-      answer = '本次训练预设：近期饮食和活动情况以病例资料中已显示的线索为主，患者没有报告新的明显变化；需要记录具体频率、份量和近期趋势。';
-    } else if (/妊娠|怀孕|月经|生育|性生活|乳房|泌乳|哺乳/.test(qLower)) {
-      answer = state.person && state.person.sex === '男' ? '本次训练预设：患者为男性，本问题不适用；目前没有相关异常主诉。' : '本次训练预设：目前没有妊娠可能或异常大出血；月经、生育和泌乳信息以病例已经显示的问诊回答为准。';
-    } else if (/起病|多久|时间|几天|几周|几月|持续|什么时候|以来|变化/.test(qLower)) {
-      answer = timelineInfo() + '；本次训练预设中未再出现新的时间线变化。';
-    } else {
-      answer = '本次训练预设回答：患者目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + template.intro + '”。以上是本次虚构训练资料中的回答，不能外推到真实患者。';
+      answers.push(medicationAnswers.length ? '本次训练预设：' + medicationAnswers.join('；') : '本次训练预设：目前没有其他规律用药或近期新增药物；请在真实问诊训练中逐项核对药名、剂量、漏服和不良反应。');
     }
-    return { answer: answer, sourceId: 'free-question-preset' };
+    if (/吸烟|饮酒|酒精|烟草|电子烟/.test(qLower)) answers.push('本次训练预设：不吸烟；饮酒为偶尔少量，近期没有暴饮酒或戒断表现。');
+    if (/饮食|吃饭|进食|运动|锻炼|活动|饮料|夜宵/.test(qLower)) answers.push('本次训练预设：近期饮食和活动情况以病例资料中已显示的线索为主，患者没有报告新的明显变化；需要记录具体频率、份量和近期趋势。');
+    if (/妊娠|怀孕|月经|生育|性生活|乳房|泌乳|哺乳/.test(qLower)) answers.push(state.person && state.person.sex === '男' ? '本次训练预设：患者为男性，本问题不适用；目前没有相关异常主诉。' : '本次训练预设：目前没有妊娠可能或异常大出血；月经、生育和泌乳信息以病例已经显示的问诊回答为准。');
+    if (/起病|多久|时间|几天|几周|几月|持续|什么时候|以来|变化/.test(qLower)) answers.push(timelineInfo() + '；本次训练预设中未再出现新的时间线变化。');
+    if (answers.length) return { answer: answers.join(' '), sourceId: symptom ? 'diagnostic-symptom-preset' : 'free-question-preset', symptomId: symptom ? symptom.id : '' };
+    return { answer: '本次训练预设回答：患者目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + template.intro + '”。以上是本次虚构训练资料中的回答，不能外推到真实患者。', sourceId: 'free-question-preset' };
   }
 
   function esc(value) {
