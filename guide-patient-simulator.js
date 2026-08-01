@@ -40,6 +40,7 @@
     { id: 'consciousness', label: '意识障碍', question: '有没有嗜睡、定向力改变、反应变慢或行为异常？起病和进展怎样？', keywords: ['意识障碍', '嗜睡', '反应变慢'] },
     { id: 'sleep', label: '睡眠障碍', question: '有没有入睡困难、夜间反复醒、白天嗜睡或打鼾憋醒？', keywords: ['睡眠', '失眠', '嗜睡', '打鼾'] },
     { id: 'mood', label: '情感症状', question: '近期情绪、兴趣、焦虑和精力有没有明显变化？是否影响睡眠和日常功能？', keywords: ['情绪', '焦虑', '抑郁', '兴趣'] }
+    , { id: 'urinary-incontinence', label: '尿失禁', question: '是否有不自主漏尿？发生在咳嗽、打喷嚏、急迫感后，还是持续滴漏？', keywords: ['尿失禁', '漏尿', '尿液不自主'] }
   ];
   var CASES = [
     {
