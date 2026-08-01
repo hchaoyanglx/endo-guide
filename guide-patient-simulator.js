@@ -842,6 +842,8 @@
     mood = template.moods.find(function (item) { return item.id === state.person.moodId; }) || template.moods[0];
     var ctaLockedTabs = state.interview && state.interview.started && !state.interview.submitted;
     var tabs = ctaLockedTabs ? [{ id: 'interview', label: 'CTA一问一答' }] : [{ id: 'start', label: '患者与沟通' }, { id: 'interview', label: 'CTA一问一答' }, { id: 'history', label: '问诊' }, { id: 'exams', label: '床旁查体' }, { id: 'tests', label: '选择检查' }, { id: 'decisions', label: '下一步判断' }, { id: 'review', label: '复盘' }];
+    tabs = tabs.filter(function (tab) { return ['start', 'interview', 'review'].includes(tab.id); });
+    if (!['start', 'interview', 'review', 'workflow'].includes(state.activeTab)) state.activeTab = 'interview';
     var tabHtml = tabs.map(function (tab) { return '<button type="button" class="sim-tab ' + (state.activeTab === tab.id ? 'active' : '') + '" data-sim-tab="' + tab.id + '">' + tab.label + '</button>'; }).join('');
     root.innerHTML = '<div class="sim-top"><div><span class="sim-kicker">随机患者模拟器</span><h3>把指南路径练成一次有温度的问诊</h3><p>每次进入本页会保留当前病例；点击“重新抽取患者”生成新的虚构患者。随机的是背景、表达和情绪，诊断事实、检查结果与安全边界来自已标注的指南路径。</p></div><div class="sim-progress"><b>' + progressCount() + '</b><span>个学习动作</span></div></div><div class="sim-notice"><b>学习边界：</b>这是虚构教学病例，不是真实医嘱。模拟器不替代急诊分诊、原指南、药品说明书或专科会诊；涉及 DKA/HHS、低钾、肾上腺危象、视力下降等危险信号时，现实中应立即升级处理。</div><div class="sim-tabs">' + tabHtml + '</div><div class="sim-body">' + (state.activeTab === 'review' ? reviewHtml() : renderTab(state.activeTab)) + '</div>';
   }
