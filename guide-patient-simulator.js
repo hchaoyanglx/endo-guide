@@ -419,11 +419,97 @@
   function gateLabel(gate) {
     return ({ communication: '先完成一次有回应的沟通', history: '先完成必问病史，尤其是危险信号', exams: '先完成关键床旁查体', tests: '先完成必要的首轮检查', decisions: '先作出下一步判断', done: '前置临床推理已完成' })[gate] || '';
   }
+  function timelineInfo() {
+    var text = [template.intro].concat(template.history.map(function (item) { return item.answer || ''; })).join(' ');
+    var matches = text.match(/(?:近|约|持续|已有|过去|前)s*[0-9一二三四五六七八九十]+s*(?:天|日|周|星期|个月|月|年|小时)/g) || [];
+    var unique = matches.filter(function (item, index) { return matches.indexOf(item) === index; });
+    return unique.length ? '本例资料已提供：' + unique.join('、') : '本例资料未提供明确患病时间；练习时必须补问起病日期、起病方式、变化趋势、最近一次发作和就诊前处理。';
+  }
+  function caseDataText() {
+    var history = template.history.map(function (item) { return '【' + item.question + '】患者回答：' + item.answer + '；意义：' + item.why; }).join('\n');
+    var exams = template.exams.map(function (item) { return '【' + item.label + '】模拟结果：' + item.result + '；意义：' + item.meaning; }).join('\n');
+    var tests = template.tests.map(function (item) { return '【' + item.name + '】结果：' + item.result + '；解释：' + item.interpretation; }).join('\n');
+    return { history: history, exams: exams, tests: tests };
+  }
+  function autoDraftsFor(key) {
+    var scene = SCENES.find(function (item) { return item.id === state.scene; }) || SCENES[0];
+    var data = caseDataText();
+    var timeline = timelineInfo();
+    var profile = state.profile || {};
+    var patient = state.person.age + '岁，' + state.person.sex + '，职业：' + state.person.job + '（虚构教学病例，不含真实身份信息）';
+    var chief = state.person.complaint + '；' + timeline;
+    var history = template.intro + '\n' + timeline + '\n' + data.history + '\n本例未出现的病史不能自行补写；请将“未询问/未提供”列为待补问。';
+    var background = '既往/共病线索：' + (profile.comorbidities || []).join('、') + '。\n用药线索：' + (profile.meds || '未设定，需逐项核对') + '。\n个人/家族/婚育月经史：以本例问诊回答为准，未提供者标记待补问。';
+    var exam = '就诊场景：' + scene.label + '；' + (profile.context || '') + '\n生命体征/体格变量：BP ' + (profile.vitals && profile.vitals.bp || '未提供') + ' mmHg，HR ' + (profile.vitals && profile.vitals.hr || '未提供') + '/min，T ' + (profile.vitals && profile.vitals.temp || '未提供') + '℃，BMI ' + (profile.vitals && profile.vitals.bmi || '未提供') + '。\n' + data.exams;
+    var diagnosis = '病例特点：' + template.note + '\n首要判断：根据已完成的检查和下一步判断选项整理，不能把模拟结果外推到真实患者。\n鉴别诊断/排除理由：' + template.decisions.map(function (item) { return item.label + '；理由：' + item.why; }).join('\n');
+    var plan = '首轮检查与监测：' + template.tests.filter(function (item) { return item.essential || item.redFlag; }).map(function (item) { return item.name + '（目的：' + item.why + '）'; }).join('；') + '。\n安全网：' + template.history.filter(function (item) { return item.redFlag; }).map(function (item) { return item.question + '；患者回答：' + item.answer; }).join('；') + '。\n下一步：完成临床判断后回到相应指南路径、药物卡和院内急救/会诊流程核对。';
+    var drafts = {
+      outpatient: {
+        '主诉': chief,
+        '现病史': history,
+        '相关既往史与用药': background,
+        '查体与辅助检查': exam + '\n' + data.tests,
+        '初步判断与鉴别': diagnosis,
+        '处理计划与安全网': plan
+      },
+      admission: {
+        '主诉与入院经过': chief + '。入院场景：' + scene.label + '；' + (profile.context || ''),
+        '现病史与系统回顾': history + '\n系统回顾只记录已询问内容，未提供项目列为待补问。',
+        '既往史/个人史/婚育月经/家族史': background,
+        '体格与专科检查': exam,
+        '辅助检查与初步诊断': data.tests + '\n' + diagnosis,
+        '入院后诊疗计划': plan + '\n监测、会诊和升级条件按病情及院内流程执行。'
+      },
+      firstCourse: {
+        '病例特点': patient + '；' + chief + '。\n' + data.history + '\n' + data.exams,
+        '拟诊与诊断依据': diagnosis + '\n辅助检查依据：' + data.tests,
+        '诊疗计划': plan,
+        '风险与告知': '已识别的危险表现：' + (template.history.filter(function (item) { return item.redFlag; }).map(function (item) { return item.question; }).join('；') || '本例暂未标注特殊危险表现') + '。\n告知患者本页为虚构训练，真实患者需由上级医师审核。'
+      },
+      dailyCourse: {
+        '今日病情变化': '教学病例今日记录：' + chief + '。\n与前一节点相比的变化需根据本例已打开的问诊、查体和检查结果填写；未提供的变化不得补写。',
+        '检查结果与趋势解释': data.tests + '\n趋势：本例仅提供当前教学节点，连续趋势需在真实病程中按时间补记。',
+        '问题清单与疗效/不良反应': diagnosis + '\n治疗反应、不良反应、依从性和护理观察未在本例设定者，标记待核对。',
+        '今日计划与升级条件': plan
+      },
+      discharge: {
+        '入院情况与出院诊断': chief + '。\n出院诊断状态：依据本例已提供资料整理；未证实项目标为待随访，不自动生成确定诊断。',
+        '住院经过与关键结果': history + '\n' + data.exams + '\n' + data.tests,
+        '出院用药与核对': '本例只生成需要核对的药物类别和安全问题：' + (profile.meds || '逐项核对处方、过敏和最近一次用药') + '。不自动生成新的剂量或停药指令。',
+        '复查随访与安全网': plan + '\n出院前需确认患者/家属能够复述药物、复查、转诊和立即就医条件。'
+      },
+      followup: {
+        '上次计划完成情况': '本例为' + scene.label + '。已知资料：' + data.history + '\n未提供的上次检查、用药和生活方式执行情况需在复诊时逐项核对。',
+        '本次症状与客观指标': chief + '\n' + exam + '\n' + data.tests,
+        '疗效、安全性与共病': diagnosis + '\n安全性重点：' + (profile.comorbidities || []).join('、') + '；' + (profile.meds || ''),
+        '本次计划与下次节点': plan + '\n下次复诊时间和复查项目须依据具体指南、结果和医院流程确定。'
+      }
+    };
+    return drafts[key] || drafts.outpatient;
+  }
+  function rubricFor(field, value) {
+    var rules = {
+      '主诉': ['时间', '持续', '起病'], '主诉与入院经过': ['时间', '入院'], '现病史': ['时间线', '伴随', '检查', '用药'], '现病史与系统回顾': ['时间线', '系统', '危险'],
+      '相关既往史与用药': ['既往', '用药', '过敏'], '既往史/个人史/婚育月经/家族史': ['既往', '家族', '待补问'], '查体与辅助检查': ['生命体征', '检查'], '体格与专科检查': ['生命体征', '查体'],
+      '初步判断与鉴别': ['判断', '鉴别', '理由'], '辅助检查与初步诊断': ['检查', '诊断'], '处理计划与安全网': ['计划', '安全网'], '入院后诊疗计划': ['监测', '会诊', '升级'],
+      '病例特点': ['主诉', '病史', '查体'], '拟诊与诊断依据': ['诊断', '依据'], '诊疗计划': ['检查', '计划'], '风险与告知': ['危险', '告知'], '今日病情变化': ['今日', '变化'],
+      '检查结果与趋势解释': ['结果', '趋势'], '问题清单与疗效/不良反应': ['问题', '不良反应'], '今日计划与升级条件': ['计划', '升级'], '入院情况与出院诊断': ['入院', '诊断'],
+      '住院经过与关键结果': ['经过', '结果'], '出院用药与核对': ['用药', '核对'], '复查随访与安全网': ['复查', '安全网'], '上次计划完成情况': ['上次', '核对'], '本次症状与客观指标': ['症状', '指标'],
+      '疗效、安全性与共病': ['疗效', '安全性', '共病'], '本次计划与下次节点': ['计划', '下次']
+    }[field] || ['待补问'];
+    var text = String(value || ''), lower = text.toLowerCase(), hits = rules.filter(function (word) { return lower.includes(word.toLowerCase()); });
+    var present = text.trim().length >= 8;
+    return { field: field, score: (present ? 1 : 0) + (hits.length >= Math.max(1, Math.ceil(rules.length * .6)) ? 1 : 0), max: 2, feedback: !present ? '尚未形成可审核内容' : hits.length >= Math.max(1, Math.ceil(rules.length * .6)) ? '结构要点已覆盖，仍需与原始资料逐项核对' : '有文字，但还缺：' + rules.filter(function (word) { return !lower.includes(word.toLowerCase()); }).join('、') };
+  }
   function documentScore() {
     var key = state.workflow && state.workflow.documentType ? state.workflow.documentType : workflowTemplateFor(state.scene);
     var doc = DOCUMENT_TEMPLATES[key] || DOCUMENT_TEMPLATES.outpatient;
+    var drafts = autoDraftsFor(key);
     var filled = doc.fields.filter(function (f) { return String(state.notes[f[0]] || '').trim().length >= 8; });
-    return { key: key, doc: doc, filled: filled, total: doc.fields.length, ratio: Math.round(filled.length / Math.max(doc.fields.length, 1) * 100) };
+    var rubric = doc.fields.map(function (f) { return rubricFor(f[0], state.notes[f[0]]); });
+    var totalPoints = rubric.reduce(function (sum, item) { return sum + item.max; }, 0);
+    var earnedPoints = rubric.reduce(function (sum, item) { return sum + item.score; }, 0);
+    return { key: key, doc: doc, drafts: drafts, filled: filled, total: doc.fields.length, rubric: rubric, totalPoints: totalPoints, earnedPoints: earnedPoints, ratio: Math.round(earnedPoints / Math.max(totalPoints, 1) * 100) };
   }
   function buildProfile(template, person, scene) {
     var id = template.id;
@@ -459,7 +545,7 @@
       response: '',
       notes: {},
       workflowGuide: false,
-      workflow: { documentType: workflowTemplateFor(scene.id), submitted: false, score: 0, feedback: '' },
+      workflow: { documentType: workflowTemplateFor(scene.id), submitted: false, score: 0, feedback: '', draftInitialized: false, autoGenerated: false },
       activeTab: 'start',
       completed: false,
       seed: newSeed()
@@ -471,7 +557,9 @@
   if (!state.scene || !SCENES.some(function (x) { return x.id === state.scene; })) state.scene = SCENES[0].id;
   if (!state.profile) state.profile = buildProfile(template, state.person, SCENES.find(function (x) { return x.id === state.scene; }) || SCENES[0]);
   if (!state.notes) state.notes = {};
-  if (!state.workflow) state.workflow = { documentType: workflowTemplateFor(state.scene), submitted: false, score: 0, feedback: '' };
+  if (!state.workflow) state.workflow = { documentType: workflowTemplateFor(state.scene), submitted: false, score: 0, feedback: '', draftInitialized: false, autoGenerated: false };
+  if (typeof state.workflow.draftInitialized !== 'boolean') state.workflow.draftInitialized = false;
+  if (typeof state.workflow.autoGenerated !== 'boolean') state.workflow.autoGenerated = false;
   if (!state.workflow.documentType || !DOCUMENT_TEMPLATES[state.workflow.documentType]) state.workflow.documentType = workflowTemplateFor(state.scene);
   var mood = template.moods.find(function (item) { return item.id === state.person.moodId; }) || template.moods[0];
 
@@ -514,7 +602,7 @@
     return '<button type="button" class="sim-choice ' + (opened ? 'is-open ' : '') + (active ? ' is-selected' : '') + (locked ? ' is-locked' : '') + '" data-sim-action="' + (locked ? 'locked' : type) + '" data-sim-id="' + esc(item.id) + '"' + (locked ? ' aria-disabled="true"' : '') + '><span class="sim-choice-index">' + (index + 1) + '</span><span><b>' + esc(item.question || item.label || item.name) + '</b>' + (locked ? '<small>需先完成：' + esc(gateLabel(gate)) + '</small>' : opened ? '<small>已查看</small>' : '<small>点击查看患者回答/检查意义</small>') + '</span></button>';
   }
   function renderStartBase() {
-    return '<div class="sim-intro"><p class="sim-muted">建议顺序：先回应感受 → 问关键病史 → 做床旁查体 → 选择首轮检查 → 解释结果 → 选择下一步。</p><div class="sim-patient-card"><div class="sim-patient-meta"><span class="sim-pill">虚构教学病例</span><span class="sim-pill sim-pill-soft">每次可重新抽取</span><span class="sim-pill sim-pill-soft">指南路径固定，表达方式随机</span></div><h3>' + esc(state.person.age + ' 岁 · ' + state.person.sex + ' · ' + state.person.job) + '</h3><p><b>主诉：</b>' + esc(state.person.complaint) + '</p><p class="sim-quote">“' + esc(mood.opening) + '”</p><p class="sim-muted">当前情绪：' + esc(mood.label) + '。' + esc(mood.style) + '</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="new">重新抽取患者</button><button class="sim-secondary" type="button" data-sim-action="restart">从头开始本例</button><button class="sim-secondary" type="button" data-sim-action="hint">显示一个提示</button></div><div class="sim-communication"><h4>第一句话怎么说？</h4><p class="sim-muted">人文沟通不计“诊断正确”，但会影响患者是否愿意继续提供信息。</p><div class="sim-grid sim-grid-3"><button class="sim-choice" type="button" data-sim-action="empathy">先回应：“我能理解你现在很担心，我们一步一步来。”</button><button class="sim-choice" type="button" data-sim-action="explain">先解释流程：“我会先确认危险信号，再安排必要检查。”</button><button class="sim-choice" type="button" data-sim-action="direct">直接问：“哪里不舒服？多久了？”</button></div></div>' + (state.response ? '<div class="sim-feedback">' + esc(state.response) + '</div>' : '') + '</div>';
+    return '<div class="sim-intro"><p class="sim-muted">建议顺序：先回应感受 → 问关键病史 → 做床旁查体 → 选择首轮检查 → 解释结果 → 选择下一步。</p><div class="sim-patient-card"><div class="sim-patient-meta"><span class="sim-pill">虚构教学病例</span><span class="sim-pill sim-pill-soft">每次可重新抽取</span><span class="sim-pill sim-pill-soft">指南路径固定，表达方式随机</span></div><h3>' + esc(state.person.age + ' 岁 · ' + state.person.sex + ' · ' + state.person.job) + '</h3><p><b>主诉：</b>' + esc(state.person.complaint) + '</p><p><b>患病时间信息：</b>' + esc(timelineInfo()) + '</p><p class="sim-quote">“' + esc(mood.opening) + '”</p><p class="sim-muted">当前情绪：' + esc(mood.label) + '。' + esc(mood.style) + '</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="new">重新抽取患者</button><button class="sim-secondary" type="button" data-sim-action="restart">从头开始本例</button><button class="sim-secondary" type="button" data-sim-action="hint">显示一个提示</button></div><div class="sim-communication"><h4>第一句话怎么说？</h4><p class="sim-muted">人文沟通不计“诊断正确”，但会影响患者是否愿意继续提供信息。</p><div class="sim-grid sim-grid-3"><button class="sim-choice" type="button" data-sim-action="empathy">先回应：“我能理解你现在很担心，我们一步一步来。”</button><button class="sim-choice" type="button" data-sim-action="explain">先解释流程：“我会先确认危险信号，再安排必要检查。”</button><button class="sim-choice" type="button" data-sim-action="direct">直接问：“哪里不舒服？多久了？”</button></div></div>' + (state.response ? '<div class="sim-feedback">' + esc(state.response) + '</div>' : '') + '</div>';
   }
   function renderProfileHtml() {
     var p = state.profile || {};
@@ -527,6 +615,14 @@
     var selected = DOCUMENT_TEMPLATES[state.workflow.documentType] ? state.workflow.documentType : defaultType;
     var doc = DOCUMENT_TEMPLATES[selected];
     state.workflow.documentType = selected;
+    if (!state.workflow.draftInitialized) {
+      var initialDraft = autoDraftsFor(selected);
+      var hasCurrentFields = doc.fields.some(function (field) { return String(state.notes[field[0]] || '').trim(); });
+      if (!hasCurrentFields) Object.keys(initialDraft).forEach(function (field) { state.notes[field] = initialDraft[field]; });
+      state.workflow.draftInitialized = true;
+      state.workflow.autoGenerated = !hasCurrentFields;
+      saveState();
+    }
     var note = function (field) { return '<label class="sim-note-field"><b>' + esc(field[0]) + '</b><small>' + esc(field[1]) + '</small><textarea data-sim-note="' + esc(field[0]) + '" aria-label="' + esc(field[0]) + '" placeholder="先自行书写，再对照结构提示；不要复制患者真实身份信息。">' + esc(state.notes[field[0]] || '') + '</textarea></label>'; };
     var options = Object.keys(DOCUMENT_TEMPLATES).map(function (key) { return '<option value="' + esc(key) + '"' + (key === selected ? ' selected' : '') + '>' + esc(DOCUMENT_TEMPLATES[key].label) + '</option>'; }).join('');
     var score = documentScore();
@@ -556,7 +652,7 @@
     var gate = gateFor('review');
     if (gate !== 'done' || !state.workflow.submitted) {
       var documentState = documentScore();
-      return '<div class="sim-review"><div class="sim-review-head"><span class="sim-kicker">复盘暂未开放</span><h3>先完成一遍完整临床推理</h3><p>复盘不是“随便点完就给分”。请按沟通 → 必问病史 → 关键查体 → 必要检查 → 下一步判断 → 文书提交的顺序完成。</p></div><div class="sim-review-block sim-missed"><h4>当前还缺什么</h4><p>' + esc(gate === 'done' ? '还没有提交文书复盘。' : gateLabel(gate)) + '</p><p class="sim-muted">当前文书结构完成度：' + documentState.filled.length + '/' + documentState.total + '。进入“病历与流程”继续训练。</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-tab="workflow">去写病历与流程</button><button class="sim-secondary" type="button" data-sim-action="hint">给我提示</button></div></div>';
+      return '<div class="sim-review"><div class="sim-review-head"><span class="sim-kicker">复盘暂未开放</span><h3>先完成一遍完整临床推理</h3><p>复盘不是“随便点完就给分”。请按沟通 → 必问病史 → 关键查体 → 必要检查 → 下一步判断 → 文书提交的顺序完成。</p></div><div class="sim-review-block sim-missed"><h4>当前还缺什么</h4><p>' + esc(gate === 'done' ? '还没有提交文书复盘。' : gateLabel(gate)) + '</p><p class="sim-muted">当前文书结构分：' + documentState.earnedPoints + '/' + documentState.totalPoints + '。进入“病历与流程”继续训练。</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-tab="workflow">去写病历与流程</button><button class="sim-secondary" type="button" data-sim-action="hint">给我提示</button></div></div>';
     }
     var essentialHistory = template.history.filter(function (x) { return x.redFlag || x.id === 'symptoms' || x.id === 'insulin' || x.id === 'crisis'; }).map(function (x) { return x.id; });
     var essentialExams = template.exams.filter(function (x) { return x.redFlag; }).map(function (x) { return x.id; });
@@ -566,13 +662,13 @@
     essentialExams.forEach(function (id) { if (!state.asked.exams.includes(id)) { var x = template.exams.find(function (i) { return i.id === id; }); missed.push('查体：' + x.label); } });
     essentialTests.forEach(function (id) { if (!state.asked.tests.includes(id)) { var x = template.tests.find(function (i) { return i.id === id; }); missed.push('检查：' + x.name); } });
     var documentState = documentScore();
-    var total = state.scores.communication + state.scores.history + state.scores.exams + state.scores.tests + state.scores.decisions + documentState.filled.length;
-    var max = 2 + essentialHistory.length + essentialExams.length + essentialTests.length + template.decisions.length * 2 + documentState.total;
+    var total = state.scores.communication + state.scores.history + state.scores.exams + state.scores.tests + state.scores.decisions + documentState.earnedPoints;
+    var max = 2 + essentialHistory.length + essentialExams.length + essentialTests.length + template.decisions.length * 2 + documentState.totalPoints;
     var ratio = Math.round(total / Math.max(max, 1) * 100);
     var safe = ratio >= 75 && state.scores.decisions >= 2;
     var tab = safe ? '本例的主线基本抓住了' : '还可以再练一遍主线';
     state.completed = true; saveState();
-    return '<div class="sim-review"><div class="sim-review-head"><span class="sim-kicker">复盘</span><h3>' + esc(tab) + '</h3><p>本例得分仅用于学习反馈，不代表真实临床能力评价。</p><div class="sim-score"><b>' + ratio + '</b><span>/ 100 学习反馈分</span></div></div><div class="sim-score-grid"><div><b>沟通</b><span>' + state.scores.communication + '</span></div><div><b>问诊</b><span>' + state.scores.history + '</span></div><div><b>查体</b><span>' + state.scores.exams + '</span></div><div><b>检查</b><span>' + state.scores.tests + '</span></div><div><b>判断</b><span>' + state.scores.decisions + '</span></div><div><b>文书结构</b><span>' + documentState.filled.length + '/' + documentState.total + '</span></div></div><div class="sim-review-block"><h4>本例最重要的路径</h4><p>' + esc(template.note) + '</p><p><b>建议顺序：</b>回应感受 → 需要立即升级或急诊评估的危险表现 → 病史/查体 → 首轮检查 → 解释结果 → 下一步 → 文书复盘。</p></div>' + (missed.length ? '<div class="sim-review-block sim-missed"><h4>下次优先补齐</h4><ul>' + missed.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '<div class="sim-review-block sim-good"><h4>关键项目已覆盖</h4><p>可以再换一个患者，练习同一疾病在不同场景和情绪下的表达。</p></div>') + medicationRefsHtml() + '<div class="sim-review-block"><h4>依据与边界</h4><ul>' + template.source.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul><p class="sim-muted">模拟结果为教学用固定值；真实患者需结合原始指南、药品说明书、检验参考区间、监护条件和多学科判断。</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="new">再抽取一位患者</button><button class="sim-secondary" type="button" data-sim-action="restart">重新做本例</button><button class="sim-secondary" type="button" data-sim-action="jump-workup">去指标追查</button><button class="sim-secondary" type="button" data-sim-action="jump-med">去药物剂量卡</button></div></div>';
+    return '<div class="sim-review"><div class="sim-review-head"><span class="sim-kicker">复盘</span><h3>' + esc(tab) + '</h3><p>本例得分仅用于学习反馈，不代表真实临床能力评价。</p><div class="sim-score"><b>' + ratio + '</b><span>/ 100 学习反馈分</span></div></div><div class="sim-score-grid"><div><b>沟通</b><span>' + state.scores.communication + '</span></div><div><b>问诊</b><span>' + state.scores.history + '</span></div><div><b>查体</b><span>' + state.scores.exams + '</span></div><div><b>检查</b><span>' + state.scores.tests + '</span></div><div><b>判断</b><span>' + state.scores.decisions + '</span></div><div><b>文书结构</b><span>' + documentState.earnedPoints + '/' + documentState.totalPoints + '</span></div></div><div class="sim-review-block"><h4>本例最重要的路径</h4><p>' + esc(template.note) + '</p><p><b>建议顺序：</b>回应感受 → 需要立即升级或急诊评估的危险表现 → 病史/查体 → 首轮检查 → 解释结果 → 下一步 → 文书复盘。</p></div><div class="sim-review-block sim-document-rubric"><h4>文书逐项评分</h4><ul>' + documentState.rubric.map(function (item) { return '<li><b>' + esc(item.field) + '：</b>' + item.score + '/' + item.max + ' · ' + esc(item.feedback) + '</li>'; }).join('') + '</ul><p class="sim-muted">评分只检查训练结构和关键词覆盖；自动生成的参考稿不是独立书写能力证明。建议清空后重写，再与本例已知资料逐项核对。</p></div>' + (missed.length ? '<div class="sim-review-block sim-missed"><h4>下次优先补齐</h4><ul>' + missed.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '<div class="sim-review-block sim-good"><h4>关键项目已覆盖</h4><p>可以再换一个患者，练习同一疾病在不同场景和情绪下的表达。</p></div>') + medicationRefsHtml() + '<div class="sim-review-block"><h4>依据与边界</h4><ul>' + template.source.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul><p class="sim-muted">模拟结果为教学用固定值；真实患者需结合原始指南、药品说明书、检验参考区间、监护条件和多学科判断。</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="new">再抽取一位患者</button><button class="sim-secondary" type="button" data-sim-action="restart">重新做本例</button><button class="sim-secondary" type="button" data-sim-action="jump-workup">去指标追查</button><button class="sim-secondary" type="button" data-sim-action="jump-med">去药物剂量卡</button></div></div>';
   }
   function renderBase() {
     template = CASES.find(function (item) { return item.id === state.templateId; }) || CASES[0];
@@ -585,6 +681,16 @@
     renderBase();
     var tabs = root.querySelector('.sim-tabs');
     if (tabs && !tabs.querySelector('[data-sim-tab="workflow"]')) tabs.insertAdjacentHTML('beforeend', '<button type="button" class="sim-tab ' + (state.activeTab === 'workflow' ? 'active' : '') + '" data-sim-tab="workflow">病历与流程</button>');
+    if (state.activeTab === 'workflow') decorateWorkflow();
+  }
+  function decorateWorkflow() {
+    var body = root.querySelector('.sim-body');
+    var title = root.querySelector('.sim-section-title');
+    if (!body || !title) return;
+    var score = documentScore();
+    title.insertAdjacentHTML('afterend', '<div class="sim-document-tools"><div><b>自动生成文书训练</b><p>以下内容只使用本例已设定的虚构资料；没有设定的患病时间、阴性症状或用药不会被补造，会明确写成“待补问”。自动草稿可直接删除，建议清空后独立重写再提交评分。</p></div><div class="sim-workflow-actions"><span class="sim-stage">' + (state.workflow.autoGenerated ? '当前：自动参考稿' : '当前：独立练习') + '</span><span class="sim-stage">文书结构分：' + score.earnedPoints + '/' + score.totalPoints + '（' + score.ratio + '%）</span><button class="primary" type="button" data-sim-action="workflow-autofill">重新生成参考文书</button><button class="sim-secondary" type="button" data-sim-action="workflow-clear">清空并开始独立训练</button></div></div>');
+    var fields = root.querySelector('.sim-workflow-grid');
+    if (fields) fields.insertAdjacentHTML('afterend', '<div class="sim-document-rubric"><b>评分维度：</b>每个字段按“是否形成可审核文字 + 是否覆盖结构关键词”各1分；不等于真实病历质量评价。提交后显示逐项反馈。</div>');
   }
   function handle(action, id) {
     if (action === 'new') { state = makeCase(); render(); return; }
@@ -616,20 +722,35 @@
       return;
     }
     if (action === 'workflow-guide') { state.workflowGuide = !state.workflowGuide; saveState(); render(); return; }
+    if (action === 'workflow-autofill') {
+      var selectedKey = state.workflow.documentType || workflowTemplateFor(state.scene);
+      var generated = autoDraftsFor(selectedKey);
+      Object.keys(generated).forEach(function (field) { state.notes[field] = generated[field]; });
+      state.workflow.draftInitialized = true;
+      state.workflow.autoGenerated = true;
+      state.workflow.submitted = false;
+      state.workflow.feedback = '已按本例已知资料生成参考文书；请先核对时间线、危险表现和未提供项目，再决定是否清空独立练习。';
+      saveState(); render(); return;
+    }
+    if (action === 'workflow-clear') {
+      var clearKey = state.workflow.documentType || workflowTemplateFor(state.scene);
+      (DOCUMENT_TEMPLATES[clearKey] || DOCUMENT_TEMPLATES.outpatient).fields.forEach(function (field) { delete state.notes[field[0]]; });
+      state.workflow.draftInitialized = true;
+      state.workflow.autoGenerated = false;
+      state.workflow.submitted = false;
+      state.workflow.feedback = '已清空本次文书字段；请按主诉 → 时间线 → 危险表现 → 证据 → 计划的顺序独立书写。';
+      saveState(); render(); return;
+    }
     if (action === 'workflow-submit') {
       var gate = gateFor('workflow');
       var result = documentScore();
       if (gate !== 'done') {
         state.workflow.submitted = false;
         state.workflow.feedback = '文书暂不能提交：请先完成“' + gateLabel(gate) + '”，再把临床推理写进文书。';
-      } else if (result.filled.length < result.total) {
-        state.workflow.submitted = false;
-        state.workflow.score = result.filled.length;
-        state.workflow.feedback = '文书结构还缺 ' + (result.total - result.filled.length) + ' 项。先完成每个字段，再提交复盘；这不是要求编造内容，而是检查记录结构是否完整。';
       } else {
         state.workflow.submitted = true;
-        state.workflow.score = result.filled.length;
-        state.workflow.feedback = '已提交本次文书结构复盘。下一步进入“复盘”，查看遗漏的安全问题与证据边界。';
+        state.workflow.score = result.ratio;
+        state.workflow.feedback = '已提交文书评分：' + result.earnedPoints + '/' + result.totalPoints + '（' + result.ratio + '%）。进入“复盘”查看逐项缺口；未完成字段不需要编造，可保留为待补问。';
       }
       saveState(); render(); return;
     }
@@ -645,7 +766,7 @@
   });
   root.addEventListener('change', function (event) {
     var selector = event.target.closest('[data-sim-document]');
-    if (selector) { state.workflow.documentType = selector.value; state.workflow.submitted = false; state.workflow.feedback = ''; saveState(); render(); }
+    if (selector) { state.workflow.documentType = selector.value; state.workflow.submitted = false; state.workflow.feedback = ''; state.workflow.draftInitialized = false; state.workflow.autoGenerated = false; state.notes = {}; saveState(); render(); }
   });
   window.PATIENT_SIMULATOR_CASES = CASES;
   window.PATIENT_SIMULATOR = { reset: function () { state = makeCase(); render(); }, cases: CASES };
