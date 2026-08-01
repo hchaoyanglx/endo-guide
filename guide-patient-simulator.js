@@ -845,11 +845,27 @@
     var tabHtml = tabs.map(function (tab) { return '<button type="button" class="sim-tab ' + (state.activeTab === tab.id ? 'active' : '') + '" data-sim-tab="' + tab.id + '">' + tab.label + '</button>'; }).join('');
     root.innerHTML = '<div class="sim-top"><div><span class="sim-kicker">随机患者模拟器</span><h3>把指南路径练成一次有温度的问诊</h3><p>每次进入本页会保留当前病例；点击“重新抽取患者”生成新的虚构患者。随机的是背景、表达和情绪，诊断事实、检查结果与安全边界来自已标注的指南路径。</p></div><div class="sim-progress"><b>' + progressCount() + '</b><span>个学习动作</span></div></div><div class="sim-notice"><b>学习边界：</b>这是虚构教学病例，不是真实医嘱。模拟器不替代急诊分诊、原指南、药品说明书或专科会诊；涉及 DKA/HHS、低钾、肾上腺危象、视力下降等危险信号时，现实中应立即升级处理。</div><div class="sim-tabs">' + tabHtml + '</div><div class="sim-body">' + (state.activeTab === 'review' ? reviewHtml() : renderTab(state.activeTab)) + '</div>';
   }
+  function decorateCtaResults() {
+    if (!state.interview || !state.interview.started || state.interview.submitted || state.interview.phase !== 'reassessment') return;
+    var body = root.querySelector('.sim-body');
+    if (!body || body.querySelector('.sim-cta-reassessment-results')) return;
+    var exams = template.exams.filter(function (item) { return (state.interview.reassessmentExams || []).includes(item.id); });
+    var tests = template.tests.filter(function (item) { return (state.interview.reassessmentTests || []).includes(item.id); });
+    if (!exams.length && !tests.length) return;
+    var html = '<div class="sim-review-block sim-cta-reassessment-results"><h4>已开立复查结果</h4><p class="sim-muted">本区只回放本病例已标注的文字结果与参考区间；系统不会凭空生成新的化验数值。实际病程需以重新开立检查后的真实报告和趋势判读为准。</p>';
+    if (exams.length) html += '<h5>复查查体</h5>' + exams.map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.label) + '</h4><p><b>' + esc(ctaResultLabel(item)) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('');
+    if (tests.length) html += '<h5>复查检查</h5>' + tests.map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.name) + '</h4><p><b>' + esc(ctaResultLabel(item)) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('');
+    html += '</div>';
+    var actions = body.querySelectorAll('.sim-actions');
+    var last = actions[actions.length - 1];
+    if (last) last.insertAdjacentHTML('beforebegin', html);
+  }
   function render() {
     renderBase();
     var tabs = root.querySelector('.sim-tabs');
     if (tabs && !tabs.querySelector('[data-sim-tab="workflow"]') && !(state.interview && state.interview.started && !state.interview.submitted)) tabs.insertAdjacentHTML('beforeend', '<button type="button" class="sim-tab ' + (state.activeTab === 'workflow' ? 'active' : '') + '" data-sim-tab="workflow">病历与流程</button>');
     if (state.activeTab === 'workflow') decorateWorkflow();
+    if (state.activeTab === 'interview') decorateCtaResults();
   }
   function decorateWorkflow() {
     var body = root.querySelector('.sim-body');
