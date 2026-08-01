@@ -347,6 +347,80 @@
     }
   ].concat(window.SIM_EXTRA_CASES || []);
 
+  var DEFAULT_SYMPTOM_RESPONSES = {
+    fever: '本次训练预设：患者近期否认发热，未出现寒战或夜间大汗。',
+    bleeding: '本次训练预设：否认皮肤瘀点瘀斑、鼻出血、牙龈出血或其他异常出血。',
+    edema: '本次训练预设：否认眼睑或双下肢水肿，晨起与傍晚没有明显差别。',
+    cough: '本次训练预设：否认咳嗽、咳痰，近期没有痰量、颜色或气味改变。',
+    hemoptysis: '本次训练预设：否认咯血或痰中带血。',
+    cyanosis: '本次训练预设：否认口唇或甲床发紫，活动后没有发绀。',
+    dyspnea: '本次训练预设：否认静息或活动后呼吸困难，无端坐呼吸和夜间憋醒。',
+    'chest-pain': '本次训练预设：否认胸痛或胸闷，没有活动诱发、呼吸相关或放射性疼痛。',
+    palpitation: '本次训练预设：否认突发心悸或心跳不齐，没有伴随晕厥和胸痛。',
+    'nausea-vomit': '本次训练预设：否认恶心呕吐，进食后没有反复呕吐或咖啡色内容物。',
+    reflux: '本次训练预设：否认烧心、反酸和胃内容物反流，平卧后没有明显加重。',
+    dysphagia: '本次训练预设：否认吞咽困难，固体和液体均能顺利咽下。',
+    hematemesis: '本次训练预设：否认呕血或咖啡色呕吐物。',
+    melena: '本次训练预设：否认黑便或便血，近期排便颜色无明显改变。',
+    'abdominal-pain': '本次训练预设：否认腹痛，没有固定部位疼痛、放射痛或腹膜刺激样表现。',
+    diarrhea: '本次训练预设：否认腹泻，大便次数和性状近期无明显改变。',
+    constipation: '本次训练预设：否认排便困难和明显腹胀，排便频率与平时相近。',
+    jaundice: '本次训练预设：否认眼白或皮肤发黄、尿色明显加深和皮肤瘙痒。',
+    'back-pain': '本次训练预设：否认新发腰背痛，没有与体位或排尿相关的疼痛。',
+    arthralgia: '本次训练预设：否认关节红肿热痛和晨僵，没有游走性关节痛。',
+    hematuria: '本次训练预设：否认肉眼血尿、尿色异常和血块。',
+    'urinary-irritation': '本次训练预设：否认尿频、尿急、尿痛，没有伴发热或腰痛。',
+    'urine-volume': '本次训练预设：近期尿量总体稳定，夜尿次数没有明显增加。',
+    'urinary-difficulty': '本次训练预设：否认排尿费力、尿线变细、尿潴留和排尿不尽感。',
+    'vaginal-bleeding': '本次训练预设：否认月经以外的阴道流血，暂无妊娠相关出血表现。',
+    obesity: '本次训练预设：近期没有明显体重快速增加，未发现新的腰围变化或运动耐量下降。',
+    'weight-loss': '本次训练预设：近期体重基本稳定，没有无法解释的持续下降。',
+    headache: '本次训练预设：否认新发或进行性头痛，没有突发剧烈头痛。',
+    vertigo: '本次训练预设：否认旋转性眩晕和站立不稳，没有伴耳鸣或神经功能改变。',
+    syncope: '本次训练预设：否认短暂意识丧失，近期没有因心悸、胸痛或体位改变而晕倒。',
+    seizure: '本次训练预设：否认抽搐或惊厥，未发生发作后意识不清。',
+    consciousness: '本次训练预设：目前意识清楚、定向力正常，无进行性嗜睡或行为异常。',
+    sleep: '本次训练预设：否认明显失眠、夜间憋醒和白天不可控制的嗜睡，家属未报告异常呼吸暂停。',
+    mood: '本次训练预设：情绪总体稳定，无持续抑郁、躁动或影响日常功能的焦虑。',
+    'urinary-incontinence': '本次训练预设：否认不自主漏尿，没有咳嗽漏尿、尿急漏尿或持续滴漏。'
+  };
+  var CASE_SYMPTOM_PRESETS = {
+    'new-t2d': { 'urine-volume': '近 2 个月夜间起夜增多，白天尿量也比平时多；没有尿痛或血尿。', 'weight-loss': '近 2 个月体重下降约 3 kg，不是刻意减重；同时口渴明显。', 'nausea-vomit': '没有恶心呕吐，能够正常进食饮水。', 'abdominal-pain': '没有腹痛，也没有深快呼吸或意识改变。' },
+    'dka-low-k': { fever: '昨晚体温约 38 ℃，伴发热感；此前没有反复高热或寒战。', 'nausea-vomit': '近 1 天呕吐约 5 次，进食后更明显，没有呕血。', 'abdominal-pain': '有弥漫性腹痛，随呕吐加重；目前没有明确固定压痛或反跳痛。', dyspnea: '出现深快呼吸和明显乏力，平卧也能呼吸；没有咯血。', 'urine-volume': '近 1 天尿量明显减少，饮水也少，站起时头晕。', consciousness: '目前能正确回答问题，但疲惫；没有抽搐或持续意识丧失。' },
+    hypoglycemia: { palpitation: '低血糖发作时会突然心慌、出汗和手抖，纠正血糖后缓解。', consciousness: '两次发作时能自行进食，另一次夜间曾叫不醒，醒后无持续定向力障碍。', sleep: '低血糖主要发生在夜间；晚餐吃得少或周末运动后更容易出现。', mood: '发作前会紧张、反应变慢，血糖恢复后情绪回到平时。' },
+    'thyroid-nodule': { dysphagia: '没有明显吞咽困难，固体和液体均能咽下；偶有咽部异物感。', dyspnea: '没有呼吸困难、喘鸣或平卧憋气。', palpitation: '没有明显心悸和手抖，体重近期稳定。', 'weight-loss': '没有无法解释的体重下降。' },
+    'primary-aldosteronism': { sleep: '家人发现打鼾，白天容易困，尚未做睡眠监测。', palpitation: '偶有乏力和肌肉无力，但没有持续心悸或晕厥。', 'urine-volume': '没有明显多尿或夜尿增多，低钾前后尿量变化不大。' },
+    'adrenal-insufficiency': { 'weight-loss': '近几个月体重持续下降，食欲也较前差，不是主动减重。', 'nausea-vomit': '今天呕吐 3 次，进食和饮水后更明显；目前没有呕血。', syncope: '站立时几乎晕倒，坐下后缓解；尚未发生完全意识丧失。', vertigo: '主要是站起时头晕发黑，不是旋转性眩晕。', consciousness: '目前意识清楚，家属未发现行为异常或持续嗜睡。' },
+    hypercalcemia: { constipation: '近来排便减少、较费力，伴口渴；没有黑便或腹泻。', 'urine-volume': '近期多尿、夜间起夜增加并主动多饮水，没有尿痛。', 'nausea-vomit': '没有持续恶心呕吐，进食基本可以维持。', consciousness: '目前意识清楚，没有反应变慢、嗜睡或行为改变。' },
+    osteoporosis: { 'back-pain': '平地滑倒后出现腰背痛，翻身和起床明显受限；疼痛没有向双下肢放射。', syncope: '跌倒前没有心悸、胸痛或意识丧失，是脚下打滑后摔倒。', arthralgia: '主要是骨折部位疼痛，没有多关节红肿热痛。' },
+    'pituitary-vision': { headache: '近 1 个月出现持续性头痛，伴双侧周边视野变窄，近期没有雷击样突发剧痛。', 'vaginal-bleeding': '月经约 4 个月不规律，但没有大出血或妊娠相关阴道流血。', 'nausea-vomit': '没有持续呕吐或剧烈头痛，近期主要困扰是视野和乏力。', consciousness: '意识清楚，没有晕厥、抽搐或进行性嗜睡。' },
+    'new-t1d': { 'weight-loss': '近 6 周体重下降约 6 kg，伴口渴、多尿，不是刻意节食。', 'urine-volume': '近月白天和夜间尿量均增多，未伴尿痛或血尿。', 'nausea-vomit': '近 2 天有恶心，但没有持续呕吐。', 'abdominal-pain': '目前没有明显腹痛，仍需结合血酮和酸碱结果排除 DKA。', dyspnea: '没有明显深快呼吸，但感到乏力；若出现呼吸加深需立即升级评估。' },
+    prediabetes: { obesity: 'BMI 约 30，腰围增大；久坐、含糖饮料较多，家属提示打鼾。', sleep: '入睡后打鼾，白天容易困，尚未完成睡眠呼吸暂停评估。', 'weight-loss': '近年体重增加约 8 kg，没有不明原因消瘦。', 'urine-volume': '没有明显多尿或夜尿增多。' },
+    hyperthyroidism: { palpitation: '静息时心跳快、容易心慌，活动后更明显；没有晕厥或胸痛。', 'weight-loss': '近 3 个月体重下降约 5 kg，食量没有相应减少。', sleep: '入睡困难、夜间易醒，白天仍感到疲倦。', mood: '近期容易焦虑、急躁，注意力较前差。' },
+    hypothyroidism: { constipation: '近数月排便次数减少、较费力，没有便血或明显腹痛。', sleep: '白天困倦、精力差，但没有夜间憋醒或明显打鼾。', edema: '没有明显下肢凹陷性水肿，体重增加较缓慢。', mood: '兴趣和精力下降，但没有持续自伤想法或行为异常。' },
+    hyponatremia: { headache: '近几天出现头痛和注意力下降，没有突发雷击样头痛。', 'nausea-vomit': '有恶心，但没有频繁呕吐或呕血。', consciousness: '反应比平时慢，但能正确回答问题；没有抽搐。', cough: '近 2 周有咳嗽，痰不多，没有咯血或明显呼吸困难。' },
+    pheochromocytoma: { headache: '反复发作性头痛，每次伴心慌和出汗，发作间歇可缓解。', palpitation: '心悸突然发作，常与头痛同时出现，偶有胸闷但未晕厥。', mood: '发作时强烈紧张和濒死感，发作结束后情绪逐渐恢复。' },
+    cushing: { obesity: '近年躯干体重增加、腰围增大，四肢相对变细；同时发现血压和血糖升高。', 'back-pain': '偶有腰背酸痛，需结合骨密度和椎体影像评估，未发生明确外伤骨折。', mood: '近来情绪波动、睡眠变差，家属认为性格与以前不同。' },
+    obesity: { obesity: '体重和腰围逐年增加，BMI 约 31；饮食、久坐和睡眠不足较突出。', sleep: '家属描述打鼾、夜间憋醒，白天嗜睡，符合睡眠呼吸暂停筛查线索。', dyspnea: '快走或爬楼时气短，休息后缓解；没有静息呼吸困难。', 'urinary-incontinence': '否认不自主漏尿，咳嗽或急迫时也没有漏尿。' },
+    pcos: { 'vaginal-bleeding': '月经约 2–3 个月来一次，量不规律；没有妊娠期或性交后异常大出血。', obesity: '体重偏高、腰围增加，伴面部痤疮和多毛；没有近期快速消瘦。', mood: '因月经和备孕问题感到焦虑，但日常功能尚可。' },
+    'diabetic-foot': { fever: '近期出现发热感，最高体温约 38 ℃；伴足部红肿和渗液。', edema: '患足红肿、局部肿胀，另一侧下肢无明显水肿。', 'back-pain': '没有腰背痛；主要疼痛和麻木集中在足部。', arthralgia: '足部局部疼痛，不能简单按普通关节炎解释；活动和负重后加重。' },
+    'gestational-diabetes': { 'nausea-vomit': '孕早期有恶心，但目前没有持续呕吐、脱水或腹痛。', 'vaginal-bleeding': '目前没有阴道流血、下腹痛或胎动异常相关表现。', edema: '目前没有明显面部或下肢水肿，血压需按产科流程动态复核。' },
+    hypoparathyroidism: { seizure: '没有抽搐或惊厥，但手足搐搦和口周麻木反复出现。', palpitation: '发作时可感到心慌，尚未发生晕厥；需要结合心电图和电解质。', consciousness: '目前意识清楚，没有嗜睡、意识丧失或行为改变。' },
+    'male-hypogonadism': { obesity: 'BMI 约 31，伴打鼾；体重问题和睡眠情况可能影响性腺轴。', sleep: '家属说夜间打鼾，白天容易困；尚未完成睡眠呼吸暂停检查。', mood: '因性欲下降和生育计划产生焦虑，但无持续抑郁表现。' },
+    'growth-delay': { diarrhea: '间断腹痛和腹泻，食欲下降；需排查营养吸收和慢性炎症原因。', 'weight-loss': '近一年体重略下降，和身高增长变慢同时出现。', headache: '否认头痛、喷射性呕吐和视野改变。', mood: '因身高增长慢感到自卑和担心，但学习和日常功能尚可。' }
+  };
+
+  function diagnosticSymptomAnswer(template, item) {
+    var overrides = CASE_SYMPTOM_PRESETS[template.id] || {};
+    if (overrides[item.id]) return overrides[item.id];
+    var matched = template.history.find(function (historyItem) {
+      var source = String(historyItem.question || '') + ' ' + String(historyItem.answer || '');
+      return (item.keywords || []).some(function (keyword) { return keyword.length >= 2 && source.includes(keyword); });
+    });
+    if (matched && matched.answer) return matched.answer;
+    return DEFAULT_SYMPTOM_RESPONSES[item.id] || '本次训练预设：患者目前未诉该症状，仍需结合完整问诊和查体核实。';
+  }
+
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
@@ -759,7 +833,7 @@
     return (state.interview.freeQuestions || []).some(function (entry) { return entry.symptomId === item.id || entry.question === item.question; });
   }
   function ctaSymptomQuickHtml() {
-    return '<details class="sim-cta-quick-panel"><summary>按《诊断学》常见症状目录选择问法</summary><p class="sim-muted">快捷项来自《诊断学（第10版）》常见症状目录（发热至情感症状）。每个症状在本次病例只能主动询问一次；患者只会返回本病例已经设定的资料，未设定的项目会明确提示“本例未预设”，不等于阴性。</p><div class="sim-cta-question-list">' + DIAGNOSTIC_SYMPTOM_BANK.map(function (item) { var asked = ctaSymptomAsked(item); return '<button type="button" class="sim-choice' + (asked ? ' is-selected' : '') + '" data-sim-action="cta-symptom-question" data-sim-id="' + esc(item.id) + '"' + (asked ? ' disabled aria-disabled="true"' : '') + '><span class="sim-choice-index">' + (asked ? '已' : '？') + '</span><span><b>' + esc(item.label) + '</b><small>' + esc(item.question) + (asked ? ' · 本次已问过，不能重复' : '') + '</small></span></button>'; }).join('') + '</div></details>';
+    return '<details class="sim-cta-quick-panel"><summary>按《诊断学》常见症状目录选择问法</summary><p class="sim-muted">快捷项来自《诊断学（第10版）》常见症状目录（发热至情感症状）。每个症状均有与当前病例主线一致的训练预设回答；每个症状在本次病例只能主动询问一次。训练回答不等于真实患者资料，不能外推到临床。</p><div class="sim-cta-question-list">' + DIAGNOSTIC_SYMPTOM_BANK.map(function (item) { var asked = ctaSymptomAsked(item); return '<button type="button" class="sim-choice' + (asked ? ' is-selected' : '') + '" data-sim-action="cta-symptom-question" data-sim-id="' + esc(item.id) + '"' + (asked ? ' disabled aria-disabled="true"' : '') + '><span class="sim-choice-index">' + (asked ? '已' : '？') + '</span><span><b>' + esc(item.label) + '</b><small>' + esc(item.question) + (asked ? ' · 本次已问过，不能重复' : '') + '</small></span></button>'; }).join('') + '</div></details>';
   }
   function ctaQuickTestHtml() {
     var tests = template.tests || [];
@@ -992,8 +1066,8 @@
       if (ctaSymptomAsked(symptomItem)) { state.response = '这个症状本次已经问过，不能重复提问；请继续选择其他症状或进入下一步。'; saveState(); render(); return; }
       var matchedHistory = ctaHistoryMatchByKeywords(symptomItem);
       if (matchedHistory && !state.interview.askedHistory.includes(matchedHistory.id)) state.interview.askedHistory.push(matchedHistory.id);
-      state.interview.freeQuestions.push({ symptomId: symptomItem.id, question: symptomItem.question, answer: matchedHistory ? matchedHistory.answer : '本病例预设资料没有提供这一项，不能据此判断有无；请在真实问诊中继续追问并客观记录。', sourceId: matchedHistory ? matchedHistory.id : '' });
-      state.response = matchedHistory ? '已按本病例资料返回患者回答；练习阶段不显示指南解析。' : '本病例没有预设这一项资料，未编造患者回答。';
+      state.interview.freeQuestions.push({ symptomId: symptomItem.id, question: symptomItem.question, answer: diagnosticSymptomAnswer(template, symptomItem), sourceId: matchedHistory ? matchedHistory.id : 'diagnostic-symptom-preset' });
+      state.response = '已按本病例症状预设资料返回患者回答；练习阶段不显示指南解析。';
       saveState(); render(); return;
     }
     if (action === 'cta-quick-test') {
