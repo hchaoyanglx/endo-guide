@@ -4,7 +4,9 @@
   var root = document.getElementById('patientSimulator');
   if (!root) return;
 
-  var STORAGE_KEY = 'endo-guide-patient-simulator-v1';
+  // v2：将原来的独立步骤合并为三个连续考站，并增加检查状态、证据矩阵和医嘱记录。
+  // 使用新键名避免旧版本中途状态与新流程混用。
+  var STORAGE_KEY = 'endo-guide-patient-simulator-v2';
   var DIAGNOSTIC_SYMPTOM_BANK = [
     { id: 'fever', label: '发热', question: '有没有发热？最高体温、持续时间、寒战或出汗怎样？', keywords: ['发热', '体温', '寒战', '出汗'] },
     { id: 'bleeding', label: '皮肤黏膜出血', question: '有没有皮肤瘀点瘀斑、鼻出血、牙龈出血或其他异常出血？', keywords: ['出血', '瘀点', '瘀斑', '鼻出血', '牙龈'] },
@@ -42,6 +44,47 @@
     { id: 'mood', label: '情感症状', question: '近期情绪、兴趣、焦虑和精力有没有明显变化？是否影响睡眠和日常功能？', keywords: ['情绪', '焦虑', '抑郁', '兴趣'] }
     , { id: 'urinary-incontinence', label: '尿失禁', question: '是否有不自主漏尿？发生在咳嗽、打喷嚏、急迫感后，还是持续滴漏？', keywords: ['尿失禁', '漏尿', '尿液不自主'] }
   ];
+  var CASE_COMPLETION = window.SIM_CASE_COMPLETION || {};
+  function completeCaseTemplate(item) {
+    var supplied = CASE_COMPLETION[item.id] || {};
+    var completion = Object.assign({
+      timeline: '本次训练固定时间线：患者在主诉出现后按病例题干到诊，先完成危险信号筛查，再完成分层检查。',
+      past: '患者否认与本病例无关的重大手术、长期住院、结核、病毒性肝炎和输血史；相关既往史见病例回答。',
+      allergy: '患者否认已知药物、食物和造影剂过敏；既往没有严重过敏反应。',
+      meds: '当前没有病例外新增药物；既往处方、保健品和最近一次用药已在问诊时逐项核对。',
+      family: '无明确同类遗传病家族史；病例中已经标出的家族线索以既有回答为准。',
+      social: '不吸烟，饮酒少量；日常活动和照护支持情况按本例固定回答记录。',
+      reproductive: '女性训练分支按适用问题记录末次月经、妊娠可能和生育计划；男性训练分支记录为不适用且无相关异常主诉。',
+      systemReview: '除病例已经标出的主线症状外，患者否认持续高热、胸痛、静息呼吸困难、进行性意识改变和活动后晕厥。',
+      symptoms: {}
+    }, item.completion || {}, supplied);
+    completion.symptoms = Object.assign({}, (item.completion && item.completion.symptoms) || {}, supplied.symptoms || {});
+    item.completion = completion;
+    var extras = [
+      { id: 'completion-timeline', question: '请按时间线说明起病日期/起病方式、变化趋势、最近一次发作和就诊前处理。', answer: completion.timeline, why: '建立可核对的主诉时间轴，决定急慢性分流和检查顺序。', essential: true },
+      { id: 'completion-past', question: '既往有无相关疾病、手术、住院、输血、感染或长期激素使用？', answer: completion.past, why: '补齐会改变分型、鉴别诊断和治疗安全性的既往史。' },
+      { id: 'completion-allergy', question: '有无药物、食物、造影剂过敏或严重过敏反应？', answer: completion.allergy, why: '在开检查、给药和住院医嘱前完成过敏史核对。' },
+      { id: 'completion-medications', question: '请逐项核对处方药、非处方药、保健品、最近停药/漏药和不良反应。', answer: completion.meds, why: '药物暴露、漏服和相互作用可能改变检查解释和治疗安全。', sensitive: false },
+      { id: 'completion-family', question: '家族中有无同类内分泌病、早发心血管病、肿瘤或遗传病？', answer: completion.family, why: '家族史用于风险分层、分型线索和必要时的遗传评估。' },
+      { id: 'completion-social', question: '请补充吸烟、饮酒、饮食、运动、职业暴露、照护和依从性情况。', answer: completion.social, why: '个人和社会背景会影响风险、治疗可执行性和出院安全。' },
+      { id: 'completion-reproductive', question: '适用时请询问末次月经、妊娠可能、哺乳、生育计划和性生活相关风险。', answer: completion.reproductive, why: '妊娠、生育和性腺状态可能改变检查、药物和转诊路径。', sensitive: true },
+      { id: 'completion-system-review', question: '系统回顾：除主线症状外，是否有发热、胸痛、呼吸困难、意识改变、晕厥或其他危险表现？', answer: completion.systemReview, why: '明确阴性危险信号，避免遗漏需要升级的表现。', redFlag: true }
+    ];
+    item.history = (item.history || []).slice();
+    extras.forEach(function (extra) {
+      if (!item.history.some(function (x) { return x.id === extra.id; })) item.history.push(extra);
+    });
+    (item.exams || []).forEach(function (exam) {
+      if (!exam.meaning) exam.meaning = '本病例固定查体结果已预设；需结合主诉、生命体征和辅助检查解释。';
+      if (!exam.normalRange) exam.normalRange = /血压|BP/.test(exam.label || '') ? '成人静息血压常用参考：<120/80 mmHg；按年龄、妊娠和疾病情境解释。' : '体格检查无单一数值参考范围；以对称性、严重程度和病情变化记录。';
+    });
+    (item.tests || []).forEach(function (test) {
+      if (!test.interpretation) test.interpretation = '本病例已设定文字报告；先与参考区间、症状和其他检查整合，再作下一步判断。';
+      if (!test.why) test.why = '该检查用于确认诊断、评估严重程度或排除关键鉴别诊断。';
+      if (!test.normalRange) test.normalRange = /MRI|CT|超声|彩超|影像|视野|X线|胸片/.test(String(test.name || '')) ? '影像/功能检查无统一单一数值参考范围；以报告单、年龄和检查方法为准。' : '以本院实验室报告单参考区间为准；不同方法和人群不能直接套用。';
+    });
+    return item;
+  }
   var CASES = [
     {
       id: 'new-t2d', group: '糖尿病/糖尿病前期', title: '体检发现血糖升高',
@@ -169,7 +212,7 @@
       tests: [
         { id: 'tsh', name: 'TSH（必要时 FT4/FT3）', stage: '首轮', workupId: 'tsh-low', result: 'TSH 0.18 mIU/L，FT4 正常偏高。', interpretation: 'TSH 抑制提示需评估自主功能结节/甲亢；此时评估顺序与 TSH 正常者不同。', why: 'TSH 是结节初始功能评估关键入口。', essential: true },
         { id: 'us', name: '甲状腺及颈部淋巴结超声', stage: '首轮', workupId: 'thyroid-nodule-marker', result: '结节低回声、边界欠清，见点状强回声；需按所用系统分层。', interpretation: '超声风险分层决定随访、细针穿刺或进一步处理；不能只按直径直接手术。', why: '结节管理依赖超声特征、大小、风险背景和患者偏好。', essential: true },
-        { id: 'fna', name: '细针穿刺与 Bethesda 分类（达到指征时）', stage: '第二轮', workupId: 'thyroid-nodule-marker', result: '若达到穿刺指征，细胞学报告需明确 Bethesda 类别；本模拟先不预设结果。', interpretation: 'Bethesda 结果用于估计恶性风险和下一步决策，不同类别不能混为一谈。', why: '避免把超声风险直接等同于病理诊断。', essential: false }
+        { id: 'fna', name: '细针穿刺与 Bethesda 分类（达到指征时）', stage: '第二轮', workupId: 'thyroid-nodule-marker', result: '本例按超声风险和大小评估后暂未达到穿刺指征，本次不执行；若复查达到指征，细胞学报告需明确 Bethesda 类别。', interpretation: '当前结果支持规范随访而非立即把结节当作癌症；若后续达到穿刺指征，再用 Bethesda 估计恶性风险并决定下一步。', why: '避免把超声风险直接等同于病理诊断。', essential: false }
       ],
       decisions: [
         { id: 'nodule-path', label: '先复核 TSH 与超声风险分层，再按指征决定功能成像/穿刺/随访', correct: true, why: 'TSH 抑制与超声高风险会改变路径；手术不是所有结节的第一步。', links: [{ type: 'workup', id: 'thyroid-nodule-marker', label: '打开甲状腺结节指标追查' }] },
@@ -202,7 +245,7 @@
       tests: [
         { id: 'electrolytes', name: '钾、钠、肌酐与碳酸氢根', stage: '首轮', workupId: 'arr-low-potassium', result: 'K⁺ 3.1 mmol/L，Na⁺ 143 mmol/L，HCO₃⁻ 30 mmol/L。', interpretation: '低钾和代谢性碱中毒线索支持进一步筛查；应先纠正低钾并记录药物。', why: '低钾可抑制醛固酮，导致假阴性。', essential: true },
         { id: 'arr', name: '醛固酮/肾素及 ARR', stage: '条件准备后', workupId: 'arr-low-potassium', result: '在纠正低钾、评估药物干扰后，ARR 升高；醛固酮达到实验室筛查要求。', interpretation: '支持筛查阳性，但 ARR 阳性通常不等于最终确诊；按指南决定确证试验和分型。', why: '筛查、确证、分型是不同步骤。', essential: true },
-        { id: 'confirm', name: '确证试验与分型（CT/必要时 AVS）', stage: '第三轮', workupId: 'arr-low-potassium', result: '本模拟不预设确证试验和 AVS 结果，需由专科按适应证安排。', interpretation: '不能凭 ARR 或 CT 单独决定手术；分型和可手术性评估要结合完整资料。', why: '避免把筛查结果直接当作治疗决定。', essential: false }
+        { id: 'confirm', name: '确证试验与分型（CT/必要时 AVS）', stage: '第三轮', workupId: 'arr-low-potassium', result: '盐水负荷后醛固酮仍未被抑制，支持原发性醛固酮增多症；肾上腺 CT 示左侧小结节，AVS 尚未完成。', interpretation: '确证试验支持原醛方向，但 CT 不能单独代表分侧；是否进行 AVS 和手术评估需由专科结合年龄、手术意愿和肾上腺静脉采血条件决定。', why: '避免把筛查结果或单侧影像直接当作手术决定。', essential: false }
       ],
       decisions: [
         { id: 'arr-path', label: '先纠正低钾并处理干扰因素，再规范采集 ARR；阳性后按指征确证和分型', correct: true, why: '这是原发性醛固酮增多症中最容易被跳过的顺序。CT 不能替代生化筛查，ARR 也不等于确诊。', links: [{ type: 'workup', id: 'arr-low-potassium', label: '打开 ARR 指标追查' }] },
@@ -235,7 +278,7 @@
       tests: [
         { id: 'morning', name: '8–9 时皮质醇 + ACTH（危象不应延误治疗）', stage: '立即/稳定后确认', workupId: 'cortisol-low', result: '晨间皮质醇很低，ACTH 明显升高。', interpretation: '支持原发性肾上腺功能减退；需结合肾素/醛固酮、抗体和病因评估。', why: '晨间皮质醇和 ACTH 是初始分层关键。', essential: true },
         { id: 'electrolytes', name: '电解质、血糖、肾功能与感染评估', stage: '立即并动态', workupId: 'cortisol-low', result: '低钠、高钾、低血糖；肌酐轻度升高，感染筛查待完善。', interpretation: '与容量不足和激素缺乏一致；需按危象路径监护和复查。', why: '并发电解质和循环异常决定紧迫程度。', essential: true },
-        { id: 'cause', name: '肾素/醛固酮、21-羟化酶抗体及垂体评估', stage: '稳定后', workupId: 'cortisol-low', result: '用于区分原发性、继发性和药物相关抑制；本模拟不预设全部结果。', interpretation: '明确病因后再制定长期替代和应激教育计划。', why: '治疗前先把病因和危象安全分开处理。', essential: false }
+        { id: 'cause', name: '肾素/醛固酮、21-羟化酶抗体及垂体评估', stage: '稳定后', workupId: 'cortisol-low', result: 'ACTH 升高、21-羟化酶抗体阳性；垂体 MRI 未见占位，支持原发性自身免疫性肾上腺功能减退方向。', interpretation: '病因线索支持原发性而非垂体性，但长期替代和应激教育仍需结合复查、合并自身免疫病和专科随访。', why: '明确病因后再制定长期替代和应激教育计划。', essential: false }
       ],
       decisions: [
         { id: 'crisis', label: '先按疑似肾上腺危象升级处理：采血不延误急救；稳定后再完成病因确认', correct: true, why: '低血压、呕吐、低钠、高钾和低血糖是危险组合；不能等动态试验结果才处理。', links: [{ type: 'workup', id: 'cortisol-low', label: '打开低皮质醇追查' }] },
@@ -268,7 +311,7 @@
       tests: [
         { id: 'calcium', name: '总钙、白蛋白/离子钙、磷、肌酐', stage: '首轮', workupId: 'calcium-low', result: '总钙持续升高；白蛋白轻度下降，离子钙升高，磷偏低。', interpretation: '确认真性高钙并评估肾功能和矿物质背景，避免只看校正钙。', why: '高钙诊断先要确认检测可靠。', essential: true },
         { id: 'pth', name: '完整 PTH', stage: '首轮', workupId: 'calcium-low', result: 'PTH 未被抑制，处于参考上限以上。', interpretation: '高钙伴 PTH 不适当正常/升高，支持 PTH 依赖性高钙，需区分原发性甲旁亢、家族性低尿钙性高钙等。', why: 'PTH 是高钙分层的核心节点。', essential: true },
-        { id: 'urine', name: '尿钙、25(OH)D 与骨密度/肾脏评估', stage: '第二轮', workupId: 'calcium-low', result: '用于区分家族性低尿钙性高钙并评估骨、肾并发症；本模拟不预设全部结果。', interpretation: '治疗决策需结合症状、钙水平、肾结石、骨密度和肾功能。', why: '病因与并发症评估决定后续处理。', essential: false }
+        { id: 'urine', name: '尿钙、25(OH)D 与骨密度/肾脏评估', stage: '第二轮', workupId: 'calcium-low', result: '24 小时尿钙升高，25(OH)D 充足；DXA 显示腰椎骨量下降，肾脏超声未见活动性结石。', interpretation: '尿钙不低使家族性低尿钙性高钙的可能性下降；骨量和既往结石史仍需纳入后续治疗与并发症评估。', why: '病因与并发症评估决定后续处理。', essential: false }
       ],
       decisions: [
         { id: 'pth-path', label: '先复核真性高钙和肾功能，再用 PTH 分层并评估骨/肾并发症', correct: true, why: '高钙不是单一疾病；PTH 未抑制时进入 PTH 依赖性路径，不能直接按肿瘤处理。', links: [{ type: 'workup', id: 'calcium-low', label: '打开钙异常指标追查' }] },
@@ -345,7 +388,7 @@
       source: ['垂体占位、泌乳素升高和垂体功能减退相关指南/共识：视野红旗、激素轴、MRI 与多学科评估', '本模拟器不提供手术、替代治疗或药物剂量'],
       note: '学习重点：视野改变优先级高；泌乳素、皮质醇、甲状腺和性腺轴要一起看。'
     }
-  ].concat(window.SIM_EXTRA_CASES || []);
+  ].concat(window.SIM_EXTRA_CASES || []).map(completeCaseTemplate);
 
   var DEFAULT_SYMPTOM_RESPONSES = {
     fever: '本次训练预设：患者近期否认发热，未出现寒战或夜间大汗。',
@@ -385,32 +428,145 @@
     'urinary-incontinence': '本次训练预设：否认不自主漏尿，没有咳嗽漏尿、尿急漏尿或持续滴漏。'
   };
   var CASE_SYMPTOM_PRESETS = {
-    'new-t2d': { 'urine-volume': '近 2 个月夜间起夜增多，白天尿量也比平时多；没有尿痛或血尿。', 'weight-loss': '近 2 个月体重下降约 3 kg，不是刻意减重；同时口渴明显。', 'nausea-vomit': '没有恶心呕吐，能够正常进食饮水。', 'abdominal-pain': '没有腹痛，也没有深快呼吸或意识改变。' },
-    'dka-low-k': { fever: '昨晚体温约 38 ℃，伴发热感；此前没有反复高热或寒战。', 'nausea-vomit': '近 1 天呕吐约 5 次，进食后更明显，没有呕血。', 'abdominal-pain': '有弥漫性腹痛，随呕吐加重；目前没有明确固定压痛或反跳痛。', dyspnea: '出现深快呼吸和明显乏力，平卧也能呼吸；没有咯血。', 'urine-volume': '近 1 天尿量明显减少，饮水也少，站起时头晕。', consciousness: '目前能正确回答问题，但疲惫；没有抽搐或持续意识丧失。' },
-    hypoglycemia: { palpitation: '低血糖发作时会突然心慌、出汗和手抖，纠正血糖后缓解。', consciousness: '两次发作时能自行进食，另一次夜间曾叫不醒，醒后无持续定向力障碍。', sleep: '低血糖主要发生在夜间；晚餐吃得少或周末运动后更容易出现。', mood: '发作前会紧张、反应变慢，血糖恢复后情绪回到平时。' },
-    'thyroid-nodule': { dysphagia: '没有明显吞咽困难，固体和液体均能咽下；偶有咽部异物感。', dyspnea: '没有呼吸困难、喘鸣或平卧憋气。', palpitation: '没有明显心悸和手抖，体重近期稳定。', 'weight-loss': '没有无法解释的体重下降。' },
-    'primary-aldosteronism': { sleep: '家人发现打鼾，白天容易困，尚未做睡眠监测。', palpitation: '偶有乏力和肌肉无力，但没有持续心悸或晕厥。', 'urine-volume': '没有明显多尿或夜尿增多，低钾前后尿量变化不大。' },
-    'adrenal-insufficiency': { 'weight-loss': '近几个月体重持续下降，食欲也较前差，不是主动减重。', 'nausea-vomit': '今天呕吐 3 次，进食和饮水后更明显；目前没有呕血。', syncope: '站立时几乎晕倒，坐下后缓解；尚未发生完全意识丧失。', vertigo: '主要是站起时头晕发黑，不是旋转性眩晕。', consciousness: '目前意识清楚，家属未发现行为异常或持续嗜睡。' },
-    hypercalcemia: { constipation: '近来排便减少、较费力，伴口渴；没有黑便或腹泻。', 'urine-volume': '近期多尿、夜间起夜增加并主动多饮水，没有尿痛。', 'nausea-vomit': '没有持续恶心呕吐，进食基本可以维持。', consciousness: '目前意识清楚，没有反应变慢、嗜睡或行为改变。' },
-    osteoporosis: { 'back-pain': '平地滑倒后出现腰背痛，翻身和起床明显受限；疼痛没有向双下肢放射。', syncope: '跌倒前没有心悸、胸痛或意识丧失，是脚下打滑后摔倒。', arthralgia: '主要是骨折部位疼痛，没有多关节红肿热痛。' },
-    'pituitary-vision': { headache: '近 1 个月出现持续性头痛，伴双侧周边视野变窄，近期没有雷击样突发剧痛。', 'vaginal-bleeding': '月经约 4 个月不规律，但没有大出血或妊娠相关阴道流血。', 'nausea-vomit': '没有持续呕吐或剧烈头痛，近期主要困扰是视野和乏力。', consciousness: '意识清楚，没有晕厥、抽搐或进行性嗜睡。' },
-    'new-t1d': { 'weight-loss': '近 6 周体重下降约 6 kg，伴口渴、多尿，不是刻意节食。', 'urine-volume': '近月白天和夜间尿量均增多，未伴尿痛或血尿。', 'nausea-vomit': '近 2 天有恶心，但没有持续呕吐。', 'abdominal-pain': '目前没有明显腹痛，仍需结合血酮和酸碱结果排除 DKA。', dyspnea: '没有明显深快呼吸，但感到乏力；若出现呼吸加深需立即升级评估。' },
-    prediabetes: { obesity: 'BMI 约 30，腰围增大；久坐、含糖饮料较多，家属提示打鼾。', sleep: '入睡后打鼾，白天容易困，尚未完成睡眠呼吸暂停评估。', 'weight-loss': '近年体重增加约 8 kg，没有不明原因消瘦。', 'urine-volume': '没有明显多尿或夜尿增多。' },
-    hyperthyroidism: { palpitation: '静息时心跳快、容易心慌，活动后更明显；没有晕厥或胸痛。', 'weight-loss': '近 3 个月体重下降约 5 kg，食量没有相应减少。', sleep: '入睡困难、夜间易醒，白天仍感到疲倦。', mood: '近期容易焦虑、急躁，注意力较前差。' },
-    hypothyroidism: { constipation: '近数月排便次数减少、较费力，没有便血或明显腹痛。', sleep: '白天困倦、精力差，但没有夜间憋醒或明显打鼾。', edema: '没有明显下肢凹陷性水肿，体重增加较缓慢。', mood: '兴趣和精力下降，但没有持续自伤想法或行为异常。' },
-    hyponatremia: { headache: '近几天出现头痛和注意力下降，没有突发雷击样头痛。', 'nausea-vomit': '有恶心，但没有频繁呕吐或呕血。', consciousness: '反应比平时慢，但能正确回答问题；没有抽搐。', cough: '近 2 周有咳嗽，痰不多，没有咯血或明显呼吸困难。' },
-    pheochromocytoma: { headache: '反复发作性头痛，每次伴心慌和出汗，发作间歇可缓解。', palpitation: '心悸突然发作，常与头痛同时出现，偶有胸闷但未晕厥。', mood: '发作时强烈紧张和濒死感，发作结束后情绪逐渐恢复。' },
-    cushing: { obesity: '近年躯干体重增加、腰围增大，四肢相对变细；同时发现血压和血糖升高。', 'back-pain': '偶有腰背酸痛，需结合骨密度和椎体影像评估，未发生明确外伤骨折。', mood: '近来情绪波动、睡眠变差，家属认为性格与以前不同。' },
-    obesity: { obesity: '体重和腰围逐年增加，BMI 约 31；饮食、久坐和睡眠不足较突出。', sleep: '家属描述打鼾、夜间憋醒，白天嗜睡，符合睡眠呼吸暂停筛查线索。', dyspnea: '快走或爬楼时气短，休息后缓解；没有静息呼吸困难。', 'urinary-incontinence': '否认不自主漏尿，咳嗽或急迫时也没有漏尿。' },
-    pcos: { 'vaginal-bleeding': '月经约 2–3 个月来一次，量不规律；没有妊娠期或性交后异常大出血。', obesity: '体重偏高、腰围增加，伴面部痤疮和多毛；没有近期快速消瘦。', mood: '因月经和备孕问题感到焦虑，但日常功能尚可。' },
-    'diabetic-foot': { fever: '近期出现发热感，最高体温约 38 ℃；伴足部红肿和渗液。', edema: '患足红肿、局部肿胀，另一侧下肢无明显水肿。', 'back-pain': '没有腰背痛；主要疼痛和麻木集中在足部。', arthralgia: '足部局部疼痛，不能简单按普通关节炎解释；活动和负重后加重。' },
-    'gestational-diabetes': { 'nausea-vomit': '孕早期有恶心，但目前没有持续呕吐、脱水或腹痛。', 'vaginal-bleeding': '目前没有阴道流血、下腹痛或胎动异常相关表现。', edema: '目前没有明显面部或下肢水肿，血压需按产科流程动态复核。' },
-    hypoparathyroidism: { seizure: '没有抽搐或惊厥，但手足搐搦和口周麻木反复出现。', palpitation: '发作时可感到心慌，尚未发生晕厥；需要结合心电图和电解质。', consciousness: '目前意识清楚，没有嗜睡、意识丧失或行为改变。' },
-    'male-hypogonadism': { obesity: 'BMI 约 31，伴打鼾；体重问题和睡眠情况可能影响性腺轴。', sleep: '家属说夜间打鼾，白天容易困；尚未完成睡眠呼吸暂停检查。', mood: '因性欲下降和生育计划产生焦虑，但无持续抑郁表现。' },
-    'growth-delay': { diarrhea: '间断腹痛和腹泻，食欲下降；需排查营养吸收和慢性炎症原因。', 'weight-loss': '近一年体重略下降，和身高增长变慢同时出现。', headache: '否认头痛、喷射性呕吐和视野改变。', mood: '因身高增长慢感到自卑和担心，但学习和日常功能尚可。' }
+    'new-t2d': {
+      'urine-volume': '近 2 个月夜间起夜增多，白天尿量也比平时多；没有尿痛或血尿。',
+      'weight-loss': '近 2 个月体重下降约 3 kg，不是刻意减重；同时口渴明显。',
+      'nausea-vomit': '没有恶心呕吐，能够正常进食饮水。',
+      'abdominal-pain': '没有腹痛，也没有深快呼吸或意识改变。'
+    },
+    'dka-low-k': {
+      fever: '昨晚体温约 38 ℃，伴发热感；此前没有反复高热或寒战。',
+      'nausea-vomit': '近 1 天呕吐约 5 次，进食后更明显，没有呕血。',
+      'abdominal-pain': '有弥漫性腹痛，随呕吐加重；目前没有明确固定压痛或反跳痛。',
+      dyspnea: '出现深快呼吸和明显乏力，平卧也能呼吸；没有咯血。',
+      'urine-volume': '近 1 天尿量明显减少，饮水也少，站起时头晕。',
+      consciousness: '目前能正确回答问题，但疲惫；没有抽搐或持续意识丧失。'
+    },
+    hypoglycemia: {
+      palpitation: '低血糖发作时会突然心慌、出汗和手抖，纠正血糖后缓解。',
+      consciousness: '两次发作时能自行进食，另一次夜间曾叫不醒，醒后无持续定向力障碍。',
+      sleep: '低血糖主要发生在夜间；晚餐吃得少或周末运动后更容易出现。',
+      mood: '发作前会紧张、反应变慢，血糖恢复后情绪回到平时。'
+    },
+    'thyroid-nodule': {
+      dysphagia: '没有明显吞咽困难，固体和液体均能咽下；偶有咽部异物感。',
+      dyspnea: '没有呼吸困难、喘鸣或平卧憋气。',
+      palpitation: '没有明显心悸和手抖，体重近期稳定。',
+      'weight-loss': '没有无法解释的体重下降。'
+    },
+    'primary-aldosteronism': {
+      sleep: '家人发现打鼾，白天容易困，尚未做睡眠监测。',
+      palpitation: '偶有乏力和肌肉无力，但没有持续心悸或晕厥。',
+      'urine-volume': '没有明显多尿或夜尿增多，低钾前后尿量变化不大。'
+    },
+    'adrenal-insufficiency': {
+      'weight-loss': '近几个月体重持续下降，食欲也较前差，不是主动减重。',
+      'nausea-vomit': '今天呕吐 3 次，进食和饮水后更明显；目前没有呕血。',
+      syncope: '站立时几乎晕倒，坐下后缓解；尚未发生完全意识丧失。',
+      vertigo: '主要是站起时头晕发黑，不是旋转性眩晕。',
+      consciousness: '目前意识清楚，家属未发现行为异常或持续嗜睡。'
+    },
+    hypercalcemia: {
+      constipation: '近来排便减少、较费力，伴口渴；没有黑便或腹泻。',
+      'urine-volume': '近期多尿、夜间起夜增加并主动多饮水，没有尿痛。',
+      'nausea-vomit': '没有持续恶心呕吐，进食基本可以维持。',
+      consciousness: '目前意识清楚，没有反应变慢、嗜睡或行为改变。'
+    },
+    osteoporosis: {
+      'back-pain': '平地滑倒后出现腰背痛，翻身和起床明显受限；疼痛没有向双下肢放射。',
+      syncope: '跌倒前没有心悸、胸痛或意识丧失，是脚下打滑后摔倒。',
+      arthralgia: '主要是骨折部位疼痛，没有多关节红肿热痛。'
+    },
+    'pituitary-vision': {
+      headache: '近 1 个月出现持续性头痛，伴双侧周边视野变窄，近期没有雷击样突发剧痛。',
+      'vaginal-bleeding': '月经约 4 个月不规律，但没有大出血或妊娠相关阴道流血。',
+      'nausea-vomit': '没有持续呕吐或剧烈头痛，近期主要困扰是视野和乏力。',
+      consciousness: '意识清楚，没有晕厥、抽搐或进行性嗜睡。'
+    },
+    'new-t1d': {
+      'weight-loss': '近 6 周体重下降约 6 kg，伴口渴、多尿，不是刻意节食。',
+      'urine-volume': '近月白天和夜间尿量均增多，未伴尿痛或血尿。',
+      'nausea-vomit': '近 2 天有恶心，但没有持续呕吐。',
+      'abdominal-pain': '目前没有明显腹痛，仍需结合血酮和酸碱结果排除 DKA。',
+      dyspnea: '没有明显深快呼吸，但感到乏力；若出现呼吸加深需立即升级评估。'
+    },
+    prediabetes: {
+      obesity: 'BMI 约 30，腰围增大；久坐、含糖饮料较多，家属提示打鼾。',
+      sleep: '入睡后打鼾，白天容易困，尚未完成睡眠呼吸暂停评估。',
+      'weight-loss': '近年体重增加约 8 kg，没有不明原因消瘦。',
+      'urine-volume': '没有明显多尿或夜尿增多。'
+    },
+    hyperthyroidism: {
+      palpitation: '静息时心跳快、容易心慌，活动后更明显；没有晕厥或胸痛。',
+      'weight-loss': '近 3 个月体重下降约 5 kg，食量没有相应减少。',
+      sleep: '入睡困难、夜间易醒，白天仍感到疲倦。',
+      mood: '近期容易焦虑、急躁，注意力较前差。'
+    },
+    hypothyroidism: {
+      constipation: '近数月排便次数减少、较费力，没有便血或明显腹痛。',
+      sleep: '白天困倦、精力差，但没有夜间憋醒或明显打鼾。',
+      edema: '没有明显下肢凹陷性水肿，体重增加较缓慢。',
+      mood: '兴趣和精力下降，但没有持续自伤想法或行为异常。'
+    },
+    hyponatremia: {
+      headache: '近几天出现头痛和注意力下降，没有突发雷击样头痛。',
+      'nausea-vomit': '有恶心，但没有频繁呕吐或呕血。',
+      consciousness: '反应比平时慢，但能正确回答问题；没有抽搐。',
+      cough: '近 2 周有咳嗽，痰不多，没有咯血或明显呼吸困难。'
+    },
+    pheochromocytoma: {
+      headache: '反复发作性头痛，每次伴心慌和出汗，发作间歇可缓解。',
+      palpitation: '心悸突然发作，常与头痛同时出现，偶有胸闷但未晕厥。',
+      mood: '发作时强烈紧张和濒死感，发作结束后情绪逐渐恢复。'
+    },
+    cushing: {
+      obesity: '近年躯干体重增加、腰围增大，四肢相对变细；同时发现血压和血糖升高。',
+      'back-pain': '偶有腰背酸痛，需结合骨密度和椎体影像评估，未发生明确外伤骨折。',
+      mood: '近来情绪波动、睡眠变差，家属认为性格与以前不同。'
+    },
+    obesity: {
+      obesity: '体重和腰围逐年增加，BMI 约 31；饮食、久坐和睡眠不足较突出。',
+      sleep: '家属描述打鼾、夜间憋醒，白天嗜睡，符合睡眠呼吸暂停筛查线索。',
+      dyspnea: '快走或爬楼时气短，休息后缓解；没有静息呼吸困难。',
+      'urinary-incontinence': '否认不自主漏尿，咳嗽或急迫时也没有漏尿。'
+    },
+    pcos: {
+      'vaginal-bleeding': '月经约 2–3 个月来一次，量不规律；没有妊娠期或性交后异常大出血。',
+      obesity: '体重偏高、腰围增加，伴面部痤疮和多毛；没有近期快速消瘦。',
+      mood: '因月经和备孕问题感到焦虑，但日常功能尚可。'
+    },
+    'diabetic-foot': {
+      fever: '近期出现发热感，最高体温约 38 ℃；伴足部红肿和渗液。',
+      edema: '患足红肿、局部肿胀，另一侧下肢无明显水肿。',
+      'back-pain': '没有腰背痛；主要疼痛和麻木集中在足部。',
+      arthralgia: '足部局部疼痛，不能简单按普通关节炎解释；活动和负重后加重。'
+    },
+    'gestational-diabetes': {
+      'nausea-vomit': '孕早期有恶心，但目前没有持续呕吐、脱水或腹痛。',
+      'vaginal-bleeding': '目前没有阴道流血、下腹痛或胎动异常相关表现。',
+      edema: '目前没有明显面部或下肢水肿，血压需按产科流程动态复核。'
+    },
+    hypoparathyroidism: {
+      seizure: '没有抽搐或惊厥，但手足搐搦和口周麻木反复出现。',
+      palpitation: '发作时可感到心慌，尚未发生晕厥；需要结合心电图和电解质。',
+      consciousness: '目前意识清楚，没有嗜睡、意识丧失或行为改变。'
+    },
+    'male-hypogonadism': {
+      obesity: 'BMI 约 31，伴打鼾；体重问题和睡眠情况可能影响性腺轴。',
+      sleep: '家属说夜间打鼾，白天容易困；尚未完成睡眠呼吸暂停检查。',
+      mood: '因性欲下降和生育计划产生焦虑，但无持续抑郁表现。'
+    },
+    'growth-delay': {
+      diarrhea: '间断腹痛和腹泻，食欲下降；需排查营养吸收和慢性炎症原因。',
+      'weight-loss': '近一年体重略下降，和身高增长变慢同时出现。',
+      headache: '否认头痛、喷射性呕吐和视野改变。',
+      mood: '因身高增长慢感到自卑和担心，但学习和日常功能尚可。'
+    }
   };
 
   function diagnosticSymptomAnswer(template, item) {
+    var completion = template.completion || {};
+    if (completion.symptoms && completion.symptoms[item.id]) return completion.symptoms[item.id];
     var overrides = CASE_SYMPTOM_PRESETS[template.id] || {};
     if (overrides[item.id]) return overrides[item.id];
     var matched = template.history.find(function (historyItem) {
@@ -418,7 +574,7 @@
       return (item.keywords || []).some(function (keyword) { return keyword.length >= 2 && source.includes(keyword); });
     });
     if (matched && matched.answer) return matched.answer;
-    return DEFAULT_SYMPTOM_RESPONSES[item.id] || '本次训练预设：患者目前未诉该症状，仍需结合完整问诊和查体核实。';
+    return DEFAULT_SYMPTOM_RESPONSES[item.id] || '患者回答（本病例固定预设）：目前否认该症状及其相关危险表现；如需进一步判断，继续追问起病时间、严重程度和伴随症状。';
   }
 
   function freeQuestionAnswer(template, query) {
@@ -435,29 +591,27 @@
     var symptom = DIAGNOSTIC_SYMPTOM_BANK.find(function (item) {
       return (item.keywords || []).some(function (keyword) { return keyword.length >= 2 && qLower.includes(keyword.toLowerCase()); });
     });
+    var completion = template.completion || {};
     var answers = symptom ? [diagnosticSymptomAnswer(template, symptom)] : [];
-    if (/过敏|药物过敏|食物过敏/.test(qLower)) {
-      answers.push('本次训练预设：患者否认已知药物或食物过敏，也没有发生过严重过敏反应；具体药名仍应在用药核对时逐项确认。');
-    }
+    if (/过敏|药物过敏|食物过敏/.test(qLower)) answers.push('患者回答：' + (completion.allergy || '否认已知药物、食物和造影剂过敏。'));
     if (/既往|手术|住院|病史|结核|肝炎|输血/.test(qLower)) {
-      answers.push('本次训练预设：除病例已经显示的相关病史外，患者否认重大手术、长期住院、结核或病毒性肝炎史；本例主线相关病史以已显示的问诊回答为准。');
+      answers.push('患者回答：' + (completion.past || '否认与本病例无关的重大手术、长期住院、结核、病毒性肝炎和输血史；相关病史见病例回答。'));
     }
     if (/家族|遗传|父母|兄弟|姐妹/.test(qLower)) {
-      answers.push('本次训练预设：家族史以本病例已显示的遗传或家族线索为主；除已显示内容外，患者否认同类内分泌疾病在近亲中聚集。');
+      answers.push('患者回答：' + (completion.family || '除病例已显示线索外，否认近亲中同类内分泌疾病聚集。'));
     }
     if (/用药|药物|服药|漏服|剂量|胰岛素|保健品|激素/.test(qLower)) {
       var medicationAnswers = template.history.filter(function (item) {
         var source = String(item.id || '') + ' ' + String(item.question || '') + ' ' + String(item.answer || '');
         return /药|用药|服药|胰岛素|激素|保健/.test(source);
       }).map(function (item) { return item.answer; }).filter(Boolean);
-      answers.push(medicationAnswers.length ? '本次训练预设：' + medicationAnswers.join('；') : '本次训练预设：目前没有其他规律用药或近期新增药物；请在真实问诊训练中逐项核对药名、剂量、漏服和不良反应。');
+      answers.push(medicationAnswers.length ? '患者回答：' + medicationAnswers.join('；') : '患者回答：' + (completion.meds || '当前没有病例外新增药物；已逐项核对药名、剂量、漏服和不良反应。'));
     }
-    if (/吸烟|饮酒|酒精|烟草|电子烟/.test(qLower)) answers.push('本次训练预设：不吸烟；饮酒为偶尔少量，近期没有暴饮酒或戒断表现。');
-    if (/饮食|吃饭|进食|运动|锻炼|活动|饮料|夜宵/.test(qLower)) answers.push('本次训练预设：近期饮食和活动情况以病例资料中已显示的线索为主，患者没有报告新的明显变化；需要记录具体频率、份量和近期趋势。');
-    if (/妊娠|怀孕|月经|生育|性生活|乳房|泌乳|哺乳/.test(qLower)) answers.push(state.person && state.person.sex === '男' ? '本次训练预设：患者为男性，本问题不适用；目前没有相关异常主诉。' : '本次训练预设：目前没有妊娠可能或异常大出血；月经、生育和泌乳信息以病例已经显示的问诊回答为准。');
-    if (/起病|多久|时间|几天|几周|几月|持续|什么时候|以来|变化/.test(qLower)) answers.push(timelineInfo() + '；本次训练预设中未再出现新的时间线变化。');
+    if (/吸烟|饮酒|酒精|烟草|电子烟|饮食|吃饭|进食|运动|锻炼|活动|饮料|夜宵/.test(qLower)) answers.push('患者回答：' + (completion.social || '不吸烟，饮酒少量；饮食、运动和照护情况按本病例固定记录。'));
+    if (/妊娠|怀孕|月经|生育|性生活|乳房|泌乳|哺乳/.test(qLower)) answers.push('患者回答：' + (completion.reproductive || '按适用问题核对末次月经、妊娠可能、生育计划和相关症状。'));
+    if (/起病|多久|时间|几天|几周|几月|持续|什么时候|以来|变化/.test(qLower)) answers.push(timelineInfo() + '；下一次变化以病程节点中显示的固定预设为准。');
     if (answers.length) return { answer: answers.join(' '), sourceId: symptom ? 'diagnostic-symptom-preset' : 'free-question-preset', symptomId: symptom ? symptom.id : '' };
-    return { answer: '本次训练预设回答：患者目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + template.intro + '”。以上是本次虚构训练资料中的回答，不能外推到真实患者。', sourceId: 'free-question-preset' };
+    return { answer: '患者回答（本病例固定预设）：目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + template.intro + '”。如需形成诊断依据，请继续追问时间、严重程度和相关危险信号。', sourceId: 'free-question-preset' };
   }
 
   function esc(value) {
@@ -558,7 +712,12 @@
   function missingRequired(bucket) {
     return requiredIds(bucket).filter(function (id) { return !state.asked[bucket].includes(id); });
   }
+  function ctaWorkflowComplete() {
+    var it = state.interview || {};
+    return !!(it.started && (it.submitted || (it.stationSubmitted && it.stationSubmitted.three)));
+  }
   function gateFor(type) {
+    if ((type === 'workflow' || type === 'review') && ctaWorkflowComplete()) return 'done';
     if (!state.asked.communication) return type === 'start' ? 'open' : 'communication';
     if (missingRequired('history').length) return type === 'start' || type === 'history' ? 'open' : 'history';
     if (missingRequired('exams').length) return type === 'start' || type === 'history' || type === 'exams' ? 'open' : 'exams';
@@ -570,10 +729,11 @@
     return ({ communication: '先完成一次有回应的沟通', history: '先完成必问病史，尤其是危险信号', exams: '先完成关键床旁查体', tests: '先完成必要的首轮检查', decisions: '先作出下一步判断', done: '前置临床推理已完成' })[gate] || '';
   }
   function timelineInfo() {
+    if (template.completion && template.completion.timeline) return '本病例固定时间线：' + template.completion.timeline;
     var text = [template.intro].concat(template.history.map(function (item) { return item.answer || ''; })).join(' ');
     var matches = text.match(/(?:近|约|持续|已有|过去|前)s*[0-9一二三四五六七八九十]+s*(?:天|日|周|星期|个月|月|年|小时)/g) || [];
     var unique = matches.filter(function (item, index) { return matches.indexOf(item) === index; });
-    return unique.length ? '本例资料已提供：' + unique.join('、') : '本例资料未提供明确患病时间；练习时必须补问起病日期、起病方式、变化趋势、最近一次发作和就诊前处理。';
+    return unique.length ? '本病例时间线：' + unique.join('、') : '本病例时间线：主诉出现后按题干到诊，起病方式、变化趋势和就诊前处理已在“完整时间线”问诊项中预设，仍需在病历中主动记录。';
   }
   function caseDataText() {
     var history = template.history.map(function (item) { return '【' + item.question + '】患者回答：' + item.answer + '；意义：' + item.why; }).join('\n');
@@ -588,9 +748,10 @@
     var profile = state.profile || {};
     var patient = state.person.age + '岁，' + state.person.sex + '，职业：' + state.person.job + '（虚构教学病例，不含真实身份信息）';
     var chief = state.person.complaint + '；' + timeline;
-    var history = template.intro + '\n' + timeline + '\n' + data.history + '\n本例未出现的病史不能自行补写；请将“未询问/未提供”列为待补问。';
-    var background = '既往/共病线索：' + (profile.comorbidities || []).join('、') + '。\n用药线索：' + (profile.meds || '未设定，需逐项核对') + '。\n个人/家族/婚育月经史：以本例问诊回答为准，未提供者标记待补问。';
-    var exam = '就诊场景：' + scene.label + '；' + (profile.context || '') + '\n生命体征/体格变量：BP ' + (profile.vitals && profile.vitals.bp || '未提供') + ' mmHg，HR ' + (profile.vitals && profile.vitals.hr || '未提供') + '/min，T ' + (profile.vitals && profile.vitals.temp || '未提供') + '℃，BMI ' + (profile.vitals && profile.vitals.bmi || '未提供') + '。\n' + data.exams;
+    var completion = template.completion || {};
+    var history = template.intro + '\n' + timeline + '\n' + data.history + '\n本病例已预设常见病史、过敏史、用药史、个人/家族史和系统回顾；病历只记录你实际主动询问并获得的回答。';
+    var background = '既往/共病线索：' + (profile.comorbidities || []).join('、') + '。\n既往史补充：' + (completion.past || '按病例问诊回答核对') + '\n过敏史：' + (completion.allergy || '按病例问诊回答核对') + '\n用药线索：' + (profile.meds || completion.meds || '已逐项核对') + '\n个人/家族/婚育史：' + [completion.social, completion.family, completion.reproductive].filter(Boolean).join('；');
+    var exam = '就诊场景：' + scene.label + '；' + (profile.context || '') + '\n生命体征/体格变量：BP ' + (profile.vitals && profile.vitals.bp || '已建立教学基线') + ' mmHg，HR ' + (profile.vitals && profile.vitals.hr || '已建立教学基线') + '/min，T ' + (profile.vitals && profile.vitals.temp || '已建立教学基线') + '℃，BMI ' + (profile.vitals && profile.vitals.bmi || '已建立教学基线') + '。\n' + data.exams;
     var diagnosis = '病例特点：' + template.note + '\n首要判断：根据已完成的检查和下一步判断选项整理，不能把模拟结果外推到真实患者。\n鉴别诊断/排除理由：' + template.decisions.map(function (item) { return item.label + '；理由：' + item.why; }).join('\n');
     var plan = '首轮检查与监测：' + template.tests.filter(function (item) { return item.essential || item.redFlag; }).map(function (item) { return item.name + '（目的：' + item.why + '）'; }).join('；') + '。\n安全网：' + template.history.filter(function (item) { return item.redFlag; }).map(function (item) { return item.question + '；患者回答：' + item.answer; }).join('；') + '。\n下一步：完成临床判断后回到相应指南路径、药物卡和院内急救/会诊流程核对。';
     var drafts = {
@@ -663,6 +824,7 @@
   }
   function buildProfile(template, person, scene) {
     var id = template.id;
+    var completion = template.completion || {};
     var acute = /dka|hypoglycemia|hyponatremia|adrenal-insufficiency|diabetic-foot|hypoparathyroidism/.test(id);
     var age = person.age;
     var bp = acute ? between(92, 128) + '/' + between(56, 82) : /primary-aldosteronism|cushing|obesity|pheochromocytoma/.test(id) ? between(142, 178) + '/' + between(88, 108) : between(108, 148) + '/' + between(66, 92);
@@ -674,9 +836,9 @@
     if (Math.random() > .55) comorbidities.push(choose(comorbidityPool.filter(function (x) { return !comorbidities.includes(x); })));
     if (/diabetes|prediabetes|obesity|gestational/.test(id) && !comorbidities.includes('家族糖尿病史')) comorbidities.unshift('糖代谢风险');
     if (/thyroid|hyperthyroidism|hypothyroidism/.test(id)) comorbidities.push('甲状腺相关既往史待核对');
-    var meds = /dka|new-t1d|new-t2d|gestational/.test(id) ? '尚未规律使用降糖药或正在建立方案' : /hypoglycemia/.test(id) ? '胰岛素/促泌剂等降糖药（需逐项核对）' : /primary-aldosteronism/.test(id) ? '降压药及可能影响 ARR 的药物（需核对）' : /thyroid/.test(id) ? '甲状腺药物/含碘或生物素产品（需核对）' : '处方药、保健品和近期停药情况需核对';
+    var meds = completion.meds || (/dka|new-t1d|new-t2d|gestational/.test(id) ? '尚未规律使用降糖药或正在建立方案' : /hypoglycemia/.test(id) ? '胰岛素/促泌剂等降糖药（需逐项核对）' : /primary-aldosteronism/.test(id) ? '降压药及可能影响 ARR 的药物（需核对）' : /thyroid/.test(id) ? '甲状腺药物/含碘或生物素产品（需核对）' : '处方药、保健品和近期停药情况需核对');
     var context = scene.id.indexOf('admission') >= 0 ? '本次因新发异常或危险信号收入院' : scene.id.indexOf('inpatient') >= 0 ? '住院第 ' + between(1, 6) + ' 天，需写病程并追踪趋势' : scene.id === 'discharge' ? '症状较入院稳定，正在做出院核对' : scene.id === 'post-discharge' ? '出院后首次/早期随访，重点看方案能否执行' : scene.id === 'outpatient-followup' ? '既往已确诊，今天重点是疗效、安全和目标调整' : '首次门诊评估，需明确是否需要急诊/住院';
-    return { scene: scene.label, context: context, vitals: { bp: bp, hr: hr, temp: temp, bmi: bmi }, comorbidities: comorbidities, meds: meds, occupationContext: person.job + '，' + (Math.random() > .5 ? '工作日久坐' : '工作时间不规律') };
+    return { scene: scene.label, context: context, vitals: { bp: bp, hr: hr, temp: temp, bmi: bmi }, comorbidities: comorbidities, meds: meds, pastHistory: completion.past || '', allergy: completion.allergy || '', familyHistory: completion.family || '', socialHistory: completion.social || '', reproductiveHistory: completion.reproductive || '', occupationContext: person.job + '，' + (Math.random() > .5 ? '工作日久坐' : '工作时间不规律') };
   }
   function makeCase() {
     var template = choose(CASES);
@@ -696,7 +858,7 @@
       notes: {},
       workflowGuide: false,
       workflow: { documentType: workflowTemplateFor(scene.id), submitted: false, score: 0, feedback: '', draftInitialized: false, autoGenerated: false },
-      interview: { started: false, phase: 'history', setting: scene.id.indexOf('inpatient') >= 0 || scene.id === 'discharge' ? 'inpatient' : 'outpatient', day: 1, askedHistory: [], freeQuestions: [], selectedExams: [], selectedTests: [], reassessmentExams: [], reassessmentTests: [], impressionDecision: '', finalDecision: '', selectedMeds: [], activeOrders: [], stoppedOrders: [], progression: [], currentEvent: null, dischargeSuggested: false, discharged: false, historyReturns: 0, examReturns: 0, text: { impression: '', diagnosis: '', plan: '', discharge: '' }, submitted: false, score: null },
+      interview: { started: false, phase: 'history', station: 1, setting: scene.id.indexOf('inpatient') >= 0 || scene.id === 'discharge' ? 'inpatient' : 'outpatient', day: 1, askedHistory: [], freeQuestions: [], selectedExams: [], selectedTests: [], testStatus: {}, reviewedTests: [], reassessmentExams: [], reassessmentTests: [], impressionDecision: '', finalDecision: '', evidence: {}, selectedMeds: [], selectedOrders: [], activeOrders: [], stoppedOrders: [], progression: [], currentEvent: null, dischargeSuggested: false, discharged: false, historyReturns: 0, examReturns: 0, stationSubmitted: { one: false, two: false, three: false }, text: { impression: '', diagnosis: '', plan: '', discharge: '' }, submitted: false, score: null },
       activeTab: 'start',
       completed: false,
       seed: newSeed()
@@ -712,16 +874,20 @@
   if (typeof state.workflow.draftInitialized !== 'boolean') state.workflow.draftInitialized = false;
   if (typeof state.workflow.autoGenerated !== 'boolean') state.workflow.autoGenerated = false;
   if (!state.workflow.documentType || !DOCUMENT_TEMPLATES[state.workflow.documentType]) state.workflow.documentType = workflowTemplateFor(state.scene);
-  if (!state.interview) state.interview = { started: false, phase: 'history', setting: 'outpatient', day: 1, askedHistory: [], freeQuestions: [], selectedExams: [], selectedTests: [], reassessmentExams: [], reassessmentTests: [], impressionDecision: '', finalDecision: '', selectedMeds: [], activeOrders: [], stoppedOrders: [], progression: [], currentEvent: null, dischargeSuggested: false, discharged: false, historyReturns: 0, examReturns: 0, text: { impression: '', diagnosis: '', plan: '', discharge: '' }, submitted: false, score: null };
+  if (!state.interview) state.interview = { started: false, phase: 'history', station: 1, setting: 'outpatient', day: 1, askedHistory: [], freeQuestions: [], selectedExams: [], selectedTests: [], testStatus: {}, reviewedTests: [], reassessmentExams: [], reassessmentTests: [], impressionDecision: '', finalDecision: '', evidence: {}, selectedMeds: [], selectedOrders: [], activeOrders: [], stoppedOrders: [], progression: [], currentEvent: null, dischargeSuggested: false, discharged: false, historyReturns: 0, examReturns: 0, stationSubmitted: { one: false, two: false, three: false }, text: { impression: '', diagnosis: '', plan: '', discharge: '' }, submitted: false, score: null };
   if (!state.interview.text) state.interview.text = { impression: '', diagnosis: '', plan: '', discharge: '' };
   if (typeof state.interview.text.discharge !== 'string') state.interview.text.discharge = '';
   if (!Array.isArray(state.interview.askedHistory)) state.interview.askedHistory = [];
   if (!Array.isArray(state.interview.freeQuestions)) state.interview.freeQuestions = [];
   if (!Array.isArray(state.interview.selectedExams)) state.interview.selectedExams = [];
   if (!Array.isArray(state.interview.selectedTests)) state.interview.selectedTests = [];
+  if (!state.interview.testStatus || typeof state.interview.testStatus !== 'object') state.interview.testStatus = {};
+  if (!Array.isArray(state.interview.reviewedTests)) state.interview.reviewedTests = [];
   if (!Array.isArray(state.interview.reassessmentExams)) state.interview.reassessmentExams = [];
   if (!Array.isArray(state.interview.reassessmentTests)) state.interview.reassessmentTests = [];
+  if (!state.interview.evidence || typeof state.interview.evidence !== 'object') state.interview.evidence = {};
   if (!Array.isArray(state.interview.selectedMeds)) state.interview.selectedMeds = [];
+  if (!Array.isArray(state.interview.selectedOrders)) state.interview.selectedOrders = [];
   if (!Array.isArray(state.interview.activeOrders)) state.interview.activeOrders = [];
   if (!Array.isArray(state.interview.stoppedOrders)) state.interview.stoppedOrders = [];
   if (!Array.isArray(state.interview.progression)) state.interview.progression = [];
@@ -734,6 +900,8 @@
   if (!state.interview.setting) state.interview.setting = 'outpatient';
   if (typeof state.interview.historyReturns !== 'number') state.interview.historyReturns = 0;
   if (typeof state.interview.examReturns !== 'number') state.interview.examReturns = 0;
+  if (typeof state.interview.station !== 'number') state.interview.station = 1;
+  if (!state.interview.stationSubmitted || typeof state.interview.stationSubmitted !== 'object') state.interview.stationSubmitted = { one: false, two: false, three: false };
   var mood = template.moods.find(function (item) { return item.id === state.person.moodId; }) || template.moods[0];
 
   function progressCount() {
@@ -763,6 +931,119 @@
   // CTA模式把“问什么、何时查、如何处理”拆成互相独立的动作。
   // 练习阶段只显示患者回答/检查结果；why、redFlag、correct 等解析字段只在提交后由 ctaReview() 展开。
   function ctaSettingLabel() { return state.interview.setting === 'inpatient' ? '住院病人（含病程复评）' : '门诊病人（首诊/复诊）'; }
+  function ctaStationForPhase(phase) {
+    if (phase === 'history' || phase === 'impression' || phase === 'exams') return 1;
+    if (phase === 'workup' || phase === 'diagnosis') return 2;
+    return 3;
+  }
+  function ctaStationLabel(station) {
+    return station === 1 ? '第一考站 · 资料收集站' : station === 2 ? '第二考站 · 资料分析站' : '第三考站 · 诊疗决策站';
+  }
+  function ctaStationHtml() {
+    var it = state.interview;
+    var current = ctaStationForPhase(it.phase);
+    it.station = current;
+    var labels = [1, 2, 3].map(function (station) {
+      var done = !!(it.stationSubmitted && it.stationSubmitted[['one', 'two', 'three'][station - 1]]);
+      var active = current === station;
+      return '<div class="sim-cta-station ' + (active ? 'active ' : '') + (done ? 'done' : '') + '"><span class="sim-cta-station-num">' + (done ? '✓' : station) + '</span><div><b>' + esc(ctaStationLabel(station)) + '</b><small>' + (station === 1 ? '问诊与查体' : station === 2 ? '检查、报告与鉴别' : '诊断、医嘱与复评') + '</small></div></div>';
+    }).join('<span class="sim-cta-station-line" aria-hidden="true"></span>');
+    return '<div class="sim-cta-stations" aria-label="三站训练进度">' + labels + '</div><div class="sim-cta-integrated-note"><b>同一患者连续推进：</b>前一站获得的资料会自动带入下一站；提交后不能返回修改，但始终可以只读查看。</div>';
+  }
+  function ctaPhaseSteps() {
+    return [
+      ['history', '病史采集', 1],
+      ['impression', '初步印象', 1],
+      ['exams', '体格检查', 1],
+      ['workup', '辅助检查', 2],
+      ['diagnosis', '诊断与鉴别', 2],
+      ['plan', '诊疗决策', 3],
+      ['reassessment', '病程复评', 3],
+      ['discharge', '出院核对', 3]
+    ];
+  }
+  function ctaPhaseIndex(phase) {
+    return Math.max(0, ctaPhaseSteps().findIndex(function (item) { return item[0] === phase; }));
+  }
+  function ctaOperationCount() {
+    var it = state.interview;
+    return (it.askedHistory || []).length + (it.freeQuestions || []).length + (it.selectedExams || []).length + (it.selectedTests || []).length + (it.reviewedTests || []).length + (it.selectedMeds || []).length + (it.selectedOrders || []).length;
+  }
+  function ctaOperationLimit(station) { return station === 1 ? 100 : station === 2 ? 25 : 20; }
+  function ctaToolbarHtml(phase) {
+    var current = ctaPhaseIndex(phase);
+    return '<nav class="sim-cta-toolbar" aria-label="CTA考站步骤">' + ctaPhaseSteps().map(function (item, index) {
+      var status = index < current ? 'done' : index === current ? 'active' : 'locked';
+      return '<span class="sim-cta-tool ' + status + '"><span>' + (index < current ? '✓' : index + 1) + '</span><b>' + esc(item[1]) + '</b></span>';
+    }).join('') + '</nav>';
+  }
+  function ctaExamShellHtml(body, phase, phaseTitle, phaseNote) {
+    var station = ctaStationForPhase(phase);
+    var used = ctaOperationCount();
+    var limit = ctaOperationLimit(station);
+    var it = state.interview;
+    return '<div class="sim-cta-exam-shell">' +
+      '<header class="sim-cta-exam-head"><div><span class="sim-cta-brand">CTA 病例考核</span><b>' + esc(ctaStationLabel(station)) + '</b></div><div class="sim-cta-exam-meta"><span>' + esc(ctaSettingLabel()) + '</span>' + (it.setting === 'inpatient' ? '<span>第' + it.day + '天</span>' : '') + '<span>操作 ' + used + '/' + limit + '</span></div></header>' +
+      ctaToolbarHtml(phase) + ctaStationHtml() +
+      '<div class="sim-cta-exam-grid"><aside class="sim-cta-instruction"><span class="sim-kicker">操作说明</span><h4>' + esc(phaseTitle) + '</h4><p>' + esc(phaseNote) + '</p><dl><div><dt>当前考站</dt><dd>' + station + '/3</dd></div><div><dt>累计操作</dt><dd>' + used + '</dd></div><div><dt>本站上限</dt><dd>' + limit + '</dd></div></dl><p class="sim-muted">提交考站后不能返回修改；后续站点仍可只读查看已获得资料。</p></aside><main class="sim-cta-workspace">' + body + '</main></div>' +
+      '<footer class="sim-cta-exam-foot"><span>资料将随患者连续带入下一站</span><b>仅供指南学习与考核训练，不用于真实临床决策</b></footer></div>';
+  }
+  function ctaWelcomeHtml() {
+    var it = state.interview;
+    var stationCards = [
+      ['第一考站', '资料收集站', '问诊、初步印象与针对性查体', '20分钟', 'active'],
+      ['第二考站', '资料分析站', '开立检查、查看报告、诊断与鉴别', '20分钟', 'locked'],
+      ['第三考站', '诊疗决策站', '治疗、医嘱、监测、宣教与复评', '20分钟', 'locked']
+    ].map(function (item, index) {
+      return '<article class="sim-cta-entry-card ' + item[4] + '"><div><span class="sim-cta-entry-num">' + (index + 1) + '</span><div><small>' + item[0] + '</small><h4>' + item[1] + '</h4></div></div><p>' + item[2] + '</p><span class="sim-cta-entry-time">' + item[3] + '</span><b>' + (index === 0 ? '可进入' : '完成前站后开放') + '</b></article>';
+    }).join('');
+    return '<div class="sim-cta-welcome sim-cta-entry"><header class="sim-cta-entry-head"><span>CTA 病例考核</span><h3>考站快捷入口</h3><p>模拟真实考核：从同一患者依次完成三个考站，提交后不可回退。</p></header><div class="sim-cta-entry-grid">' + stationCards + '</div><div class="sim-patient-card sim-cta-stem"><span class="sim-pill">本次虚构病例题干</span><h3>' + esc(state.person.age + ' 岁 · ' + state.person.sex + ' · ' + state.person.job) + '</h3><p><b>主诉：</b>' + esc(state.person.complaint) + '</p><p class="sim-quote">“' + esc(mood.opening) + '”</p><label class="sim-cta-select"><b>训练场景</b><select data-cta-setting><option value="outpatient"' + (it.setting === 'outpatient' ? ' selected' : '') + '>门诊：首诊/复诊</option><option value="inpatient"' + (it.setting === 'inpatient' ? ' selected' : '') + '>住院：入院/病程/复评</option></select></label></div><div class="sim-actions sim-cta-entry-actions"><button class="primary" type="button" data-sim-action="cta-start">进入第一考站</button><button class="sim-secondary" type="button" data-sim-action="new">换一位患者</button></div><p class="sim-muted">视频中的第四考站和二维码不纳入本网站；本站将前三考站合并为完整就诊训练。</p></div>';
+  }
+  function ctaTestStatus(id) {
+    return (state.interview.testStatus || {})[id] || 'available';
+  }
+  function ctaReportsReady() {
+    return (state.interview.selectedTests || []).some(function (id) { return ctaTestStatus(id) === 'reported'; });
+  }
+  function ctaReportHtml(item) {
+    var status = ctaTestStatus(item.id);
+    if (status !== 'reported') return '<article class="sim-detail sim-report-pending"><div class="sim-report-head"><span class="sim-stage">待执行</span><b>' + esc(item.name) + '</b></div><p>检查已开立，点击“执行并返回报告”后才能看到结果。</p></article>';
+    var reviewed = (state.interview.reviewedTests || []).includes(item.id);
+    return '<article class="sim-detail sim-report-card ' + (item.redFlag ? 'sim-report-critical' : '') + '"><div class="sim-report-head"><div><span class="sim-stage">检查结果已返回</span><h4>' + esc(item.name) + '</h4></div><span class="sim-report-status">' + (reviewed ? '已阅' : '待阅') + '</span></div><details class="sim-report-sheet"' + (reviewed ? ' open' : '') + '><summary>打开检查报告</summary><div class="sim-report-paper"><div class="sim-report-paper-title"><span>检查报告</span><b>' + esc(item.name) + '</b></div><div class="sim-report-meta"><span>患者：' + esc(state.person.age + '岁 · ' + state.person.sex) + '</span><span>场景：' + esc(ctaSettingLabel()) + '</span><span>报告日：第' + esc(state.interview.day) + '天</span></div><div class="sim-report-table"><div><b>项目/所见</b><b>结果/报告</b><b>参考信息</b></div><div><span>' + esc(ctaResultLabel(item)) + '</span><span>' + esc(item.result) + '</span><span>' + esc(ctaReferenceRange(item)) + '</span></div></div><p class="sim-report-note">教学用预设报告；报告单不直接给出诊断结论，请自行解释并与当前病例证据核对。</p></div></details><button class="sim-link" type="button" data-sim-action="cta-review-test" data-sim-id="' + esc(item.id) + '">' + (reviewed ? '已完成阅报告' : '阅后标记为已阅') + '</button></article>';
+  }
+  function ctaTestCatalogHtml() {
+    var groups = {};
+    (template.tests || []).forEach(function (item) { var key = item.stage || '按当前问题选择'; if (!groups[key]) groups[key] = []; groups[key].push(item); });
+    return Object.keys(groups).map(function (group) {
+      return '<section class="sim-test-group"><h4>' + esc(group) + '</h4><div class="sim-choice-list">' + groups[group].map(function (item) { var status = ctaTestStatus(item.id); var action = status === 'ordered' ? 'cta-execute-test' : status === 'reported' ? 'cta-review-test' : 'cta-test'; var label = status === 'ordered' ? '已开立，执行并返回报告' : status === 'reported' ? ((state.interview.reviewedTests || []).includes(item.id) ? '报告已阅' : '报告可用，标记已阅') : '加入待开检查'; return ctaChoiceButton(action, item.id, item.name, status !== 'available', label); }).join('') + '</div></section>';
+    }).join('');
+  }
+  function ctaEvidenceFacts() {
+    var facts = [];
+    (state.interview.askedHistory || []).forEach(function (id) { var item = template.history.find(function (x) { return x.id === id; }); if (item) facts.push({ id: 'history:' + id, label: '病史：' + item.question, value: item.answer }); });
+    (state.interview.selectedExams || []).forEach(function (id) { var item = template.exams.find(function (x) { return x.id === id; }); if (item) facts.push({ id: 'exam:' + id, label: '查体：' + item.label, value: item.result }); });
+    (state.interview.selectedTests || []).forEach(function (id) { var item = template.tests.find(function (x) { return x.id === id; }); if (item && ctaTestStatus(id) === 'reported') facts.push({ id: 'test:' + id, label: '报告：' + item.name, value: item.result }); });
+    return facts;
+  }
+  function ctaEvidenceHtml() {
+    var facts = ctaEvidenceFacts();
+    if (!facts.length) return '<div class="sim-notice"><b>证据矩阵暂未开放：</b>先完成查体并获得至少一份报告。</div>';
+    var decision = template.decisions.find(function (x) { return x.id === state.interview.finalDecision; }) || template.decisions[0];
+    if (!decision) return '';
+    var selected = state.interview.evidence[decision.id] || {};
+    return '<div class="sim-evidence-matrix"><h4>诊断依据矩阵：' + esc(decision.label) + '</h4><p class="sim-muted">把已获得的资料标记为支持、反对或暂不判断。作答时不显示指南解析，提交后才评分。</p><div class="sim-evidence-head"><span>已获得资料</span><span>支持</span><span>反对</span><span>不判断</span></div>' + facts.map(function (fact) { var value = selected[fact.id] || 'unknown'; return '<div class="sim-evidence-row"><div><b>' + esc(fact.label) + '</b><small>' + esc(fact.value) + '</small></div><button type="button" class="sim-evidence-btn ' + (value === 'support' ? 'active' : '') + '" data-sim-action="cta-evidence" data-sim-id="' + esc(fact.id) + '" data-sim-evidence="support" aria-label="标记为支持">支持</button><button type="button" class="sim-evidence-btn ' + (value === 'against' ? 'active' : '') + '" data-sim-action="cta-evidence" data-sim-id="' + esc(fact.id) + '" data-sim-evidence="against" aria-label="标记为反对">反对</button><button type="button" class="sim-evidence-btn ' + (value === 'unknown' ? 'active' : '') + '" data-sim-action="cta-evidence" data-sim-id="' + esc(fact.id) + '" data-sim-evidence="unknown" aria-label="标记为不判断">—</button></div>'; }).join('') + '</div>';
+  }
+  function ctaOrderOptionsHtml() {
+    var options = [
+      ['monitor', '生命体征、出入量及相关指标监测'],
+      ['repeat', '按本病路径安排复查和趋势记录'],
+      ['education', '给出药物、饮食、危险信号和随访教育'],
+      ['consult', '必要时申请相关专科或多学科会诊'],
+      ['safety', '记录知情沟通、拒绝风险和升级条件']
+    ];
+    var selected = state.interview.selectedOrders || [];
+    return '<div class="sim-order-set"><h4>非药物医嘱与安全计划</h4><p class="sim-muted">这些是医嘱类别训练项，具体项目仍需结合本例、指南和医院制度；不自动等同于真实医嘱。</p><div class="sim-choice-list">' + options.map(function (item) { return ctaChoiceButton('cta-order', item[0], item[1], selected.includes(item[0]), '治疗计划的一部分'); }).join('') + '</div></div>';
+  }
   function ctaGroup(item) {
     var id = String(item.id || '');
     if (item.redFlag || /crisis|red|fluid|airway|episode|acute/i.test(id)) return '危险信号与严重程度';
@@ -777,11 +1058,11 @@
   function ctaKnownFactsHtml() {
     var complaints = (template.complaints || []).filter(function (item) { return item && item !== state.person.complaint; });
     return '<div class="sim-review-block sim-cta-known-data"><h4>问诊前已知病例资料（仅展示本例已设定部分）</h4>' +
-      '<p><b>病例主线：</b>' + esc(template.intro || '本例未提供题干摘要，请从主诉和主动问诊开始。') + '</p>' +
-      '<p><b>本次主诉：</b>' + esc(state.person.complaint || '本例未提供主诉，请先核对患者自述。') + '</p>' +
+      '<p><b>病例主线：</b>' + esc(template.intro || '病例摘要由本次训练题干给出，请从主诉和主动问诊开始。') + '</p>' +
+      '<p><b>本次主诉：</b>' + esc(state.person.complaint || '主诉由本次虚构患者固定生成，请先核对患者自述。') + '</p>' +
       '<p><b>题干公开的时间线：</b>' + esc(timelineInfo()) + '</p>' +
       (complaints.length ? '<p><b>本病例其他预设就诊切入点（不等于本次患者已陈述）：</b>' + esc(complaints.join('；')) + '</p>' : '') +
-      '<p class="sim-muted"><b>仍需主动追问：</b>起病方式和完整时间线、伴随症状与阴性危险信号、既往史/手术史、用药与过敏、个人与家族史、婚育/月经史（适用时）、系统回顾及照护/依从性。未展示不等于阴性，未预设项目不会被系统补造。</p>' +
+      '<p class="sim-muted"><b>仍需主动追问：</b>起病方式和完整时间线、伴随症状与阴性危险信号、既往史/手术史、用药与过敏、个人与家族史、婚育/月经史（适用时）、系统回顾及照护/依从性。本病例已为这些常用项目准备固定患者回答；未点击的问题不会计入你的问诊记录。</p>' +
       '<p class="sim-cta-boundary"><b>严格学习边界：</b>年龄、职业、情绪和部分背景为随机训练变量；病例主线、已标注检查结果和指南路径固定。全部内容仅供学习，严禁用于真实患者评估、处方或临床决策。</p></div>';
   }
   function ctaMedicationOptions() { return (window.SIM_CASE_MEDICATIONS || {})[template.id] || []; }
@@ -813,11 +1094,15 @@
     var it = state.interview;
     if (!it.activeOrders.length) it.activeOrders = it.selectedMeds.slice();
     var score = ctaScore();
-    var acute = /dka|hypoglycemia|hyponatremia|adrenal-insufficiency|hypercalcemia|thyroid-storm/.test(template.id);
-    var draw = Math.random();
-    var status = draw < (acute ? 0.30 : 0.18) ? 'worse' : draw < (acute ? 0.62 : 0.62) ? 'same' : 'better';
+    var selectedDecision = template.decisions.find(function (x) { return x.id === it.finalDecision; });
+    var unsafe = (score.unsafeSelected || []).length > 0;
+    var hasReports = ctaReportsReady();
+    var planWritten = String(it.text.plan || '').trim().length >= 20;
+    // 病情分支由“关键决策是否正确、是否执行报告、是否写出监测计划”决定；
+    // 不再用与治疗无关的纯随机数决定好转或恶化。
+    var status = unsafe || !selectedDecision || !selectedDecision.correct ? 'worse' : !hasReports || !planWritten ? 'same' : 'better';
     var day = it.day + 1;
-    var event = status === 'worse' ? { status: 'worse', title: '病情恶化：需要立即重新评估', detail: '第' + day + '天，患者自述症状较前加重/耐受变差（本例随机教学事件）。请先重新核对生命体征、意识、容量和本病危险信号，必要时升级监护、急诊或专科会诊；不能机械等待下一天。' } : status === 'same' ? { status: 'same', title: '病情变化不明显：继续寻找未解决问题', detail: '第' + day + '天，患者自述与前一节点相比无明显改善（本例随机教学事件）。请重新评估依从性、诱因、检查趋势和治疗安全性，再决定是否继续当前计划。' } : { status: 'better', title: '病情好转：进入出院条件评估', detail: '第' + day + '天，患者自述症状较前减轻、情绪更稳定（本例随机教学事件）。这不等于自动出院；仍需确认危险信号消失、客观指标趋势、进食/活动和随访可执行性。' };
+    var event = status === 'worse' ? { status: 'worse', title: '病情恶化：需要立即重新评估', detail: '第' + day + '天，教学分支提示关键安全节点未满足或出现不安全选择。请先重新核对生命体征、意识、容量和本病危险信号，必要时升级监护、急诊或专科会诊；不能机械等待下一天。' } : status === 'same' ? { status: 'same', title: '病情变化不明显：继续寻找未解决问题', detail: '第' + day + '天，教学分支提示检查报告或监测计划尚不完整。请重新评估依从性、诱因、报告趋势和治疗安全性，再决定是否继续当前计划。' } : { status: 'better', title: '病情好转：进入出院条件评估', detail: '第' + day + '天，教学分支提示关键诊断、报告和监测计划已覆盖。这不等于自动出院；仍需确认危险信号消失、客观指标趋势、进食/活动和随访可执行性。' };
     it.day = day;
     it.currentEvent = event;
     it.progression.push({ day: day, status: status, title: event.title, detail: event.detail });
@@ -843,7 +1128,7 @@
     var examMax = criticalExams.length * 2 + optionalExams.length;
     var criticalTests = template.tests.filter(function (x) { return x.redFlag || x.essential; });
     var optionalTests = template.tests.filter(function (x) { return !criticalTests.includes(x); });
-    var testEarned = criticalTests.reduce(function (n, x) { return n + (it.selectedTests.includes(x.id) ? 2 : 0); }, 0) + optionalTests.reduce(function (n, x) { return n + (it.selectedTests.includes(x.id) ? 1 : 0); }, 0);
+    var testEarned = criticalTests.reduce(function (n, x) { return n + (ctaTestStatus(x.id) === 'reported' && it.reviewedTests.includes(x.id) ? 2 : 0); }, 0) + optionalTests.reduce(function (n, x) { return n + (ctaTestStatus(x.id) === 'reported' && it.reviewedTests.includes(x.id) ? 1 : 0); }, 0);
     var testMax = criticalTests.length * 2 + optionalTests.length;
     var selectedDecision = template.decisions.find(function (x) { return x.id === it.finalDecision; });
     var decisionEarned = selectedDecision && selectedDecision.correct ? 2 : 0;
@@ -877,12 +1162,12 @@
   function ctaQuickTestHtml() {
     var tests = template.tests || [];
     if (!tests.length) return '';
-    return '<details class="sim-cta-quick-panel"><summary>本病例可快捷开立的检查</summary><p class="sim-muted">只列本病例已有指南路径和预设结果的检查；点击后显示文字结果和参考区间。影像检查只显示文字报告，不生成图片。</p><div class="sim-cta-question-list">' + tests.map(function (item) { return '<button type="button" class="sim-choice" data-sim-action="cta-quick-test" data-sim-id="' + esc(item.id) + '"><span class="sim-choice-index">检</span><span><b>' + esc(item.name) + '</b><small>' + esc(item.stage || '按当前问题选择') + '</small></span></button>'; }).join('') + '</div></details>';
+    return '<details class="sim-cta-quick-panel"><summary>本病例可快捷开立的检查</summary><p class="sim-muted">只列本病例已有指南路径和预设结果的检查；点击后只是加入待开列表，需在第二考站执行后才能查看文字报告。影像检查只显示文字报告，不生成图片。</p><div class="sim-cta-question-list">' + tests.map(function (item) { var status = ctaTestStatus(item.id); return '<button type="button" class="sim-choice" data-sim-action="cta-quick-test" data-sim-id="' + esc(item.id) + '"' + (status !== 'available' ? ' disabled aria-disabled="true"' : '') + '><span class="sim-choice-index">' + (status === 'reported' ? '✓' : '检') + '</span><span><b>' + esc(item.name) + '</b><small>' + (status === 'ordered' ? '已加入待开列表' : status === 'reported' ? '已在报告站获得结果' : esc(item.stage || '按当前问题选择')) + '</small></span></button>'; }).join('') + '</div></details>';
   }
   function ctaQuickResultsHtml() {
     var tests = (template.tests || []).filter(function (item) { return (state.interview.selectedTests || []).includes(item.id); });
     if (!tests.length) return '';
-    return '<div class="sim-cta-results sim-cta-quick-results"><h4>已获得的检查结果</h4>' + tests.map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.name) + '</h4><p><b>' + esc(ctaResultLabel(item)) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('') + '</div>';
+    return '<div class="sim-cta-results sim-cta-quick-results"><h4>本次检查状态</h4>' + tests.map(ctaReportHtml).join('') + '</div>';
   }
   function decorateCtaHistory() {
     if (!state.interview || !state.interview.started || state.interview.submitted || state.interview.phase !== 'history') return;
@@ -908,44 +1193,46 @@
   function ctaReview() {
     var score = ctaScore(), it = state.interview;
     var status = function (ok, critical) { return ok ? '<span class="sim-cta-status good">已覆盖</span>' : critical ? '<span class="sim-cta-status error">严重漏项</span>' : '<span class="sim-cta-status warn">建议补充</span>'; };
-    var historyRows = template.history.map(function (item) { var asked = it.askedHistory.includes(item.id); var critical = score.criticalHistory.includes(item); return '<article class="sim-cta-review-row ' + (asked ? 'good' : critical ? 'error' : 'warn') + '"><div>' + status(asked, critical) + '<b>' + esc(ctaGroup(item)) + '</b><p><b>应问：</b>' + esc(item.question) + '</p>' + (asked ? '<p><b>患者回答：</b>' + esc(item.answer) + '</p>' : '<p class="sim-cta-error-text">本次未问到，患者信息不会自动出现。</p>') + '<p><b>为什么：</b>' + esc(item.why || '本例未提供单独解释；应结合相关指南和当前危险程度复核。') + '</p></div></article>'; }).join('');
-    var examRows = template.exams.map(function (item) { var selected = it.selectedExams.includes(item.id); var critical = score.criticalExams.includes(item); return '<article class="sim-cta-review-row ' + (selected ? 'good' : critical ? 'error' : 'warn') + '"><div>' + status(selected, critical) + '<b>查体：' + esc(item.label) + '</b><p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p><p><b>临床意义：</b>' + esc(item.meaning || '本例未提供单独解释；请回到对应指南路径核对。') + '</p></div></article>'; }).join('');
-    var testRows = template.tests.map(function (item) { var selected = it.selectedTests.includes(item.id); var critical = score.criticalTests.includes(item); return '<article class="sim-cta-review-row ' + (selected ? 'good' : critical ? 'error' : 'warn') + '"><div>' + status(selected, critical) + '<b>检查：' + esc(item.name) + '</b><p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p><p><b>如何解释：</b>' + esc(item.interpretation) + '</p><p><b>为什么选择：</b>' + esc(item.why || '本例未提供单独解释；请回到指标追查路径核对。') + '</p>' + (item.workupId ? '<button class="sim-link" type="button" data-sim-link="workup:' + esc(item.workupId) + '">打开对应指标追查</button>' : '') + '</div></article>'; }).join('');
+    var historyRows = template.history.map(function (item) { var asked = it.askedHistory.includes(item.id); var critical = score.criticalHistory.includes(item); return '<article class="sim-cta-review-row ' + (asked ? 'good' : critical ? 'error' : 'warn') + '"><div>' + status(asked, critical) + '<b>' + esc(ctaGroup(item)) + '</b><p><b>应问：</b>' + esc(item.question) + '</p>' + (asked ? '<p><b>患者回答：</b>' + esc(item.answer) + '</p>' : '<p class="sim-cta-error-text">本次未问到；患者回答已预设，但不会自动计入你的问诊记录。</p>') + '<p><b>为什么：</b>' + esc(item.why || '本病例已设定该问题的学习意义；请结合对应指南和当前危险程度复核。') + '</p></div></article>'; }).join('');
+    var examRows = template.exams.map(function (item) { var selected = it.selectedExams.includes(item.id); var critical = score.criticalExams.includes(item); return '<article class="sim-cta-review-row ' + (selected ? 'good' : critical ? 'error' : 'warn') + '"><div>' + status(selected, critical) + '<b>查体：' + esc(item.label) + '</b><p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p><p><b>临床意义：</b>' + esc(item.meaning || '本病例已设定查体意义；请回到对应指南路径核对。') + '</p></div></article>'; }).join('');
+    var testRows = template.tests.map(function (item) { var selected = ctaTestStatus(item.id) === 'reported'; var ordered = it.selectedTests.includes(item.id) && !selected; var critical = score.criticalTests.includes(item); return '<article class="sim-cta-review-row ' + (selected ? 'good' : critical ? 'error' : 'warn') + '"><div>' + status(selected, critical) + '<b>检查：' + esc(item.name) + '</b>' + (ordered ? '<p class="sim-cta-error-text">已开立但未执行，不能把待执行项目当作已获得结果。</p>' : '') + '<p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p><p><b>如何解释：</b>' + esc(item.interpretation) + '</p><p><b>为什么选择：</b>' + esc(item.why || '本病例已设定该检查的学习意义；请回到指标追查路径核对。') + '</p>' + (item.workupId ? '<button class="sim-link" type="button" data-sim-link="workup:' + esc(item.workupId) + '">打开对应指标追查</button>' : '') + '</div></article>'; }).join('');
     var decisionRows = template.decisions.map(function (item) { var selected = item.id === it.finalDecision; return '<article class="sim-cta-review-row ' + (selected && item.correct ? 'good' : item.correct ? 'error' : selected ? 'error' : 'warn') + '"><div>' + status(selected && item.correct, item.correct) + '<b>' + esc(item.label) + '</b><p><b>指南理由：</b>' + esc(item.why) + '</p>' + linksHtml(item.links) + '</div></article>'; }).join('');
     var medRows = ctaMedicationOptions().map(function (ref) { var selected = it.selectedMeds.includes(ref.name); var unsafe = ctaMedicationUnsafe(ref); return '<article class="sim-cta-review-row ' + (selected && !unsafe ? 'good' : selected && unsafe ? 'error' : 'warn') + '"><div>' + status(selected && !unsafe, unsafe) + '<b>' + esc(ref.name) + '</b><p><b>本例作用：</b>' + esc(ref.role) + '</p><p><b>安全核对：</b>' + esc(ref.safety) + '</p><p class="sim-muted">依据：' + esc(ref.source) + '</p>' + (ref.medSearch ? '<button class="sim-link" type="button" data-sim-action="jump-med-name" data-sim-id="' + esc(ref.medSearch) + '">打开药物剂量卡</button>' : '') + '</div></article>'; }).join('');
-    return '<div class="sim-review sim-cta-review"><div class="sim-review-head"><span class="sim-kicker">CTA 站后解析</span><h3>' + (score.ratio >= 80 ? '主线覆盖较完整' : '请按红色缺口重新训练') + '</h3><p>本次为' + esc(ctaSettingLabel()) + '；解析在提交后才开放，练习过程没有提前显示答案。</p><div class="sim-score"><b>' + score.ratio + '</b><span>/ 100 学习反馈分</span></div></div><div class="sim-score-grid"><div><b>问诊</b><span>' + score.histEarned + '/' + score.histMax + '</span></div><div><b>查体</b><span>' + score.examEarned + '/' + score.examMax + '</span></div><div><b>检查</b><span>' + score.testEarned + '/' + score.testMax + '</span></div><div><b>判断</b><span>' + score.decisionEarned + '/2</span></div><div><b>文字总结</b><span>' + score.textEarned + '/3</span></div><div><b>药物安全</b><span>' + (score.medMax ? score.medEarned + '/' + score.medMax : '未设候选') + '</span></div></div><div class="sim-review-block sim-cta-guide"><h4>按 CTA 顺序回放</h4><p>资料收集（主动问诊）→ 初步印象（诊断/鉴别及理由）→ 针对性查体 → 辅助检查与诊断 → 最终判断与治疗 → 治疗后复评（住院场景）。</p><p class="sim-muted">红色=关键漏问或选择了药物卡标注的停用/避免方向；黄色=可补充项目；绿色=本次已覆盖。每条“为什么”均来自本例已标注的指南路径字段。</p></div><div class="sim-review-block"><h4>一、问诊逐项解析</h4><div class="sim-cta-review-list">' + historyRows + '</div></div><div class="sim-review-block"><h4>二、查体逐项解析</h4><div class="sim-cta-review-list">' + examRows + '</div></div><div class="sim-review-block"><h4>三、辅助检查逐项解析</h4><div class="sim-cta-review-list">' + testRows + '</div></div><div class="sim-review-block"><h4>四、诊断/鉴别诊断与治疗决策解析</h4><div class="sim-cta-review-list">' + decisionRows + '</div>' + (medRows ? '<div class="sim-cta-review-list">' + medRows + '</div>' : '<p class="sim-muted">本例没有挂接药物候选卡；不要自行补写剂量，回到药物剂量卡按适应证和禁忌核对。</p>') + '</div><div class="sim-review-block"><h4>本例指南依据</h4><ul>' + template.source.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-retry">保留本例，重新做一遍</button><button class="sim-secondary" type="button" data-sim-action="new">抽取新患者</button></div></div>';
+    var selectedOrders = (it.selectedOrders || []).map(function (id) { return { monitor: '生命体征、出入量及相关指标监测', repeat: '按本病路径安排复查和趋势记录', education: '药物、饮食、危险信号和随访教育', consult: '必要时申请相关专科或多学科会诊', safety: '记录知情沟通、拒绝风险和升级条件' }[id] || id; });
+    return '<div class="sim-review sim-cta-review"><div class="sim-review-head"><span class="sim-kicker">CTA 三站站后解析</span><h3>' + (score.ratio >= 80 ? '三站主线覆盖较完整' : '请按红色缺口重新训练') + '</h3><p>本次为' + esc(ctaSettingLabel()) + '；第一、第二、第三考站已合并为同一患者流程，解析只在提交后开放。</p><div class="sim-score"><b>' + score.ratio + '</b><span>/ 100 学习反馈分</span></div></div><div class="sim-score-grid"><div><b>资料收集</b><span>' + score.histEarned + '/' + score.histMax + '</span></div><div><b>查体</b><span>' + score.examEarned + '/' + score.examMax + '</span></div><div><b>检查报告</b><span>' + score.testEarned + '/' + score.testMax + '</span></div><div><b>诊断判断</b><span>' + score.decisionEarned + '/2</span></div><div><b>文字总结</b><span>' + score.textEarned + '/3</span></div><div><b>药物安全</b><span>' + (score.medMax ? score.medEarned + '/' + score.medMax : '未设候选') + '</span></div></div><div class="sim-review-block sim-cta-guide"><h4>三站连续回放</h4><p>第一考站：问诊与查体 → 第二考站：开立检查、执行、查看报告、建立证据 → 第三考站：最终诊断、治疗医嘱、监测、宣教和病程延伸。</p><p class="sim-muted">红色=患者安全错误或关键漏项；黄色=可补充项目；绿色=本次已覆盖。每条“为什么”均来自本例已标注的指南路径字段。</p></div><div class="sim-review-block"><h4>本次选择的非药物医嘱与安全计划</h4>' + (selectedOrders.length ? '<ul>' + selectedOrders.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '<p class="sim-muted">未选择非药物医嘱类别，请在第三考站补充监测、复查和宣教。</p>') + '</div><div class="sim-review-block"><h4>一、资料收集：问诊逐项解析</h4><div class="sim-cta-review-list">' + historyRows + '</div></div><div class="sim-review-block"><h4>二、资料收集：查体逐项解析</h4><div class="sim-cta-review-list">' + examRows + '</div></div><div class="sim-review-block"><h4>三、资料分析：辅助检查逐项解析</h4><div class="sim-cta-review-list">' + testRows + '</div></div><div class="sim-review-block"><h4>四、诊断/鉴别诊断与治疗决策解析</h4><div class="sim-cta-review-list">' + decisionRows + '</div>' + (medRows ? '<div class="sim-cta-review-list">' + medRows + '</div>' : '<p class="sim-muted">本例没有挂接药物候选卡；不要自行补写剂量，回到药物剂量卡按适应证和禁忌核对。</p>') + '</div><div class="sim-review-block"><h4>本例指南依据</h4><ul>' + template.source.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-retry">保留本例，重新做一遍</button><button class="sim-secondary" type="button" data-sim-action="new">抽取新患者</button></div></div>';
   }
   function renderCta() {
     var it = state.interview;
     if (it.submitted) return ctaReview();
-    if (!it.started) { return '<div class="sim-cta-welcome"><div class="sim-section-title"><div><span class="sim-kicker">CTA 一问一答训练站</span><h3>先问，再获得患者回答</h3><p class="sim-muted">本模式参考你提供的 CTA 病例流程：资料收集 → 初步印象 → 针对性查体 → 辅助检查/诊断 → 治疗与复评。练习时不会显示“为什么”、红旗或正确选项。</p></div></div><div class="sim-patient-card"><span class="sim-pill">本次虚构患者</span><h3>' + esc(state.person.age + ' 岁 · ' + state.person.sex + ' · ' + state.person.job) + '</h3><p><b>主诉：</b>' + esc(state.person.complaint) + '</p><p class="sim-quote">“' + esc(mood.opening) + '”</p><p class="sim-muted">你可以先选择门诊或住院场景；场景只影响流程提示，不会替你生成答案。</p><label class="sim-cta-select"><b>训练场景</b><select data-cta-setting><option value="outpatient"' + (it.setting === 'outpatient' ? ' selected' : '') + '>门诊：首诊/复诊</option><option value="inpatient"' + (it.setting === 'inpatient' ? ' selected' : '') + '>住院：入院/病程/复评</option></select></label></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-start">开始资料收集</button><button class="sim-secondary" type="button" data-sim-action="new">换一位患者</button></div></div>'; }
+    if (!it.started) return ctaWelcomeHtml();
     var phase = it.phase;
-    var phaseTitle = ({ history: '第一站：资料收集（主动问诊）', impression: '第二站：初步印象与鉴别', exams: '第三站：针对性体格检查', workup: '第四站：辅助检查', diagnosis: '第五站：最终诊断与下一步', plan: '第六站：治疗方案', reassessment: '第七站：治疗后复评', discharge: '第八站：出院评估与停医嘱' })[phase] || 'CTA 训练';
-    var phaseNote = ({ history: '患者只回答你点选的一个问题；不要把未问到的资料当成已知。', impression: '从当前已获得的信息提出初步印象和鉴别；完成后单向进入查体。', exams: '只选择能回答当前问题的查体；选择后才显示模拟结果。', workup: '选择能确认诊断、排除危险或改变下一步的检查；结果不附带解析。', diagnosis: '选择你的最终判断并写下支持/不支持理由；解析会在提交后开放。', plan: '选择药物或治疗方向并写安全监测；可悬停/聚焦查看通用药物卡，但病例级对错仍到提交后才显示。', reassessment: '住院场景：第' + it.day + '天治疗后重新选择需要复查的查体/检查，再决定是否继续调整。', discharge: '仅在随机剧情提示好转且你完成必要复评后进入；停医嘱需逐项确认，不能一键全部停止。' })[phase];
-    var body = '<div class="sim-section-title"><div><span class="sim-kicker">' + esc(ctaSettingLabel()) + (it.setting === 'inpatient' ? ' · 第' + it.day + '天' : '') + '</span><h3>' + esc(phaseTitle) + '</h3><p class="sim-muted">' + esc(phaseNote) + '</p></div><span class="sim-stage">已问 ' + it.askedHistory.length + '/' + template.history.length + ' 项</span></div>';
+    var station = ctaStationForPhase(phase);
+    var phaseTitle = ({ history: '资料收集：主动问诊', impression: '资料收集：初步印象', exams: '资料收集：针对性查体', workup: '资料分析：开立检查与查看报告', diagnosis: '资料分析：诊断证据与鉴别诊断', plan: '诊疗决策：治疗方案与医嘱', reassessment: '诊疗决策：治疗后复评', discharge: '诊疗决策：出院评估与停医嘱' })[phase] || 'CTA 三站训练';
+    var phaseNote = ({ history: '患者只回答你点选的一个问题；不要把未问到的资料当成已知。', impression: '从当前已获得的信息提出初步印象和鉴别；完成第一站后单向进入资料分析。', exams: '只选择能回答当前问题的查体；选择后才显示客观结果。', workup: '先开立，再执行，报告返回后才能进行解释；结果不附带解析。', diagnosis: '从已获得的病史、查体和报告建立支持/反对证据；解析会在提交后开放。', plan: '选择药物、非药物医嘱、监测和宣教；可触碰查看通用药物卡，但病例级对错仍到提交后才显示。', reassessment: '住院场景：第' + it.day + '天治疗后重新选择需要复查的查体/检查，再决定是否继续调整。', discharge: '完成客观复评后进入出院核对；停医嘱需逐项确认，不能一键全部停止。' })[phase];
+    var body = '<div class="sim-section-title"><div><span class="sim-kicker">' + esc(ctaStationLabel(station) + ' · ' + ctaSettingLabel()) + (it.setting === 'inpatient' ? ' · 第' + it.day + '天' : '') + '</span><h3>' + esc(phaseTitle) + '</h3><p class="sim-muted">' + esc(phaseNote) + '</p></div><span class="sim-stage">已问 ' + it.askedHistory.length + '/' + template.history.length + ' 项</span></div>';
     if (state.response && state.response.indexOf('CTA训练') < 0) body += '<div class="sim-feedback">' + esc(state.response) + '</div>';
     if (phase !== 'history' && phase !== 'impression' && phase !== 'exams') body += '<div class="sim-cta-transcript"><h4>已获得的有效问诊信息（只显示你主动问过的内容）</h4>' + ctaTranscript() + '</div>';
     if (phase === 'history') {
       var questions = ctaQuestionOptions();
-      body += '<div class="sim-cta-transcript">' + ctaTranscript() + '</div><h4>选择你下一句要问的问题</h4><p class="sim-muted">每个病例都提供多于三个可选问题；可按症状、起病时间、危险表现、用药和共病逐项追问。下方还可输入你自己的问题，系统会根据本病例预设回答层返回患者回答；未显示指南解析，回答仅供本次训练。</p><div class="sim-cta-question-list">' + (questions.length ? questions.map(function (item) { return ctaChoiceButton('cta-question', item.id, item.question, false, ctaGroup(item)); }).join('') : '<p class="sim-muted">本例预设问题已全部问过，可以进入初步印象。</p>') + '</div><div class="sim-free-question"><label><b>自由提问（可问任意症状/时间线/用药/危险表现）</b><input type="text" data-cta-free-question placeholder="例如：有没有呕吐？最近一次用药是什么时候？"></label><button class="sim-secondary" type="button" data-sim-action="cta-free-question">询问患者</button></div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-impression">结束问诊，进入初步印象</button></div>';
+      body += '<div class="sim-cta-split"><section class="sim-cta-pane sim-cta-selector-pane"><div class="sim-cta-pane-head"><span>问诊操作栏</span><b>选择下一句</b></div><p class="sim-muted">每个问题只能问一次；可按主诉、时间线、危险表现、用药、共病和婚育史逐项追问。</p><div class="sim-cta-question-list">' + (questions.length ? questions.map(function (item) { return ctaChoiceButton('cta-question', item.id, item.question, false, ctaGroup(item)); }).join('') : '<p class="sim-muted">本例预设问题已全部问过，可以进入初步印象。</p>') + '</div><div class="sim-free-question"><label><b>自由提问（仅匹配本例固定资料）</b><input type="text" data-cta-free-question placeholder="例如：有没有呕吐？最近一次用药是什么时候？"></label><button class="sim-secondary" type="button" data-sim-action="cta-free-question">搜索并询问</button></div></section><section class="sim-cta-pane sim-cta-console-pane"><div class="sim-cta-pane-head"><span>问诊结果</span><b>患者即时回答</b></div><div class="sim-cta-transcript">' + (ctaTranscript() || '<p class="sim-muted">尚未提问。选择左侧问题后，患者回答将在这里逐条出现。</p>') + '</div></section></div><div class="sim-actions sim-cta-sticky-actions"><button class="primary" type="button" data-sim-action="cta-impression">进入初步印象</button></div>';
     } else if (phase === 'impression') {
       body += '<div class="sim-cta-transcript"><h4>目前患者已回答</h4>' + ctaTranscript() + '</div><h4>选择你的初步判断（不显示对错）</h4><div class="sim-choice-list">' + template.decisions.map(function (item) { return ctaChoiceButton('cta-impression-choice', item.id, item.label, item.id === it.impressionDecision, '初步诊断/鉴别选项'); }).join('') + '</div><label class="sim-note-field"><b>初步印象与鉴别理由</b><small>写支持证据、尚不能排除的危险情况和下一步需要验证的内容。</small><textarea data-cta-text="impression" placeholder="先独立书写，不要等解析...">' + esc(it.text.impression || '') + '</textarea></label><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-exams">进入针对性查体</button></div>';
     } else if (phase === 'exams') {
-      body += '<div class="sim-cta-transcript"><h4>问诊记录</h4>' + ctaTranscript() + '</div><h4>选择要做的查体</h4><div class="sim-choice-list">' + template.exams.map(function (item) { return ctaChoiceButton('cta-exam', item.id, item.label, it.selectedExams.includes(item.id), it.selectedExams.includes(item.id) ? '已获得模拟结果' : '选择后显示结果'); }).join('') + '</div><div class="sim-cta-results">' + template.exams.filter(function (item) { return it.selectedExams.includes(item.id); }).map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.label) + '</h4><p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('') + '</div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-workup">进入辅助检查</button></div>';
+      body += '<div class="sim-cta-transcript sim-cta-history-strip"><h4>已获得问诊记录</h4>' + ctaTranscript() + '</div><div class="sim-cta-split"><section class="sim-cta-pane sim-cta-selector-pane"><div class="sim-cta-pane-head"><span>体格检查</span><b>选择检查部位与项目</b></div><div class="sim-choice-list">' + template.exams.map(function (item) { return ctaChoiceButton('cta-exam', item.id, item.label, it.selectedExams.includes(item.id), it.selectedExams.includes(item.id) ? '已检查，本项不可重复' : '选择后在右侧显示结果'); }).join('') + '</div></section><section class="sim-cta-pane sim-cta-console-pane"><div class="sim-cta-pane-head"><span>检查结果</span><b>客观所见</b></div><div class="sim-cta-results">' + (template.exams.filter(function (item) { return it.selectedExams.includes(item.id); }).map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.label) + '</h4><p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>参考信息：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('') || '<p class="sim-muted">尚未进行查体。选择左侧项目后，客观结果显示在这里。</p>') + '</div></section></div><div class="sim-actions sim-cta-sticky-actions"><button class="primary" type="button" data-sim-action="cta-workup">本站结束，进入第二考站</button></div>';
     } else if (phase === 'workup') {
-      body += '<h4>选择辅助检查</h4><div class="sim-choice-list">' + template.tests.map(function (item) { return ctaChoiceButton('cta-test', item.id, item.name, it.selectedTests.includes(item.id), it.selectedTests.includes(item.id) ? '已获得模拟结果' : item.stage || '选择后显示结果'); }).join('') + '</div><div class="sim-cta-results">' + template.tests.filter(function (item) { return it.selectedTests.includes(item.id); }).map(function (item) { return '<article class="sim-detail"><h4>' + esc(item.name) + '</h4><p><b>' + ctaResultLabel(item) + '：</b>' + esc(item.result) + '</p><p><b>正常范围/参考区间：</b>' + esc(ctaReferenceRange(item)) + '</p></article>'; }).join('') + '</div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-diagnosis">进入最终诊断</button></div>';
+      body += '<p class="sim-muted">严格按“开立 → 执行 → 打开报告 → 标记已阅”推进；未打开报告不能当作已掌握结果。</p><div class="sim-cta-split"><section class="sim-cta-pane sim-cta-selector-pane"><div class="sim-cta-pane-head"><span>检查栏</span><b>选择并执行检查</b></div>' + ctaTestCatalogHtml() + '</section><section class="sim-cta-pane sim-cta-console-pane"><div class="sim-cta-pane-head"><span>检查结果</span><b>已开立/已返回报告</b></div><div class="sim-cta-results">' + (template.tests.filter(function (item) { return it.selectedTests.includes(item.id); }).map(ctaReportHtml).join('') || '<p class="sim-muted">尚未开立检查。左侧选择后需再次执行，报告才会返回。</p>') + '</div></section></div><div class="sim-actions sim-cta-sticky-actions"><button class="primary" type="button" data-sim-action="cta-diagnosis">进入诊断与鉴别</button></div>';
     } else if (phase === 'diagnosis') {
-      body += '<h4>选择最终诊断/下一步判断</h4><div class="sim-choice-list">' + template.decisions.map(function (item) { return ctaChoiceButton('cta-final-choice', item.id, item.label, item.id === it.finalDecision, '最终判断选项'); }).join('') + '</div><label class="sim-note-field"><b>最终诊断与鉴别诊断理由</b><small>写出支持证据、反对证据、仍需排除的危险情况和选择本方案的原因。</small><textarea data-cta-text="diagnosis" placeholder="先独立书写，不要等解析...">' + esc(it.text.diagnosis || '') + '</textarea></label><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-plan">进入治疗方案</button></div>';
+      body += '<div class="sim-cta-split"><section class="sim-cta-pane sim-cta-selector-pane"><div class="sim-cta-pane-head"><span>诊断病种</span><b>选择最终诊断/下一步判断</b></div><div class="sim-choice-list">' + template.decisions.map(function (item) { return ctaChoiceButton('cta-final-choice', item.id, item.label, item.id === it.finalDecision, '加入诊断清单'); }).join('') + '</div></section><section class="sim-cta-pane sim-cta-console-pane"><div class="sim-cta-pane-head"><span>已添加诊断</span><b>' + esc((template.decisions.find(function (item) { return item.id === it.finalDecision; }) || {}).label || '尚未选择') + '</b></div>' + ctaEvidenceHtml() + '<label class="sim-note-field"><b>最终诊断与鉴别诊断理由</b><small>写支持证据、反对证据、仍需排除的危险情况和选择本方案的原因。</small><textarea data-cta-text="diagnosis" placeholder="先独立书写，不要等解析...">' + esc(it.text.diagnosis || '') + '</textarea></label></section></div><div class="sim-actions sim-cta-sticky-actions"><button class="primary" type="button" data-sim-action="cta-plan">本站结束，进入第三考站</button></div>';
     } else if (phase === 'plan') {
       var refs = ctaMedicationOptions();
-      body += '<h4>选择治疗/药物方向</h4><p class="sim-muted">悬停或触碰待选药物查看通用药物卡；卡片不标注本病例对错，避免提前泄露答案。</p><div class="sim-choice-list">' + (refs.length ? refs.map(function (ref) { return ctaMedicationButton(ref, it.selectedMeds.includes(ref.name)); }).join('') : '<p class="sim-muted">本例未挂接药物候选卡；请写治疗原则，提交后回到指南和药物卡复核。</p>') + '</div><label class="sim-note-field"><b>治疗计划与监测/宣教</b><small>写治疗目标、监测项目、复评节点、患者教育和升级条件；不要凭空补剂量。</small><textarea data-cta-text="plan" placeholder="先独立书写，不要等解析...">' + esc(it.text.plan || '') + '</textarea><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-submit">提交并查看解析</button>' + (it.setting === 'inpatient' ? '<button class="sim-secondary" type="button" data-sim-action="cta-next-day">推进到第' + (it.day + 1) + '天</button><button class="sim-secondary" type="button" data-sim-action="cta-reassessment">进入治疗后复评</button>' : '') + '</div>';
+      body += '<p class="sim-muted">先把治疗、监测和宣教加入方案，再统一提交。悬停或触碰药物可查看通用药物卡，但不会提前显示病例级对错。</p><div class="sim-cta-split"><section class="sim-cta-pane sim-cta-selector-pane"><div class="sim-cta-pane-head"><span>治疗方案</span><b>药物与处置方向</b></div><div class="sim-choice-list">' + (refs.length ? refs.map(function (ref) { return ctaMedicationButton(ref, it.selectedMeds.includes(ref.name)); }).join('') : '<p class="sim-muted">本例未挂接药物候选卡；请写治疗原则，提交后回到指南和药物卡复核。</p>') + '</div>' + ctaOrderOptionsHtml() + '</section><section class="sim-cta-pane sim-cta-console-pane"><div class="sim-cta-pane-head"><span>已添加方案</span><b>治疗、监测与宣教</b></div><label class="sim-note-field"><b>治疗计划与监测/宣教</b><small>写治疗目标、监测项目、复评节点、患者教育和升级条件；不要凭空补剂量。</small><textarea data-cta-text="plan" placeholder="先独立书写，不要等解析...">' + esc(it.text.plan || '') + '</textarea></label></section></div><div class="sim-actions sim-cta-sticky-actions"><button class="primary" type="button" data-sim-action="cta-submit">提交第三考站并查看解析</button>' + (it.setting === 'inpatient' ? '<button class="sim-secondary" type="button" data-sim-action="cta-next-day">进入病程延伸：第' + (it.day + 1) + '天</button><button class="sim-secondary" type="button" data-sim-action="cta-reassessment">治疗后复评</button>' : '') + '</div>';
     } else if (phase === 'reassessment') {
       var activeOrders = it.activeOrders || [];
       body += '<div class="sim-review-block sim-cta-day-log"><h4>病情变化记录</h4>' + ctaProgressionHtml() + '</div><div class="sim-notice"><b>住院病程节点：</b>治疗后病情会变化；再次选择需要复查的查体和检查。系统不会凭空生成新的化验数值，需由你主动开立后获取本例文字结果。</div><h4>治疗后需要复查的查体</h4><div class="sim-choice-list">' + template.exams.map(function (item) { return ctaChoiceButton('cta-reexam', item.id, item.label, it.reassessmentExams && it.reassessmentExams.includes(item.id), '治疗后复评'); }).join('') + '</div><h4>治疗后需要复查的检查</h4><div class="sim-choice-list">' + template.tests.map(function (item) { return ctaChoiceButton('cta-retest', item.id, item.name, it.reassessmentTests && it.reassessmentTests.includes(item.id), '治疗后复评'); }).join('') + '</div><div class="sim-review-block"><h4>当前有效医嘱（模拟）</h4>' + (activeOrders.length ? activeOrders.map(function (name) { var stopped = (it.stoppedOrders || []).includes(name); return '<div class="sim-order-row ' + (stopped ? 'stopped' : '') + '"><span><b>' + esc(name) + '</b><small>' + (stopped ? '已记录停用' : '继续观察/核对') + '</small></span>' + (stopped ? '' : '<button class="sim-link" type="button" data-sim-action="cta-stop-order" data-sim-id="' + esc(name) + '">记录停用该医嘱</button>') + '</div>'; }).join('') : '<p class="sim-muted">尚未选择药物方向；请在治疗方案阶段形成可核对的模拟医嘱。</p>') + '</div><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-next-day">进入第' + (it.day + 1) + '天</button>' + (it.dischargeSuggested ? '<button class="sim-secondary" type="button" data-sim-action="cta-discharge">进入出院评估</button>' : '') + '<button class="sim-secondary" type="button" data-sim-action="cta-submit">结束住院模拟并查看解析</button></div>';
     } else if (phase === 'discharge') {
       body += '<div class="sim-review-block sim-cta-day-log"><h4>出院前病情记录</h4>' + ctaProgressionHtml() + '<p class="sim-cta-error-text">“好转”只是教学剧情提示，不等于自动满足出院标准；请按指南、客观指标、用药核对和随访条件由上级医师审核。</p></div><div class="sim-review-block"><h4>出院前医嘱核对</h4>' + ((it.activeOrders || []).map(function (name) { var stopped = (it.stoppedOrders || []).includes(name); return '<div class="sim-order-row ' + (stopped ? 'stopped' : '') + '"><span><b>' + esc(name) + '</b><small>' + (stopped ? '已记录停用' : '仍需核对是否继续/调整') + '</small></span>' + (stopped ? '' : '<button class="sim-link" type="button" data-sim-action="cta-stop-order" data-sim-id="' + esc(name) + '">记录停用该医嘱</button>') + '</div>'; }).join('') || '<p class="sim-muted">无已选模拟药物医嘱。</p>') + '</div><label class="sim-note-field"><b>出院交代、复查和安全网</b><small>写清继续/停用/调整后需核对的项目、复诊时间、危险信号和患者复述。</small><textarea data-cta-text="discharge" placeholder="先独立书写，不要等解析...">' + esc(it.text.discharge || '') + '</textarea></label><div class="sim-actions"><button class="primary" type="button" data-sim-action="cta-submit">结束住院模拟并查看解析</button></div>';
     }
-    return body;
+    return ctaExamShellHtml(body, phase, phaseTitle, phaseNote);
   }
   function defensiveCommunicationHtml() {
     var templates = window.SIM_DEFENSIVE_COMMUNICATION || [];
@@ -967,7 +1254,7 @@
   }
   function renderProfileHtml() {
     var p = state.profile || {};
-    return '<div class="sim-profile-grid"><div><b>就诊场景</b><span>' + esc(p.scene || '') + '</span><small>' + esc(p.context || '') + '</small></div><div><b>生命体征/体格变量</b><span>BP ' + esc(p.vitals && p.vitals.bp) + ' mmHg · HR ' + esc(p.vitals && p.vitals.hr) + '/min · T ' + esc(p.vitals && p.vitals.temp) + '℃ · BMI ' + esc(p.vitals && p.vitals.bmi) + '</span><small>这些是教学模拟变量，需与本例危险信号和检查结果一起解释。</small></div><div><b>基础病/风险线索</b><span>' + esc((p.comorbidities || []).join('、')) + '</span><small>通过病史核对，不把随机标签当作诊断。</small></div><div><b>用药/生活背景</b><span>' + esc(p.meds || '') + '</span><small>' + esc(p.occupationContext || '') + '</small></div></div>';
+    return '<div class="sim-profile-grid"><div><b>就诊场景</b><span>' + esc(p.scene || '') + '</span><small>' + esc(p.context || '') + '</small></div><div><b>生命体征/体格变量</b><span>BP ' + esc(p.vitals && p.vitals.bp) + ' mmHg · HR ' + esc(p.vitals && p.vitals.hr) + '/min · T ' + esc(p.vitals && p.vitals.temp) + '℃ · BMI ' + esc(p.vitals && p.vitals.bmi) + '</span><small>这些是教学模拟变量，需与本例危险信号和检查结果一起解释。</small></div><div><b>基础病/风险线索</b><span>' + esc((p.comorbidities || []).join('、')) + '</span><small>通过病史核对，不把随机标签当作诊断。</small></div><div><b>用药/生活背景</b><span>' + esc(p.meds || '') + '</span><small>' + esc(p.occupationContext || '') + '</small></div><div><b>既往史/过敏史</b><span>' + esc(p.pastHistory || '') + '</span><small>' + esc(p.allergy || '') + '</small></div><div><b>家族史/个人史</b><span>' + esc(p.familyHistory || '') + '</span><small>' + esc(p.socialHistory || '') + '</small></div><div><b>婚育/月经史（适用时）</b><span>' + esc(p.reproductiveHistory || '') + '</span><small>敏感问题需说明询问目的并尊重隐私。</small></div></div>';
   }
   function renderStart() { return renderStartBase().replace('<div class="sim-intro">', '<div class="sim-intro">' + renderProfileHtml()); }
   function renderWorkflow() {
@@ -1005,7 +1292,7 @@
       return '<article class="sim-detail ' + (item.correct ? 'sim-correct' : 'sim-wrong') + '"><h4>' + esc(item.label) + '</h4><p>' + (item.correct ? '<b>路径判断：更符合当前信息</b>' : '<b>路径判断：不建议作为当前首选</b>') + '</p><p><b>指南理由：</b>' + esc(item.why) + '</p>' + linksHtml(item.links) + '</article>';
     }).join('');
     var gate = gateFor(tab);
-    var gateNote = gate !== 'open' && gate !== 'done' ? '<div class="sim-notice"><b>当前步骤已锁定：</b>' + esc(gateLabel(gate)) + '。完成前置步骤后再查看本组结果，避免只靠点击记答案。</div>' : '';
+    var gateNote = gate !== 'open' && gate !== 'done' ? '<div class="sim-notice"><b>当前步骤已锁定：</b>' + esc(gateLabel(gate)) + '。完成前置步骤后再查看本组结果，避免只靠点击记答案。</div>' : gate === 'done' && ctaWorkflowComplete() ? '<div class="sim-notice sim-cta-bridge"><b>CTA 三站已完成：</b>本例的问诊、查体、检查报告和诊疗决策可直接用于文书结构复盘；文书内容仍需你按已获得资料独立整理。</div>' : '';
     return '<div class="sim-section-title"><div><span class="sim-kicker">' + esc(cfg[0]) + '</span><h3>' + esc(cfg[2]) + '</h3></div><button class="sim-secondary" type="button" data-sim-action="hint">给我提示</button></div>' + gateNote + '<div class="sim-choice-list">' + list + '</div><div class="sim-details">' + (details || '<p class="sim-muted">完成本步骤后逐项查看患者回答、检查意义或路径理由；每一项都要回答“它改变了什么”。</p>') + '</div>';
   }
   function renderTab(tab) { return tab === 'workflow' ? renderWorkflow() : tab === 'interview' ? renderCta() : renderDataTab(tab); }
@@ -1015,6 +1302,7 @@
       var documentState = documentScore();
       return '<div class="sim-review"><div class="sim-review-head"><span class="sim-kicker">复盘暂未开放</span><h3>先完成一遍完整临床推理</h3><p>复盘不是“随便点完就给分”。请按沟通 → 必问病史 → 关键查体 → 必要检查 → 下一步判断 → 文书提交的顺序完成。</p></div><div class="sim-review-block sim-missed"><h4>当前还缺什么</h4><p>' + esc(gate === 'done' ? '还没有提交文书复盘。' : gateLabel(gate)) + '</p><p class="sim-muted">当前文书结构分：' + documentState.earnedPoints + '/' + documentState.totalPoints + '。进入“病历与流程”继续训练。</p></div><div class="sim-actions"><button class="primary" type="button" data-sim-tab="workflow">去写病历与流程</button><button class="sim-secondary" type="button" data-sim-action="hint">给我提示</button></div></div>';
     }
+    if (ctaWorkflowComplete()) return ctaReview();
     var essentialHistory = template.history.filter(function (x) { return x.redFlag || x.id === 'symptoms' || x.id === 'insulin' || x.id === 'crisis'; }).map(function (x) { return x.id; });
     var essentialExams = template.exams.filter(function (x) { return x.redFlag; }).map(function (x) { return x.id; });
     var essentialTests = template.tests.filter(function (x) { return x.essential; }).map(function (x) { return x.id; });
@@ -1087,13 +1375,13 @@
     var fields = root.querySelector('.sim-workflow-grid');
     if (fields) fields.insertAdjacentHTML('afterend', '<div class="sim-document-rubric"><b>评分维度：</b>每个字段按“是否形成可审核文字 + 是否覆盖结构关键词”各1分；不等于真实病历质量评价。提交后显示逐项反馈。</div>');
   }
-  function handle(action, id) {
+  function handle(action, id, extra) {
     if (action === 'new') { state = makeCase(); render(); return; }
     if (action === 'restart') { var fresh = makeCase(); fresh.templateId = state.templateId; fresh.person = state.person; fresh.seed = newSeed(); state = fresh; render(); return; }
     if (action === 'hint') { state.hints += 1; state.response = '提示：' + (state.activeTab === 'start' ? '先回应患者情绪，再询问会改变急诊分流的危险信号。' : state.activeTab === 'history' ? '优先问时间线、用药、妊娠/生育、心肾功能和危险信号。' : state.activeTab === 'exams' ? '查体要回答“患者是否稳定、是否需要升级、下一项检查是什么”。' : state.activeTab === 'tests' ? '优先选择能确认诊断、危象或改变下一步的检查，并说明为什么。' : '先说出当前主导矛盾，再解释为什么其他选项会延误或增加风险。'); render(); return; }
     if (action === 'empathy' || action === 'explain' || action === 'direct') { state.asked.communication = true; state.scores.communication = action === 'empathy' ? 2 : action === 'explain' ? 1 : 0; state.response = action === 'empathy' ? mood.after : action === 'explain' ? '好的，先告诉我流程，我会尽量配合。' : '好吧，你问什么我就回答什么。'; saveState(); render(); return; }
     if (action === 'locked') { state.response = '当前步骤不能跳过：' + gateLabel(gateFor(state.activeTab)); saveState(); render(); return; }
-    if (action === 'cta-start') { state.interview.started = true; state.interview.phase = 'history'; state.interview.submitted = false; state.activeTab = 'interview'; saveState(); render(); return; }
+    if (action === 'cta-start') { state.interview.started = true; state.interview.phase = 'history'; state.interview.station = 1; state.interview.submitted = false; state.activeTab = 'interview'; saveState(); render(); return; }
     if (action === 'cta-question') {
       var questionItem = template.history.find(function (x) { return x.id === id; });
       if (questionItem && !state.interview.askedHistory.includes(id)) { state.interview.askedHistory.push(id); saveState(); render(); }
@@ -1113,7 +1401,8 @@
       var quickTest = template.tests.find(function (item) { return item.id === id; });
       if (!quickTest) return;
       if (!state.interview.selectedTests.includes(id)) state.interview.selectedTests.push(id);
-      state.response = '已开立本病例预设检查；结果区只显示文字结果和参考区间，不显示提交后的解析。';
+      if (!state.interview.testStatus[id]) state.interview.testStatus[id] = 'ordered';
+      state.response = '检查已加入待开列表；请进入第二考站执行后再查看报告。';
       saveState(); render(); return;
     }
     if (action === 'cta-free-question') {
@@ -1126,7 +1415,7 @@
       state.response = '已按本病例预设训练资料回答；未显示指南解析。';
       saveState(); render(); return;
     }
-    if (action === 'cta-impression') { if (!state.interview.askedHistory.length) { state.response = '至少主动询问一个问题后，才能结束资料收集。'; saveState(); render(); return; } state.interview.phase = 'impression'; state.response = ''; saveState(); render(); return; }
+    if (action === 'cta-impression') { if (!state.interview.askedHistory.length) { state.response = '至少主动询问一个问题后，才能结束资料收集。'; saveState(); render(); return; } state.interview.stationSubmitted.one = true; state.interview.phase = 'impression'; state.interview.station = 1; state.response = ''; saveState(); render(); return; }
     if (action === 'cta-history-return' || action === 'cta-exams-return') { state.response = 'CTA训练按站点单向推进；已获得的问诊和检查信息会在后续站点保留查看，不能返回上一站。'; saveState(); render(); return; }
     if (action === 'cta-exams') { if (!state.interview.impressionDecision) { state.response = '先选择一个初步判断，再进入针对性查体。'; saveState(); render(); return; } state.interview.phase = 'exams'; state.response = ''; saveState(); render(); return; }
     if (action === 'cta-exam') {
@@ -1135,27 +1424,51 @@
       else state.interview.selectedExams.push(examId);
       saveState(); render(); return;
     }
-    if (action === 'cta-workup') { if (!state.interview.selectedExams.length) { state.response = '至少选择一项针对性查体后，才能进入辅助检查。'; saveState(); render(); return; } state.interview.phase = 'workup'; state.response = ''; saveState(); render(); return; }
+    if (action === 'cta-workup') { if (!state.interview.selectedExams.length) { state.response = '至少选择一项针对性查体后，才能进入辅助检查。'; saveState(); render(); return; } state.interview.stationSubmitted.one = true; state.interview.phase = 'workup'; state.interview.station = 2; state.response = ''; saveState(); render(); return; }
     if (action === 'cta-test') {
       var testId = id;
-      if (state.interview.selectedTests.includes(testId)) state.interview.selectedTests = state.interview.selectedTests.filter(function (x) { return x !== testId; });
-      else state.interview.selectedTests.push(testId);
+      if (!state.interview.selectedTests.includes(testId)) state.interview.selectedTests.push(testId);
+      state.interview.testStatus[testId] = 'ordered';
+      state.response = '检查已开立；请点击同一项目的“执行并返回报告”，报告返回前不能进行结果解释。';
+      saveState(); render(); return;
+    }
+    if (action === 'cta-execute-test') {
+      if (!state.interview.selectedTests.includes(id)) state.interview.selectedTests.push(id);
+      state.interview.testStatus[id] = 'reported';
+      state.response = '检查已执行，模拟报告返回。请打开报告并标记已阅后再解释结果。';
+      saveState(); render(); return;
+    }
+    if (action === 'cta-review-test') {
+      if (!state.interview.reviewedTests.includes(id)) state.interview.reviewedTests.push(id);
       saveState(); render(); return;
     }
     if (action === 'cta-exams-return') {
       if (state.interview.examReturns < 2) { state.interview.examReturns += 1; state.interview.phase = state.interview.phase === 'diagnosis' ? 'workup' : 'exams'; }
       saveState(); render(); return;
     }
-    if (action === 'cta-diagnosis') { if (!state.interview.selectedTests.length) { state.response = '至少选择一项辅助检查后，才能进入最终诊断。'; saveState(); render(); return; } state.interview.phase = 'diagnosis'; state.response = ''; saveState(); render(); return; }
+    if (action === 'cta-diagnosis') { if (!ctaReportsReady()) { state.response = '至少执行并获得一份辅助检查报告后，才能进入诊断分析；仅加入待开列表不算获得结果。'; saveState(); render(); return; } if (!state.interview.reviewedTests.length) { state.response = '检查报告已经返回，但你尚未打开并标记已阅。请先查看至少一份报告，再进入诊断分析。'; saveState(); render(); return; } state.interview.phase = 'diagnosis'; state.interview.station = 2; state.response = ''; saveState(); render(); return; }
     if (action === 'cta-final-choice' || action === 'cta-impression-choice') {
       if (action === 'cta-final-choice') state.interview.finalDecision = id;
       else state.interview.impressionDecision = id;
       saveState(); render(); return;
     }
-    if (action === 'cta-plan') { if (!state.interview.finalDecision) { state.response = '先选择最终诊断/下一步判断，再进入治疗方案。'; saveState(); render(); return; } state.interview.phase = 'plan'; state.response = ''; saveState(); render(); return; }
+    if (action === 'cta-plan') { if (!state.interview.finalDecision) { state.response = '先选择最终诊断/下一步判断，再进入治疗方案。'; saveState(); render(); return; } state.interview.stationSubmitted.two = true; state.interview.phase = 'plan'; state.interview.station = 3; state.response = ''; saveState(); render(); return; }
     if (action === 'cta-med') {
       if (state.interview.selectedMeds.includes(id)) state.interview.selectedMeds = state.interview.selectedMeds.filter(function (x) { return x !== id; });
       else state.interview.selectedMeds.push(id);
+      saveState(); render(); return;
+    }
+    if (action === 'cta-order') {
+      if (!Array.isArray(state.interview.selectedOrders)) state.interview.selectedOrders = [];
+      if (state.interview.selectedOrders.includes(id)) state.interview.selectedOrders = state.interview.selectedOrders.filter(function (x) { return x !== id; });
+      else state.interview.selectedOrders.push(id);
+      saveState(); render(); return;
+    }
+    if (action === 'cta-evidence') {
+      var decisionId = state.interview.finalDecision || (template.decisions[0] && template.decisions[0].id);
+      if (!decisionId) return;
+      if (!state.interview.evidence[decisionId]) state.interview.evidence[decisionId] = {};
+      state.interview.evidence[decisionId][id] = extra || 'unknown';
       saveState(); render(); return;
     }
     if (action === 'cta-reassessment') { state.interview.phase = 'reassessment'; state.interview.reassessmentExams = state.interview.reassessmentExams || []; state.interview.reassessmentTests = state.interview.reassessmentTests || []; saveState(); render(); return; }
@@ -1182,10 +1495,10 @@
       else state.interview.reassessmentTests.push(id);
       saveState(); render(); return;
     }
-    if (action === 'cta-submit') { state.interview.submitted = true; state.interview.score = ctaScore().ratio; saveState(); render(); return; }
+    if (action === 'cta-submit') { state.interview.stationSubmitted.three = true; state.interview.submitted = true; state.interview.score = ctaScore().ratio; saveState(); render(); return; }
     if (action === 'cta-retry') {
       var currentSetting = state.interview.setting;
-      state.interview = { started: true, phase: 'history', setting: currentSetting, day: 1, askedHistory: [], freeQuestions: [], selectedExams: [], selectedTests: [], reassessmentExams: [], reassessmentTests: [], impressionDecision: '', finalDecision: '', selectedMeds: [], activeOrders: [], stoppedOrders: [], progression: [], currentEvent: null, dischargeSuggested: false, discharged: false, historyReturns: 0, examReturns: 0, text: { impression: '', diagnosis: '', plan: '', discharge: '' }, submitted: false, score: null };
+      state.interview = { started: true, phase: 'history', station: 1, setting: currentSetting, day: 1, askedHistory: [], freeQuestions: [], selectedExams: [], selectedTests: [], testStatus: {}, reviewedTests: [], reassessmentExams: [], reassessmentTests: [], impressionDecision: '', finalDecision: '', evidence: {}, selectedMeds: [], selectedOrders: [], activeOrders: [], stoppedOrders: [], progression: [], currentEvent: null, dischargeSuggested: false, discharged: false, historyReturns: 0, examReturns: 0, stationSubmitted: { one: false, two: false, three: false }, text: { impression: '', diagnosis: '', plan: '', discharge: '' }, submitted: false, score: null };
       state.activeTab = 'interview'; saveState(); render(); return;
     }
     if (action === 'cta-reset') { state.interview.started = false; state.interview.submitted = false; state.activeTab = 'interview'; saveState(); render(); return; }
@@ -1249,7 +1562,7 @@
   root.addEventListener('click', function (event) {
     var tab = event.target.closest('[data-sim-tab]'); if (tab) { state.activeTab = tab.dataset.simTab; saveState(); render(); return; }
     var link = event.target.closest('[data-sim-link]'); if (link) { var parts = link.dataset.simLink.split(':'); openLink({ type: parts[0], id: parts.slice(1).join(':') }); return; }
-    var btn = event.target.closest('[data-sim-action]'); if (btn) { handle(btn.dataset.simAction, btn.dataset.simId); }
+    var btn = event.target.closest('[data-sim-action]'); if (btn) { handle(btn.dataset.simAction, btn.dataset.simId, btn.dataset.simEvidence); }
   });
   root.addEventListener('input', function (event) {
     var field = event.target.closest('[data-sim-note]');

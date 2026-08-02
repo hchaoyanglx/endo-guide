@@ -312,7 +312,7 @@
       tests: [
         { id: 'ogtt', name: '75 g OGTT 三点结果', stage: '诊断', workupId: 'glucose-high', result: '空腹和 1/2 小时中至少一项达到妊娠期诊断标准；需按原始报告确认。', interpretation: '按妊娠期标准诊断和分层，不直接套用非妊娠阈值。', why: '妊娠期阈值和目标不同。', essential: true },
         { id: 'monitor', name: '空腹/餐后血糖或 CGM 记录', stage: '首轮管理', workupId: 'glucose-high', result: '餐后峰值反复偏高；未见明显低血糖。', interpretation: '用于评估饮食和治疗反应，目标需按产科/糖尿病指南和个体情况制定。', why: '监测结果指导是否升级治疗。', essential: true },
-        { id: 'complication', name: '肾脏、眼底和胎儿监测（按风险）', stage: '同步', workupId: 'kidney-albuminuria', result: '根据既往糖尿病类型和孕周安排；本模拟不预设全部结果。', interpretation: '孕期需要母体和胎儿双向随访。', why: '避免只看血糖。', essential: false }
+        { id: 'complication', name: '肾脏、眼底和胎儿监测（按风险）', stage: '同步', workupId: 'kidney-albuminuria', result: '尿蛋白阴性，血压复测正常；胎儿超声提示生长和羊水量符合孕周，胎动正常。', interpretation: '本例当前未见明显母体肾脏或胎儿生长异常，但孕期仍需按孕周和风险持续监测。', why: '避免只看血糖。', essential: false }
       ],
       decisions: [
         { id: 'gdm', label: '按妊娠期糖尿病路径进行饮食/运动、血糖监测、必要时胰岛素和产科协同随访', correct: true, why: '妊娠是特殊人群，目标、药物和胎儿监测需单独依据指南。', links: [{ type: 'workup', id: 'glucose-high', label: '打开妊娠期血糖追查' }] },
