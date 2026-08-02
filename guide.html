@@ -303,6 +303,38 @@ body.dark .sim-cta-integrated-note{background:#3b351e;color:#f5e8b6}.body.dark .
           </ol>
           <p class="plain">本表对应 ADA 2026 的血糖目标、药物治疗、妊娠和住院部分；具体制剂滴定、转换和停药必须回到对应指南、现行中国药品说明书和医院协议。</p>
         </section>
+        <section class="insulin-guide" id="pump-calculation-guide" aria-labelledby="pump-calculation-title">
+          <h3 id="pump-calculation-title">胰岛素泵计算学习表：先理解术语，再做起始估算</h3>
+          <p>以下公式来自《中国1型糖尿病诊治指南（2021版）》胰岛素剂量设定与调整部分（PDF第25–26页、表13）；儿童起始框架另来自《儿童1型糖尿病防治指南（2026）》（PDF第3页）。两个人群必须分开阅读。</p>
+          <div class="warn"><b>学习边界：</b>公式用于建立泵治疗的计算框架，不是自动处方。起始值仍须结合既往剂量、低血糖、进食、运动、肾功能、感染、酮体、活性胰岛素、连续葡萄糖趋势和泵管状态复核；真实启泵及调整应由受过培训的团队完成。</div>
+          <h4>术语先读</h4>
+          <div class="grid">
+            <article class="card"><b>每日总量</b><p>24小时内所用全部胰岛素，包括基础量与餐时、加餐和校正用量。</p></article>
+            <article class="card"><b>基础率</b><p>泵持续少量输注胰岛素的速度，用来覆盖空腹、两餐之间和夜间的基础需要。</p></article>
+            <article class="card"><b>餐时大剂量</b><p>进餐前后为覆盖食物，尤其碳水化合物而追加的胰岛素。</p></article>
+            <article class="card"><b>碳水化合物系数</b><p>1 U胰岛素预计可覆盖多少克碳水化合物；数值越小，通常表示同样食物需要更多胰岛素。</p></article>
+            <article class="card"><b>胰岛素敏感系数</b><p>1 U胰岛素预计可使血糖下降多少mmol/L。</p></article>
+            <article class="card"><b>校正大剂量</b><p>当前血糖高于目标时，为缩小差值而估算的追加量。</p></article>
+            <article class="card"><b>活性胰岛素</b><p>此前给药后仍在体内继续发挥降糖作用的胰岛素；未扣除时重复校正可能造成叠加和低血糖。</p></article>
+            <article class="card"><b>U（单位）</b><p>胰岛素生物活性单位，不是毫升；不同浓度和泵设置不能凭体积直接互换。</p></article>
+          </div>
+          <div class="table-wrap"><table class="tbl">
+            <thead><tr><th>计算环节</th><th>指南给出的起始方法</th><th>怎样理解</th></tr></thead>
+            <tbody>
+              <tr><td>成人1型糖尿病，未接受胰岛素治疗</td><td>每日总量（U）=体重（kg）×0.4–0.5 U/kg</td><td>只是启泵时的总量估算，不能脱离体重以外的临床因素。</td></tr>
+              <tr><td>成人1型糖尿病，既往已用胰岛素</td><td>接近达标且无低血糖：原量×75%–85%；经常低血糖或进食明显减少：原量×70%；显著高血糖、无低血糖或感染等应激：原量×100%–110%</td><td>先按既往控制和安全风险确定新的每日总量。</td></tr>
+              <tr><td>基础与餐时分配</td><td>全天基础量=每日总量×40%–50%；全天餐前总量=每日总量×50%–60%</td><td>两部分相加形成24小时总量，随后仍需按血糖模式调整。</td></tr>
+              <tr><td>平均每小时基础率</td><td>全天基础总量÷24</td><td>这是平均值；实际可按时段设置不同基础率。</td></tr>
+              <tr><td>指南6段法</td><td>令β=全天基础总量÷24；00:00–03:00为0.6β，03:00–09:00为1.2β，09:00–12:00为β，12:00–16:00为β±0.1，16:00–20:00为1.1β，20:00–24:00为0.8β</td><td>这是指南列出的分段起始框架，不是所有患者的固定模板。</td></tr>
+              <tr><td>碳水化合物系数</td><td>速效胰岛素：500÷每日总量；短效胰岛素：450÷每日总量，单位g/U</td><td>表示1 U胰岛素预计覆盖多少克碳水化合物。</td></tr>
+              <tr><td>加餐补充大剂量</td><td>食物碳水化合物总量（g）÷碳水化合物系数（g/U）</td><td>还要核对活性胰岛素、运动、给药时机和高脂高蛋白餐。</td></tr>
+              <tr><td>校正大剂量</td><td>（实测血糖−目标血糖）÷胰岛素敏感系数</td><td>用于估算缩小当前血糖与目标差值所需的追加量。</td></tr>
+              <tr><td>胰岛素敏感系数</td><td>速效胰岛素：1800÷（每日总量×18）；短效胰岛素：1500÷（每日总量×18），单位mmol·L⁻¹·U⁻¹</td><td>表示1 U胰岛素预计使血糖下降多少；短间隔重复校正会叠加。</td></tr>
+              <tr><td>儿童1型糖尿病</td><td>初治患儿每日总量0.4–1.0 U/kg；基础率占40%–50%，三餐大剂量占50%–60%；可用2–6段或更多分段法</td><td>2026儿童指南范围；须结合胰岛功能、青春期、生长发育、生活习惯、家庭条件和低血糖风险。</td></tr>
+            </tbody>
+          </table></div>
+          <p class="plain"><b>复核提示：</b>餐后、夜间或运动相关异常应先识别连续模式，再调整对应时段或餐时成分；泵管堵塞、输注中断或酮症风险必须优先处理，不能只靠公式追加胰岛素。</p>
+        </section>
         <div id="medTools" class="library-tools"></div><div id="medSummary" class="search-summary" aria-live="polite">正在加载药物卡……</div><input id="medSearch" class="deep-search" aria-label="搜索药物" placeholder="搜索药名、疾病、适用患者、剂量或监测项目……"><div id="medGrid" class="med-grid"></div>
       </section>
 
