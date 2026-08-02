@@ -1103,9 +1103,9 @@
     var limit = ctaOperationLimit(station);
     var it = state.interview;
     return '<div class="sim-cta-exam-shell">' +
-      '<header class="sim-cta-exam-head"><div><span class="sim-cta-brand">CTA 病例考核</span><b>' + esc(ctaStationLabel(station)) + '</b></div><div class="sim-cta-exam-meta"><span>' + esc(ctaSettingLabel()) + '</span>' + (it.setting === 'inpatient' ? '<span>第' + it.day + '天</span>' : '') + '<span>操作 ' + used + '/' + limit + '</span></div></header>' +
+      '<header class="sim-cta-exam-head"><div class="sim-cta-exam-title"><div><span class="sim-cta-brand">CTA 病例考核</span><b>' + esc(ctaStationLabel(station)) + '</b></div><p class="sim-cta-exam-guidance"><strong>操作说明：</strong>' + esc(phaseTitle) + ' · ' + esc(phaseNote) + '<em>提交考站后不能返回修改；后续站点仍可只读查看已获得资料。</em></p></div><div class="sim-cta-exam-meta"><span>当前考站 ' + station + '/3</span><span>' + esc(ctaSettingLabel()) + '</span>' + (it.setting === 'inpatient' ? '<span>第' + it.day + '天</span>' : '') + '<span>操作 ' + used + '/' + limit + '</span></div></header>' +
       ctaToolbarHtml(phase) + ctaStationHtml() +
-      '<div class="sim-cta-exam-grid"><aside class="sim-cta-instruction"><span class="sim-kicker">操作说明</span><h4>' + esc(phaseTitle) + '</h4><p>' + esc(phaseNote) + '</p><dl><div><dt>当前考站</dt><dd>' + station + '/3</dd></div><div><dt>累计操作</dt><dd>' + used + '</dd></div><div><dt>本站上限</dt><dd>' + limit + '</dd></div></dl><p class="sim-muted">提交考站后不能返回修改；后续站点仍可只读查看已获得资料。</p></aside><main class="sim-cta-workspace">' + body + '</main></div>' +
+      '<div class="sim-cta-exam-grid"><main class="sim-cta-workspace">' + body + '</main></div>' +
       '<footer class="sim-cta-exam-foot"><span>资料将随患者连续带入下一站</span><b>仅供指南学习与考核训练，不用于真实临床决策</b></footer></div>';
   }
   function ctaWelcomeHtml() {

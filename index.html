@@ -59,6 +59,40 @@ body.dark .sim-cta-integrated-note{background:#3b351e;color:#f5e8b6}.body.dark .
     /* CTA内的左右面板各自滚动；点击左侧选项时保留右侧当前位置。 */
     .sim-cta-console-pane .sim-cta-transcript,.sim-cta-history-strip,.sim-cta-selector-pane .sim-choice-list,.sim-cta-selector-pane .sim-cta-question-list{overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;scroll-behavior:auto;-webkit-overflow-scrolling:touch}
 </style>
+<style id="cta-layout-fix">
+  /* CTA各考站共用：说明收纳在顶部，工作区不再被固定侧栏挤窄。 */
+  .sim-cta-exam-head{align-items:flex-start}
+  .sim-cta-exam-title{display:block!important;min-width:0;flex:1}
+  .sim-cta-exam-title>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .sim-cta-exam-guidance{margin:7px 0 0;max-width:78ch;font-size:12px;line-height:1.55;color:rgba(255,255,255,.92)}
+  .sim-cta-exam-guidance strong{color:#fff}
+  .sim-cta-exam-guidance em{display:inline;margin-left:8px;font-style:normal;color:rgba(255,255,255,.78)}
+  .sim-cta-exam-meta{display:flex!important;align-items:center;justify-content:flex-end;flex-wrap:wrap;flex:0 0 auto}
+  .sim-cta-exam-grid{display:block}
+  .sim-cta-workspace{width:100%;box-sizing:border-box}
+  .sim-report-card,.sim-report-sheet,.sim-report-paper{max-width:100%;box-sizing:border-box}
+  .sim-report-paper{overflow:hidden}
+  .sim-report-table{width:100%;max-width:100%;overflow-x:auto}
+  .sim-report-table>div{min-width:0!important;grid-template-columns:minmax(110px,.8fr) minmax(0,1.6fr) minmax(110px,1fr)}
+  .sim-report-table span,.sim-report-table b{overflow-wrap:anywhere;word-break:break-word}
+  .sim-report-meta span{min-width:0;overflow-wrap:anywhere}
+  .sim-evidence-matrix{width:100%;box-sizing:border-box;overflow-x:hidden}
+  .sim-evidence-head,.sim-evidence-row{min-width:0!important;grid-template-columns:minmax(0,1fr) repeat(3,minmax(48px,64px));gap:6px}
+  .sim-evidence-row>div{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+  .sim-evidence-btn{width:100%;min-height:36px;padding:6px 3px;white-space:nowrap}
+  .sim-cta-workspace .sim-med-choice{min-width:0;overflow:visible;position:relative}
+  .sim-cta-workspace .sim-med-choice>span:last-child{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+  /* CTA中药物卡直接展开，避免悬浮层被窄选择栏或移动端触碰裁掉。 */
+  .sim-cta-workspace .sim-med-tooltip{position:static!important;display:block!important;width:auto;max-width:none;max-height:260px;box-sizing:border-box;margin:10px 0 0;overflow:auto;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  .sim-cta-workspace .sim-med-tooltip span,.sim-cta-workspace .sim-med-tooltip b{min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  @media(max-width:980px){
+    .sim-cta-exam-head{flex-direction:column;gap:10px}
+    .sim-cta-exam-meta{justify-content:flex-start!important}
+    .sim-cta-exam-guidance em{display:block;margin:3px 0 0}
+    .sim-report-table>div{grid-template-columns:minmax(100px,.7fr) minmax(0,1.5fr) minmax(90px,.9fr)}
+    .sim-evidence-head,.sim-evidence-row{grid-template-columns:minmax(0,1fr) repeat(3,minmax(44px,58px));gap:4px}
+  }
+</style>
 </head>
 <body>
 <a class="skip" href="#content">跳到正文</a>
