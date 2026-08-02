@@ -565,7 +565,7 @@
   };
 
   function diagnosticSymptomAnswer(template, item) {
-    var completion = template.completion || {};
+    var completion = ctaPatientCompletion(template, state.person.sex);
     if (completion.symptoms && completion.symptoms[item.id]) return completion.symptoms[item.id];
     var overrides = CASE_SYMPTOM_PRESETS[template.id] || {};
     if (overrides[item.id]) return overrides[item.id];
@@ -592,7 +592,7 @@
     var symptom = ctaSymptomItems().find(function (item) {
       return (item.keywords || []).some(function (keyword) { return keyword.length >= 2 && qLower.includes(keyword.toLowerCase()); });
     });
-    var completion = template.completion || {};
+    var completion = ctaPatientCompletion(template, state.person.sex);
     var answers = symptom ? [diagnosticSymptomAnswer(template, symptom)] : [];
     if (/过敏|药物过敏|食物过敏/.test(qLower)) answers.push('患者回答：' + (completion.allergy || '否认已知药物、食物和造影剂过敏。'));
     if (/既往|手术|住院|病史|结核|肝炎|输血/.test(qLower)) {
@@ -612,7 +612,7 @@
     if (/妊娠|怀孕|月经|生育|性生活|乳房|泌乳|哺乳/.test(qLower)) answers.push('患者回答：' + (state.person.sex === '男' ? '本例为男性；不询问月经、妊娠或阴道出血，按适用性改问性功能和生育计划。' : (completion.reproductive || '按适用问题核对末次月经、妊娠可能、生育计划和相关症状。')));
     if (/起病|多久|时间|几天|几周|几月|持续|什么时候|以来|变化/.test(qLower)) answers.push(timelineInfo() + '；下一次变化以病程节点中显示的固定预设为准。');
     if (answers.length) return { answer: answers.join(' '), sourceId: symptom ? 'diagnostic-symptom-preset' : 'free-question-preset', symptomId: symptom ? symptom.id : '' };
-    return { answer: '患者回答（本病例固定预设）：目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + template.intro + '”。如需形成诊断依据，请继续追问时间、严重程度和相关危险信号。', sourceId: 'free-question-preset' };
+    return { answer: '患者回答（本病例固定预设）：目前否认该问题有明显异常，也没有新的需要立即升级的表现；本例主线为“' + ctaPatientIntro() + '”。如需形成诊断依据，请继续追问时间、严重程度和相关危险信号。', sourceId: 'free-question-preset' };
   }
 
   function esc(value) {
@@ -730,8 +730,9 @@
     return ({ communication: '先完成一次有回应的沟通', history: '先完成必问病史，尤其是危险信号', exams: '先完成关键床旁查体', tests: '先完成必要的首轮检查', decisions: '先作出下一步判断', done: '前置临床推理已完成' })[gate] || '';
   }
   function timelineInfo() {
-    if (template.completion && template.completion.timeline) return '本病例固定时间线：' + template.completion.timeline;
-    var text = [template.intro].concat(ctaHistoryItems().map(function (item) { return item.answer || ''; })).join(' ');
+    var completion = ctaPatientCompletion(template, state.person.sex);
+    if (completion && completion.timeline) return '本病例固定时间线：' + completion.timeline;
+    var text = [ctaPatientIntro()].concat(ctaHistoryItems().map(function (item) { return item.answer || ''; })).join(' ');
     var matches = text.match(/(?:近|约|持续|已有|过去|前)s*[0-9一二三四五六七八九十]+s*(?:天|日|周|星期|个月|月|年|小时)/g) || [];
     var unique = matches.filter(function (item, index) { return matches.indexOf(item) === index; });
     return unique.length ? '本病例时间线：' + unique.join('、') : '本病例时间线：主诉出现后按题干到诊，起病方式、变化趋势和就诊前处理已在“完整时间线”问诊项中预设，仍需在病历中主动记录。';
@@ -749,8 +750,8 @@
     var profile = state.profile || {};
     var patient = state.person.age + '岁，' + state.person.sex + '，职业：' + state.person.job + '（虚构教学病例，不含真实身份信息）';
     var chief = state.person.complaint + '；' + timeline;
-    var completion = template.completion || {};
-    var history = template.intro + '\n' + timeline + '\n' + data.history + '\n本病例已预设常见病史、过敏史、用药史、个人/家族史和系统回顾；病历只记录你实际主动询问并获得的回答。';
+    var completion = ctaPatientCompletion(template, state.person.sex);
+    var history = ctaPatientIntro() + '\n' + timeline + '\n' + data.history + '\n本病例已预设常见病史、过敏史、用药史、个人/家族史和系统回顾；病历只记录你实际主动询问并获得的回答。';
     var background = '既往/共病线索：' + (profile.comorbidities || []).join('、') + '。\n既往史补充：' + (completion.past || '按病例问诊回答核对') + '\n过敏史：' + (completion.allergy || '按病例问诊回答核对') + '\n用药线索：' + (profile.meds || completion.meds || '已逐项核对') + '\n个人/家族/婚育史：' + [completion.social, completion.family, completion.reproductive].filter(Boolean).join('；');
     var exam = '就诊场景：' + scene.label + '；' + (profile.context || '') + '\n生命体征/体格变量：BP ' + (profile.vitals && profile.vitals.bp || '已建立教学基线') + ' mmHg，HR ' + (profile.vitals && profile.vitals.hr || '已建立教学基线') + '/min，T ' + (profile.vitals && profile.vitals.temp || '已建立教学基线') + '℃，BMI ' + (profile.vitals && profile.vitals.bmi || '已建立教学基线') + '。\n' + data.exams;
     var diagnosis = '病例特点：' + template.note + '\n首要判断：根据已完成的检查和下一步判断选项整理，不能把模拟结果外推到真实患者。\n鉴别诊断/排除理由：' + template.decisions.map(function (item) { return item.label + '；理由：' + item.why; }).join('\n');
@@ -823,9 +824,46 @@
     var earnedPoints = rubric.reduce(function (sum, item) { return sum + item.score; }, 0);
     return { key: key, doc: doc, drafts: drafts, filled: filled, total: doc.fields.length, rubric: rubric, totalPoints: totalPoints, earnedPoints: earnedPoints, ratio: Math.round(earnedPoints / Math.max(totalPoints, 1) * 100) };
   }
+  function ctaPatientCompletion(template, sex) {
+    var completion = Object.assign({}, template.completion || {});
+    if (sex !== '男') return completion;
+    if (template.id === 'pituitary-vision') {
+      completion.timeline = '近 1 个月双侧周边视野逐渐变窄，偶有复视；近 4 个月出现性欲下降和勃起困难，今天因视野变化和泌乳素升高转诊。';
+      completion.past = '无颅脑外伤、垂体手术或放疗史；无明确肾上腺疾病；没有影响本次评估的相关用药史。';
+      completion.meds = '近 1 个月使用甲氧氯普胺；没有抗精神病药、雌激素或甲状腺激素；需同步核对药物对泌乳素的影响。';
+      completion.systemReview = '除头痛、视野改变、性欲下降和乏力外，否认持续呕吐、晕厥、意识改变和突发剧烈头痛。';
+      completion.symptoms = Object.assign({}, completion.symptoms || {});
+      delete completion.symptoms['vaginal-bleeding'];
+    }
+    if (template.id === 'cushing') {
+      completion.timeline = '近 1 年体重和血压逐渐升高，近 4 个月出现皮肤紫纹和近端肌无力；今日因多项代谢异常转诊。';
+      completion.social = '久坐、睡眠不足；不吸烟；性功能和生育相关情况需按患者意愿核对。';
+      completion.systemReview = '有体重增加、近端无力和皮肤易瘀青；否认急性意识改变、持续呕吐和胸痛。';
+      completion.symptoms = Object.assign({}, completion.symptoms || {});
+      delete completion.symptoms['vaginal-bleeding'];
+    }
+    return completion;
+  }
+  function ctaPatientComplaints(template, sex) {
+    var complaints = (template.complaints || []).slice();
+    if (sex === '男' && template.id === 'pituitary-vision') return complaints.map(function (item) { return item.replace('月经紊乱/性欲下降', '性欲下降/勃起困难'); });
+    if (sex === '男' && template.id === 'cushing') return complaints.map(function (item) { return item.replace('容易瘀青、月经紊乱', '容易瘀青、性功能/生育方面变化'); });
+    return complaints.filter(function (item) { return !(sex === '男' && /月经|妊娠|孕周|阴道/.test(item)); });
+  }
+  function ctaPatientMoods(template, sex) {
+    var moods = (template.moods || []).map(function (item) { return Object.assign({}, item); });
+    if (sex === '男' && template.id === 'pituitary-vision') moods.forEach(function (item) { if (item.id === 'shy') item.opening = '有些性功能问题我不太好意思说，但近来确实有变化。'; });
+    return moods;
+  }
+  function ctaPatientIntro() {
+    var intro = template.intro || '';
+    if (state.person.sex === '男' && template.id === 'pituitary-vision') intro = intro.replace('月经/性功能变化', '性功能变化');
+    if (state.person.sex === '男' && template.id === 'cushing') intro = intro.replace('月经紊乱', '性功能或生育方面变化');
+    return intro;
+  }
   function buildProfile(template, person, scene) {
     var id = template.id;
-    var completion = template.completion || {};
+    var completion = ctaPatientCompletion(template, person.sex);
     var acute = /dka|hypoglycemia|hyponatremia|adrenal-insufficiency|diabetic-foot|hypoparathyroidism/.test(id);
     var age = person.age;
     var bp = acute ? between(92, 128) + '/' + between(56, 82) : /primary-aldosteronism|cushing|obesity|pheochromocytoma/.test(id) ? between(142, 178) + '/' + between(88, 108) : between(108, 148) + '/' + between(66, 92);
@@ -843,8 +881,9 @@
   }
   function makeCase() {
     var template = choose(CASES);
-    var mood = choose(template.moods);
-    var person = { age: choose(template.demographics.ages), sex: choose(template.demographics.sexes), job: choose(template.demographics.jobs), complaint: choose(template.complaints), moodId: mood.id };
+    var sex = choose(template.demographics.sexes);
+    var mood = choose(ctaPatientMoods(template, sex));
+    var person = { age: choose(template.demographics.ages), sex: sex, job: choose(template.demographics.jobs), complaint: choose(ctaPatientComplaints(template, sex)), moodId: mood.id };
     var scene = choose(SCENES);
     return {
       templateId: template.id,
@@ -868,8 +907,19 @@
   var state = loadState() || makeCase();
   if (!state || !state.templateId || !state.person || !state.asked || !state.opened || !state.scores) state = makeCase();
   var template = CASES.find(function (item) { return item.id === state.templateId; }) || CASES[0];
+  var validComplaints = ctaPatientComplaints(template, state.person && state.person.sex);
+  if (state.person && validComplaints.length && !validComplaints.includes(state.person.complaint)) state.person.complaint = validComplaints[0];
   if (!state.scene || !SCENES.some(function (x) { return x.id === state.scene; })) state.scene = SCENES[0].id;
   if (!state.profile) state.profile = buildProfile(template, state.person, SCENES.find(function (x) { return x.id === state.scene; }) || SCENES[0]);
+  var currentPatientCompletion = ctaPatientCompletion(template, state.person.sex);
+  if (state.profile) {
+    state.profile.pastHistory = currentPatientCompletion.past || state.profile.pastHistory || '';
+    state.profile.allergy = currentPatientCompletion.allergy || state.profile.allergy || '';
+    state.profile.familyHistory = currentPatientCompletion.family || state.profile.familyHistory || '';
+    state.profile.socialHistory = currentPatientCompletion.social || state.profile.socialHistory || '';
+    state.profile.reproductiveHistory = currentPatientCompletion.reproductive || state.profile.reproductiveHistory || '';
+    state.profile.meds = currentPatientCompletion.meds || state.profile.meds || '';
+  }
   if (!state.notes) state.notes = {};
   if (!state.workflow) state.workflow = { documentType: workflowTemplateFor(state.scene), submitted: false, score: 0, feedback: '', draftInitialized: false, autoGenerated: false };
   if (typeof state.workflow.draftInitialized !== 'boolean') state.workflow.draftInitialized = false;
@@ -904,7 +954,8 @@
   if (typeof state.interview.station !== 'number') state.interview.station = 1;
   if (typeof state.interview.identityConfirmed !== 'boolean') state.interview.identityConfirmed = false;
   if (!state.interview.stationSubmitted || typeof state.interview.stationSubmitted !== 'object') state.interview.stationSubmitted = { one: false, two: false, three: false };
-  var mood = template.moods.find(function (item) { return item.id === state.person.moodId; }) || template.moods[0];
+  var moodOptions = ctaPatientMoods(template, state.person.sex);
+  var mood = moodOptions.find(function (item) { return item.id === state.person.moodId; }) || moodOptions[0] || template.moods[0];
 
   function progressCount() {
     var cta = state.interview && state.interview.started ? state.interview.askedHistory.length + state.interview.selectedExams.length + state.interview.selectedTests.length + (state.interview.finalDecision ? 1 : 0) + (state.interview.submitted ? 1 : 0) : 0;
@@ -942,6 +993,9 @@
   function ctaPatientHistoryItem(item) {
     var copy = Object.assign({}, item);
     var male = state.person.sex === '男';
+    var completion = ctaPatientCompletion(template, state.person.sex);
+    var completionKey = { 'completion-timeline': 'timeline', 'completion-past': 'past', 'completion-allergy': 'allergy', 'completion-medications': 'meds', 'completion-family': 'family', 'completion-social': 'social', 'completion-reproductive': 'reproductive', 'completion-system-review': 'systemReview' }[item.id];
+    if (completionKey && completion[completionKey]) copy.answer = completion[completionKey];
     if (template.id === 'pituitary-vision' && item.id === 'pituitary') {
       if (male) {
         copy.question = '性欲、勃起、乳溢、头痛和生育计划？';
@@ -1115,7 +1169,7 @@
   function ctaKnownFactsHtml() {
     var complaints = (template.complaints || []).filter(function (item) { return item && item !== state.person.complaint; });
     return '<div class="sim-review-block sim-cta-known-data"><h4>问诊前已知病例资料（仅展示本例已设定部分）</h4>' +
-      '<p><b>病例主线：</b>' + esc(template.intro || '病例摘要由本次训练题干给出，请从主诉和主动问诊开始。') + '</p>' +
+      '<p><b>病例主线：</b>' + esc(ctaPatientIntro() || '病例摘要由本次训练题干给出，请从主诉和主动问诊开始。') + '</p>' +
       '<p><b>本次主诉：</b>' + esc(state.person.complaint || '主诉由本次虚构患者固定生成，请先核对患者自述。') + '</p>' +
       '<p><b>题干公开的时间线：</b>' + esc(timelineInfo()) + '</p>' +
       (complaints.length ? '<p><b>本病例其他预设就诊切入点（不等于本次患者已陈述）：</b>' + esc(complaints.join('；')) + '</p>' : '') +
