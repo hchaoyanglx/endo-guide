@@ -59,6 +59,19 @@ body.dark .sim-cta-integrated-note{background:#3b351e;color:#f5e8b6}.body.dark .
     /* CTA内的左右面板各自滚动；点击左侧选项时保留右侧当前位置。 */
     .sim-cta-console-pane .sim-cta-transcript,.sim-cta-history-strip,.sim-cta-selector-pane .sim-choice-list,.sim-cta-selector-pane .sim-cta-question-list{overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;scroll-behavior:auto;-webkit-overflow-scrolling:touch}
 </style>
+<style id="medication-learning-fix">
+  .med-mechanism{margin:12px 0;padding:11px 13px;border-left:5px solid var(--blue);background:#eef5f8;color:var(--ink);line-height:1.65}
+  .med-mechanism b{display:block;color:var(--green2);margin-bottom:4px}
+  .insulin-guide{margin:18px 0;padding:16px;border:1px solid var(--line);background:var(--panel)}
+  .insulin-guide h3{margin:0 0 8px;color:var(--green2)}
+  .insulin-guide h4{margin:16px 0 8px;color:var(--green2)}
+  .insulin-guide .tbl td:first-child{font-weight:800;color:var(--green2);min-width:140px}
+  .insulin-guide .warn{border-left:5px solid var(--amber);background:#fff6df;padding:11px 13px;margin:12px 0}
+  .insulin-guide li{margin:6px 0}
+  body.dark .med-mechanism{background:#21483d;border-color:#86b6a7}
+  body.dark .insulin-guide .warn{background:#42391e;color:#f5e8b6}
+  @media(max-width:720px){.insulin-guide{padding:12px}.insulin-guide .tbl{min-width:900px}}
+</style>
 <style id="cta-layout-fix">
   /* CTA各考站共用：说明收纳在顶部，工作区不再被固定侧栏挤窄。 */
   .sim-cta-exam-head{align-items:flex-start}
@@ -265,6 +278,31 @@ body.dark .sim-cta-integrated-note{background:#3b351e;color:#f5e8b6}.body.dark .
         <div class="section-head"><div><div class="kicker">药物与剂量</div><h2>先选患者，再查药物</h2></div><p>仅收录指南原文明确写出的剂量；适应证、剂量、禁忌和监测必须一起阅读。</p></div>
         <div class="notice"><b>重要：</b>以下为指南学习用剂量，不是患者处方。每张卡把“明确禁用”和“需慎用/调整”分开显示；二者不能互换。指南未列出绝对禁忌时，本站明确写“未单列”，不自行补造；正式开立前仍须核对现行中国说明书、过敏史、妊娠/哺乳、肝肾功能及相互作用。</div>
         <div class="evidence-note"><b>胰岛素阅读顺序：</b>先看“1型总量框架”或“2型基础起始”，再按基础、餐时、预混或复方制剂查卡片。单位（U）是生物活性单位，不可按毫升自行换算；U100、U200、U300、U500、U700及周制剂不得凭体积互换。<br><b>减重药阅读顺序：</b>先看“启动与3个月复评”，再按患者合并症、注射频率、胃肠耐受和禁忌选择具体制剂。<br><button class="primary" data-jump="education">同步打开药物与日常宣教</button></div>
+        <section class="insulin-guide" aria-labelledby="insulin-adjust-title">
+          <h3 id="insulin-adjust-title">胰岛素调药学习表：先看餐后血糖，再定位需要调整的环节</h3>
+          <p>餐后血糖应在餐开始后 1–2 小时记录。多数非妊娠成人的峰值目标为 <b>&lt;10.0 mmol/L（&lt;180 mg/dL）</b>；目标必须结合年龄、低血糖风险、妊娠、住院场景和合并症个体化。</p>
+          <div class="warn"><b>先记住：</b>指南支持“识别连续模式 → 核对进食、注射、监测、病日和肾功能 → 只调整对应成分 → 复查”，不支持把一个固定滑动量表套给所有患者。以下是指南学习用分支，不是患者处方。</div>
+          <div class="table-wrap"><table class="tbl">
+            <thead><tr><th>患者/场景</th><th>餐后数值（餐开始后 1–2 h）</th><th>先判断</th><th>指南支持的学习动作</th></tr></thead>
+            <tbody>
+              <tr><td>多数非妊娠成人门诊</td><td>目标：&lt;10.0 mmol/L（&lt;180 mg/dL）</td><td>是否连续出现？A1C/CGM 是否与餐前读数一致？</td><td>单次异常不自动加量；先核对测量时点、碳水估算、餐前给药时机/部位、漏针、运动、病日和肾功能。</td></tr>
+              <tr><td>T2D：空腹已在个体化目标，餐后反复高</td><td>连续模式达到或超过 10.0 mmol/L，且无低血糖</td><td>基础量是否已经足够？哪一餐峰值最高？是否出现“过度基础化”？</td><td>若仅使用基础胰岛素且没有严重高血糖，ADA 2026 支持从最大餐或血糖峰值餐开始加餐时胰岛素，起始可讨论 <b>4 U 或基础量的 10%</b>；随后必须按个体化方案和监测结果滴定，不能自动复制。</td></tr>
+              <tr><td>T1D：基础-餐时、泵或 AID</td><td>餐后高，但餐前和夜间并未同样升高</td><td>碳水比例、餐前给药时机、CGM 趋势箭头、脂肪/蛋白、运动和输注管路</td><td>优先复核餐时计算、给药时机和设备；基础胰岛素不能因餐后单项偏高而停用。餐时剂量需结合碳水、当前血糖/趋势、病日和活动个体化。</td></tr>
+              <tr><td>妊娠糖尿病或妊娠合并 T1D/T2D</td><td>空腹通常 &lt;5.3；1 小时 &lt;7.8 或 2 小时 &lt;6.7 mmol/L</td><td>孕周、记录时点、低血糖和产科/胎儿风险</td><td>重复超过目标时由产科—内分泌团队调整基础或餐时胰岛素；不能把非妊娠成人的 10.0 mmol/L 目标直接套用。</td></tr>
+              <tr><td>老年、低血糖高风险或严重合并症</td><td>没有一个适用于所有人的固定餐后数值</td><td>认知、进食规律、肾功能、既往严重低血糖和照护能力</td><td>先确认个体化血糖目标和可执行的监测计划；宁可先找出低血糖原因，也不要按默认表快速叠加胰岛素。</td></tr>
+              <tr><td>餐后低血糖</td><td>&lt;3.9 mmol/L（&lt;70 mg/dL）；&lt;3.0 mmol/L（&lt;54 mg/dL）属于更严重层级</td><td>上一餐剂量、进食量/延迟、运动、肾功能、酒精、促泌剂和重复校正</td><td>先按低血糖路径处理并复盘，不能增加相应餐时量；反复发生或需要他人帮助时立即升级评估。</td></tr>
+              <tr><td>住院非危重患者</td><td>常用目标 5.6–10.0 mmol/L（100–180 mg/dL）</td><td>营养方式、感染/激素、既往胰岛素、肾功能和低血糖</td><td>24 小时内血糖 ≥10.0 mmol/L 在两次测量出现时，按医院协议启动或强化胰岛素；不得把门诊表直接用于 DKA/HHS。</td></tr>
+              <tr><td>伴多尿、呕吐、腹痛、脱水、体重下降或意识改变</td><td>血糖 ≥16.7 mmol/L（≥300 mg/dL），或伴酮症/脱水/意识改变</td><td>立即排除 DKA、HHS 和感染、心梗、卒中等诱因</td><td>进入急症评估；不是门诊自行按餐后数值加几单位。若合并低钾，先按急症路径补钾，再决定胰岛素。</td></tr>
+            </tbody>
+          </table></div>
+          <h4>把餐后异常写成病历中的临床推理</h4>
+          <ol>
+            <li>先写“可能是餐时覆盖不足、时机不匹配、饮食或病日因素”，再列连续读数和测量时点。</li>
+            <li>若空腹也高，先按基础段评估；若空腹达标而餐后高，才考虑餐时覆盖，不要无限增加基础量。</li>
+            <li>调整后复查同一餐、同一时点的结构化血糖或 CGM 趋势，同时记录低血糖和患者可执行性。</li>
+          </ol>
+          <p class="plain">本表对应 ADA 2026 的血糖目标、药物治疗、妊娠和住院部分；具体制剂滴定、转换和停药必须回到对应指南、现行中国药品说明书和医院协议。</p>
+        </section>
         <div id="medTools" class="library-tools"></div><div id="medSummary" class="search-summary" aria-live="polite">正在加载药物卡……</div><input id="medSearch" class="deep-search" aria-label="搜索药物" placeholder="搜索药名、疾病、适用患者、剂量或监测项目……"><div id="medGrid" class="med-grid"></div>
       </section>
 
@@ -417,6 +455,7 @@ body.dark .sim-cta-integrated-note{background:#3b351e;color:#f5e8b6}.body.dark .
 <script src="./guide-patient-simulator-cases.js?v=20260801"></script>
 <script src="./guide-patient-simulator-completion.js?v=20260802-cases1"></script>
 <script src="./guide-patient-simulator-medications.js?v=20260801"></script>
+<script src="./guide-medication-mechanisms.js?v=20260802"></script>
 <script src="./guide-defensive-communication.js?v=20260801"></script>
 <script src="./guide-patient-simulator.js?v=20260802-cta18"></script>
 <script src="./guide-cross-links.js?v=20260801"></script>
