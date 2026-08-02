@@ -994,10 +994,10 @@
   function ctaSettingLabel() { return state.interview.setting === 'inpatient' ? '住院病人（含病程复评）' : '门诊病人（首诊/复诊）'; }
   function ctaIdentityHonorific() { return state.person.sex === '女' ? '女士' : '先生'; }
   function ctaIdentityLabel() { return (state.person.surname || '患者') + ctaIdentityHonorific(); }
-  function ctaIdentityQuestion() { return '您好，请问您是本病例设定的 ' + ctaIdentityLabel() + ' 吗？为了保障安全，请您说一下年龄和今天来诊的主要原因。'; }
-  function ctaIdentityAnswer() { return '是的，我是本病例设定的 ' + ctaIdentityLabel() + '，今年 ' + state.person.age + ' 岁，今天因为“' + state.person.complaint + '”来诊。'; }
+  function ctaIdentityQuestion() { return '您好，请问您是本病例设定的 ' + ctaIdentityLabel() + ' 吗？为了保障安全，请您说一下年龄、职业和今天来诊的主要原因。'; }
+  function ctaIdentityAnswer() { return '是的，我是本病例设定的 ' + ctaIdentityLabel() + '，今年 ' + state.person.age + ' 岁，从事' + state.person.job + '，今天因为“' + state.person.complaint + '”来诊。'; }
   function ctaIdentityHtml() {
-    return '<section class="sim-identity-card"><div class="sim-identity-badge">问诊第 0 步 · 身份核对</div><h4>先确认患者身份，再开始病史询问</h4><p class="sim-muted">这是每个病例的固定首步。训练不要求输入真实姓名；请使用“患者姓氏＋女士/先生”称谓，核对年龄和本次就诊原因，并向患者说明身份核对的目的。</p><div class="sim-identity-script"><b>建议话术</b><p>“' + esc(ctaIdentityQuestion()) + '”</p></div><div class="sim-identity-patient"><span class="sim-stage">患者待确认资料</span><b>' + esc(ctaIdentityLabel() + ' · ' + state.person.age + ' 岁') + '</b><small>本例为虚构教学身份，仅使用随机姓氏，不填写真实姓名或身份证号码。</small></div><button class="primary" type="button" data-sim-action="cta-confirm-identity">已向患者确认身份，进入问诊</button></section>';
+    return '<section class="sim-identity-card"><div class="sim-identity-badge">问诊第 0 步 · 身份核对</div><h4>先确认患者身份，再开始病史询问</h4><p class="sim-muted">这是每个病例的固定首步。训练不要求输入真实姓名；请使用“患者姓氏＋女士/先生”称谓，核对年龄、职业和本次就诊原因，并向患者说明身份核对的目的。</p><div class="sim-identity-script"><b>建议话术</b><p>“' + esc(ctaIdentityQuestion()) + '”</p></div><div class="sim-identity-patient"><span class="sim-stage">患者待确认资料</span><b>' + esc(ctaIdentityLabel() + ' · ' + state.person.age + ' 岁') + '</b><span>职业：' + esc(state.person.job) + '</span><small>本例为虚构教学身份，仅使用随机姓氏和职业背景，不填写真实姓名或身份证号码。</small></div><button class="primary" type="button" data-sim-action="cta-confirm-identity">已向患者确认身份，进入问诊</button></section>';
   }
   function ctaPatientHistoryItem(item) {
     var copy = Object.assign({}, item);
@@ -1302,6 +1302,13 @@
     panel.innerHTML = ctaKnownFactsHtml() + ctaSymptomQuickHtml() + ctaQuickTestHtml() + ctaQuickResultsHtml();
     anchor.parentNode.insertBefore(panel, anchor);
   }
+  function decorateCtaScrollHint() {
+    if (!state.interview || !state.interview.started || state.interview.submitted || state.interview.phase !== 'history') return;
+    var pane = root.querySelector('.sim-cta-console-pane');
+    var transcript = pane && pane.querySelector('.sim-cta-transcript');
+    if (!transcript || pane.querySelector('.sim-cta-scroll-hint')) return;
+    transcript.insertAdjacentHTML('beforebegin', '<p class="sim-muted sim-cta-scroll-hint">右侧患者回答区可用鼠标滚轮或拖动滚动条；点击左侧问题后会保留当前阅读位置。</p>');
+  }
   function ctaTranscript() {
     var it = state.interview;
     if (!state.interview.identityConfirmed && !state.interview.askedHistory.length && !(state.interview.freeQuestions || []).length) return '<p class="sim-muted">患者还没有回答任何问题。请先完成身份核对，再选择一个你想主动询问的问题。</p>';
@@ -1482,18 +1489,51 @@
     if (!communication) return;
     communication.insertAdjacentHTML('afterend', '<div class="sim-notice sim-cta-bridge"><b>主动问诊入口</b><p>完整病史不应凭空出现：进入 CTA 后，每点击一个具体问题，患者才回答这一项；你没有问到的内容会明确标记为“尚未获得”。</p><button class="primary" type="button" data-sim-tab="interview">进入 CTA 主动问诊</button></div>');
   }
+  function ctaScrollTargets() {
+    if (!root) return [];
+    return Array.prototype.slice.call(root.querySelectorAll('.sim-cta-console-pane .sim-cta-transcript, .sim-cta-history-strip, .sim-cta-selector-pane .sim-choice-list, .sim-cta-selector-pane .sim-cta-question-list, .sim-cta-toolbar'));
+  }
+  function captureCtaScroll() {
+    var targets = ctaScrollTargets();
+    return {
+      tab: state.activeTab,
+      phase: state.interview && state.interview.phase,
+      pageTop: window.pageYOffset || document.documentElement.scrollTop || 0,
+      pageLeft: window.pageXOffset || document.documentElement.scrollLeft || 0,
+      panels: targets.map(function (el) { return { top: el.scrollTop, left: el.scrollLeft }; })
+    };
+  }
+  function restoreCtaScroll(snapshot) {
+    if (!snapshot || snapshot.tab !== state.activeTab || snapshot.phase !== (state.interview && state.interview.phase)) return;
+    var restore = function () {
+      var targets = ctaScrollTargets();
+      snapshot.panels.forEach(function (position, index) {
+        var el = targets[index];
+        if (!el) return;
+        el.scrollTop = position.top;
+        el.scrollLeft = position.left;
+      });
+      if (snapshot.pageTop || snapshot.pageLeft) window.scrollTo(snapshot.pageLeft, snapshot.pageTop);
+    };
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(function () { window.requestAnimationFrame(restore); });
+    } else restore();
+  }
   function render() {
+    var scrollSnapshot = captureCtaScroll();
     renderBase();
     var tabs = root.querySelector('.sim-tabs');
     if (tabs && !tabs.querySelector('[data-sim-tab="workflow"]') && !(state.interview && state.interview.started && !state.interview.submitted)) tabs.insertAdjacentHTML('beforeend', '<button type="button" class="sim-tab ' + (state.activeTab === 'workflow' ? 'active' : '') + '" data-sim-tab="workflow">病历与流程</button>');
     if (state.activeTab === 'workflow') decorateWorkflow();
     if (state.activeTab === 'interview') decorateCtaResults();
     if (state.activeTab === 'interview') decorateCtaHistory();
+    if (state.activeTab === 'interview') decorateCtaScrollHint();
     if (state.activeTab === 'interview' && state.interview && !state.interview.started) {
       var ctaWelcomeCard = root.querySelector('.sim-cta-welcome .sim-patient-card');
       if (ctaWelcomeCard && !root.querySelector('.sim-cta-welcome .sim-cta-known-data')) ctaWelcomeCard.insertAdjacentHTML('afterend', ctaKnownFactsHtml());
     }
     if (state.activeTab === 'start') decorateStart();
+    restoreCtaScroll(scrollSnapshot);
   }
   function decorateWorkflow() {
     var body = root.querySelector('.sim-body');
@@ -1511,7 +1551,7 @@
     if (action === 'empathy' || action === 'explain' || action === 'direct') { state.asked.communication = true; state.scores.communication = action === 'empathy' ? 2 : action === 'explain' ? 1 : 0; state.response = action === 'empathy' ? mood.after : action === 'explain' ? '好的，先告诉我流程，我会尽量配合。' : '好吧，你问什么我就回答什么。'; saveState(); render(); return; }
     if (action === 'locked') { state.response = '当前步骤不能跳过：' + gateLabel(gateFor(state.activeTab)); saveState(); render(); return; }
     if (action === 'cta-start') { state.interview.started = true; state.interview.phase = 'history'; state.interview.station = 1; state.interview.identityConfirmed = false; state.interview.submitted = false; state.activeTab = 'interview'; saveState(); render(); return; }
-    if (action === 'cta-confirm-identity') { state.interview.identityConfirmed = true; state.response = '患者已确认身份：' + ctaIdentityLabel() + '，' + state.person.age + ' 岁；本次就诊原因为“' + state.person.complaint + '”。现在进入一问一答病史采集。'; saveState(); render(); return; }
+    if (action === 'cta-confirm-identity') { state.interview.identityConfirmed = true; state.response = '患者已确认身份：' + ctaIdentityLabel() + '，' + state.person.age + ' 岁，从事' + state.person.job + '；本次就诊原因为“' + state.person.complaint + '”。现在进入一问一答病史采集。'; saveState(); render(); return; }
     if (action === 'cta-question') {
       if (!state.interview.identityConfirmed) { state.response = '请先完成“' + ctaIdentityLabel() + '”的身份核对，再开始问诊。'; saveState(); render(); return; }
       var questionItem = ctaHistoryItems().find(function (x) { return x.id === id; });
